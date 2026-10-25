@@ -163,9 +163,9 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
         {/* Bottom CTA */}
         <section className="px-6 pb-24 md:px-10 text-center">
           <div className="max-w-xl mx-auto">
-            <h2 className="text-3xl font-normal text-white mb-4">{closingLine ?? "Your business is live tonight."}</h2>
+            <h2 className="text-3xl font-normal text-white mb-4">{closingLine ?? "Your website, ready for your review."}</h2>
             <p className="text-white/45 mb-8 font-medium">
-              {isIntroRatePeriod ? "Your site goes live today. Intro rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+              {isIntroRatePeriod ? "Review your site, then activate when ready. Intro rate locked for 12 months, then standard pricing." : "Review your site, then activate when ready. Contact Found for help canceling anytime."}
             </p>
             <button
               onClick={() => setDrawerOpen(true)}
@@ -176,7 +176,7 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isIntroRatePeriod
-                ? <>Intro rate expires {INTRO_RATE_CUTOFF_LABEL} · locked for 12 months, then ${normalPrice}/month.{" "}
+                ? <>Intro rate expires {INTRO_RATE_CUTOFF_LABEL} · locked for 12 months, then ${normalPrice}/month. Contact Found for help canceling anytime.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans
                     </Link></>

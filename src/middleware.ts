@@ -127,12 +127,30 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
   if (isRootHost) {
+    if (pathname === "/pricing" || pathname === "/pricing/") {
+      const url = req.nextUrl.clone()
+      url.pathname = "/plans"
+      return NextResponse.redirect(url, 301)
+    }
     // Marks the request as Found's own marketing site (not a tenant site,
     // not dashboard/admin) so the root layout knows it's safe to load
     // Found's own analytics beacon - tenant sites and the dashboard should
     // never get Found's own traffic tracking mixed into them.
     const requestHeaders = new Headers(req.headers)
     requestHeaders.set("x-found-root-site", "1")
+    // Keep these root-only pages outside tenant slug paths, including tenants named "about".
+    const marketingPages = ["/support", "/contact", "/about"]
+    const internalPrefix = "/_found-marketing"
+    if (marketingPages.includes(pathname)) {
+      const url = req.nextUrl.clone()
+      url.pathname = `${internalPrefix}${pathname}`
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+    }
+    if (pathname.startsWith(`${internalPrefix}/`) && marketingPages.includes(pathname.slice(internalPrefix.length))) {
+      const url = req.nextUrl.clone()
+      url.pathname = pathname.slice(internalPrefix.length)
+      return NextResponse.redirect(url, 301)
+    }
     return NextResponse.next({ request: { headers: requestHeaders } })
   }
 

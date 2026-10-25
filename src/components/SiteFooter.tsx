@@ -17,7 +17,11 @@ export default function SiteFooter() {
             &copy; {new Date().getFullYear()} Found Co. LLC. All rights reserved.
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[["Support", "/support"], ["About", "/about"], ["Contact", "/contact"], ["Plans", "/plans"]].map(([label, href]) => (
+            <Link key={href} href={href} className="text-xs font-medium transition-colors hover:text-white/60"
+              style={{ color: "rgba(255,255,255,0.3)" }}>{label}</Link>
+          ))}
           <Link
             href="/terms"
             className="text-xs font-medium transition-colors hover:text-white/60"

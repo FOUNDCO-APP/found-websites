@@ -15,7 +15,7 @@ const SIGNAL_GREEN = "#32D074"
 
 // Found's own verbs, not DripJobs' contractor-specific ones - mirrors the
 // real feature blocks in the "What's actually different" section below.
-const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders", "sell online", "collect reviews"]
+const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders", "sell online", "manage leads"]
 
 // "Get found." stays fixed (it's the company name) - only the outcome
 // rotates, so every industry gets equal billing instead of "hired" quietly
@@ -24,11 +24,11 @@ const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders
 const HERO_OUTCOMES = ["Get hired.", "Get booked.", "Get jobs.", "Get orders.", "Get calls."]
 
 const HOME_FAQS: { q: string; a: string }[] = [
-  { q: "How fast can I actually get a site?", a: "Most owners are live the same day. Answer a few questions, and Found writes your copy, picks your photos, and builds every page for you." },
+  { q: "How do I get my site live?", a: "Answer a few questions, review your site, then activate when ready. Custom-domain setup can take longer." },
   { q: "Do I need any design experience?", a: "No. There's no editor to learn - you answer questions, Found builds the site." },
-  { q: "What if I already have a website?", a: "Point your existing domain to Found and you're live with a new site today. No agency, no waiting weeks for a redesign." },
-  { q: "What's the camera thing everyone mentions?", a: "Every plan includes it. Finish a job, take a photo, tap the heart - it's live on your site and ready to become a social post." },
-  { q: "Can I cancel anytime?", a: "Yes. No contracts." },
+  { q: "What if I already have a website?", a: "Review your new Found site, activate when ready, then connect your existing domain. Custom-domain setup can take longer." },
+  { q: "What's the camera thing everyone mentions?", a: "Every plan includes photos. The heart saves a private Favorite; it does not publish. Turn on Gallery to publish a photo, or choose Use on Page for a page background." },
+  { q: "Can I cancel anytime?", a: "Yes. Contact Found for help canceling. Cancellation stops future renewals; access continues through your paid billing period." },
 ]
 
 // Types each word out, pauses, deletes it, moves to the next - loops
@@ -196,7 +196,7 @@ export default function HomeClient() {
                   Found builds your site.<br />You get the calls.
                 </p>
                 <p className="found-hero-desktop-copy mt-7 hidden max-w-md text-base font-medium leading-8 text-white/70 md:block md:text-lg">
-                  Found writes your copy, picks your photos, and builds your pages — around your trade, your town, and your voice. Most owners are live before they finish their second cup of coffee.
+                  Found writes your copy, picks your photos, and builds your pages — around your trade, your town, and your voice. Review your site, then activate when ready.
                 </p>
                 <div className="found-hero-actions absolute inset-x-6 bottom-8 flex flex-col gap-3 sm:flex-row md:static md:inset-auto md:mt-9">
                   <button
@@ -272,7 +272,7 @@ export default function HomeClient() {
             <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
               <div>
                 <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-                  Three minutes.
+                  Your next step.
                 </p>
                 <h2 className="max-w-xl text-4xl font-light leading-tight md:text-6xl">
                   Your whole business, ready to meet the world.
@@ -282,7 +282,7 @@ export default function HomeClient() {
                 {[
                   ["01", "You talk. We listen.", "A few questions about your work, your town, and what makes you different. That's the whole conversation."],
                   ["02", "Your site writes itself.", "Found picks your photos, writes your copy, and builds every page — tuned to your industry and your neighborhood."],
-                  ["03", "Go live today.", "A real site. Your web address. Ready to share and start booking clients — today."],
+                  ["03", "Review, then activate.", "Check your pages and business details, then activate when you're ready to share."],
                 ].map(([step, title, body]) => (
                   <div key={step} className="bg-[#0B0E0C] p-7" style={{ borderTop: `2px solid ${SIGNAL_GREEN}` }}>
                     <div className="mb-6 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
@@ -300,7 +300,7 @@ export default function HomeClient() {
               >
                 Get my site
               </button>
-              <p className="mt-4 text-xs text-white/30 font-medium">Most sites are ready the same day.</p>
+              <p className="mt-4 text-xs text-white/30 font-medium">Custom-domain setup can take longer.</p>
             </div>
           </div>
         </section>
@@ -354,10 +354,10 @@ export default function HomeClient() {
             <div className="mt-16 grid gap-10 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080A09] p-8 md:grid-cols-2 md:gap-16 md:p-14">
               <div className="flex flex-col justify-center">
                 <h3 className="text-3xl font-normal leading-tight text-white md:text-4xl">
-                  Take a photo. It&apos;s on your site.
+                  Your photos. Your choice of where they appear.
                 </h3>
                 <p className="mt-5 text-base leading-8 text-white/55 font-medium">
-                  Finish a job, snap a photo on your phone, tap the heart in Found — it&apos;s already live on your website, ready to become your next social post. Built the way CompanyCam works for contractors, except Found built it for every business, not just one trade.
+                  Take or upload a photo. The heart saves a private Favorite; it does not publish. Turn on Gallery to publish it, or choose Use on Page for a page background. You choose what customers see.
                 </p>
               </div>
               <div className="flex items-center justify-center">
@@ -430,7 +430,7 @@ export default function HomeClient() {
                     style={{ color: "rgba(8,10,9,0.58)" }}
                   >
                     Start today at $29, $39, or $69/month —<br className="hidden md:block" />
-                    your price, locked in for a full year.
+                    your intro rate for 12 months, then standard pricing.
                   </p>
                   <button
                     type="button"
@@ -453,7 +453,7 @@ export default function HomeClient() {
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
               <p className="mt-5 text-base text-white/50 font-medium">
-            {isIntroRatePeriod ? `Intro rates expire ${INTRO_RATE_CUTOFF_LABEL} — locked in for your first year.` : "Simple, honest pricing. Cancel anytime."}
+            {isIntroRatePeriod ? `Intro rates expire ${INTRO_RATE_CUTOFF_LABEL} — 12 months, then standard pricing.` : "Simple, honest pricing. Contact Found for help canceling anytime."}
           </p>
             </div>
 
@@ -463,7 +463,7 @@ export default function HomeClient() {
                   {
                     key: "found",
                     shortName: "Starter",
-                    headline: "Get online today.",
+                    headline: "Your website, ready for your review.",
                     name: "Found Starter",
                     price: isIntroRatePeriod ? "$29" : "$39",
                     normalPrice: "$39",
@@ -474,7 +474,7 @@ export default function HomeClient() {
                       "Beautiful industry photos, built in",
                       "Leads come straight to you",
                       "New leads get an automatic reply from your business",
-                      "Take a photo. It's on your site.",
+                      "Choose which photos appear on your site",
                     ],
                   },
                   {
@@ -508,7 +508,7 @@ export default function HomeClient() {
                     bullets: [
                       "Bookings, estimates, payments, and email marketing",
                       "Payment setup where it matters",
-                      "More five-star reviews, without asking",
+                      "Automatic review requests - coming soon",
                       "Reach your full client list",
                       "Your whole team, no extra charge",
                       "Show clients their finished job",
@@ -524,7 +524,7 @@ export default function HomeClient() {
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
               {isIntroRatePeriod
-                ? <>Intro rates expire {INTRO_RATE_CUTOFF_LABEL} · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
+                ? <>Intro rates expire {INTRO_RATE_CUTOFF_LABEL} · locked for 12 months, then regular price · Contact Found for help canceling anytime. <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
                 : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
               }
             </p>

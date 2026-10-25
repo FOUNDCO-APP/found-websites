@@ -34,7 +34,7 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Beautiful industry photos, built in",     values: [true, true, true] },
   { label: "Leads come straight to you",              values: [true, true, true] },
   { label: "New leads get an automatic reply from your business",  values: [true, true, true] },
-  { label: "Take a photo. It's on your site.",        values: [true, true, true] },
+  { label: "Choose which photos appear on your site", values: [true, true, true] },
   { label: "Plus automatic lead follow-up",           values: [false, true, true] },
   { label: "Drip-style messages keep new leads from going cold", values: [false, true, true] },
   { label: "See who's interested and ready to hire",  values: [false, true, true] },
@@ -45,7 +45,7 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing", values: [false, true, true] },
   { label: "Plus bookings, estimates, payments, and email marketing", values: [false, false, true] },
   { label: "Payment setup where it matters",          values: [false, true, true] },
-  { label: "More five-star reviews, without asking",  values: [false, false, true] },
+  { label: "Automatic review requests - coming soon", values: [false, false, "Coming soon"] },
   { label: "Reach your full client list",             values: [false, false, true] },
   { label: "Your whole team, no extra charge",        values: [false, false, true] },
   { label: "Show clients their finished job",         values: [false, false, true] },
@@ -84,7 +84,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          {IS_INTRO_RATE_PERIOD ? `Intro rates expire ${INTRO_RATE_CUTOFF_LABEL}. Locked in for your first year.` : "Simple, honest pricing. Cancel anytime."}
+          {IS_INTRO_RATE_PERIOD ? `Intro rates expire ${INTRO_RATE_CUTOFF_LABEL}. Intro rate for 12 months, then standard pricing.` : "Simple, honest pricing. Contact Found for help canceling anytime."}
         </p>
       </section>
 
@@ -148,7 +148,7 @@ export default function PlansPage() {
                   <td className="py-4 pr-8 text-white/65 font-medium">{row.label}</td>
                   {row.values.map((val, j) => (
                     <td key={j} className="py-4 px-4 text-center">
-                      {val === true ? <span className="flex justify-center"><Check /></span> : <span className="flex justify-center"><Dash /></span>}
+                      {typeof val === "string" ? <span className="text-xs text-white/65">{val}</span> : val === true ? <span className="flex justify-center"><Check /></span> : <span className="flex justify-center"><Dash /></span>}
                     </td>
                   ))}
                 </tr>
@@ -162,8 +162,8 @@ export default function PlansPage() {
       <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
           {IS_INTRO_RATE_PERIOD
-            ? <>Intro rates expire {INTRO_RATE_CUTOFF_LABEL} — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
-            : "Cancel anytime. Results vary by market and business type."}
+            ? <>Intro rates expire {INTRO_RATE_CUTOFF_LABEL} — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Contact Found for help canceling anytime. Results vary by market and business type.</>
+            : "Contact Found for help canceling anytime. Results vary by market and business type."}
         </p>
       </div>
 

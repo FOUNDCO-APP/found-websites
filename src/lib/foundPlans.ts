@@ -31,7 +31,7 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
     key: "found",
     name: "Found Starter",
     eyebrow: "Done for you",
-    headline: "Get online today.",
+    headline: "Your website, ready for your review.",
     line: "A polished website you can update from your phone.",
     shortLine: "Your site, photos, gallery, and leads - easy to update from your phone.",
     price: 29,
@@ -50,7 +50,7 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
       "Beautiful industry photos, built in",
       "Leads come straight to you",
       "New leads get an automatic reply from your business",
-      "Take a photo. It's on your site.",
+      "Choose which photos appear on your site",
     ],
     industryBullets: [
       "Complete website",
@@ -109,7 +109,7 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
     homepageBullets: [
       "Bookings, estimates, payments, and email marketing",
       "Payment setup where it matters",
-      "More five-star reviews, without asking",
+      "Automatic review requests - coming soon",
       "Reach your full client list",
       "Your whole team, no extra charge",
       "Show clients their finished job",

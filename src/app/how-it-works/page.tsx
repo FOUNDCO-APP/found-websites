@@ -44,14 +44,14 @@ const BUILD_STEPS = [
   },
   {
     step: "03",
-    title: "You review it and go live.",
-    body: "Use your Found web address right away, or connect your own domain. The dashboard gives you a simple place to update photos, copy, leads, and business tools from your phone.",
+    title: "Review your site, then activate when ready.",
+    body: "Check your pages and business details before activating. Custom-domain setup can take longer. The dashboard gives you a place to update photos, copy, leads, and business tools from your phone.",
   },
 ]
 
 const APP_WORKFLOWS = [
   { title: "Website updates", body: "Edit headlines, about copy, contact details, services, menu items, products, and featured updates without opening a design editor." },
-  { title: "Photos from the field", body: "Take or upload a photo, assign it to the right job or album, and heart the best shots so they can appear on the public website." },
+  { title: "Photos from the field", body: "Take or upload a photo. The heart saves a private Favorite; it does not publish. Turn on Gallery to publish, or choose Use on Page for a page background." },
   { title: "Leads and contacts", body: "New inquiries, quote requests, orders, and bookings land in one mobile dashboard so the owner can respond quickly." },
   { title: "Orders and bookings", body: "Restaurants, shops, wellness businesses, and service providers can add online ordering, simple product checkout, reservations, or booking tools." },
   { title: "Estimates and payments", body: "Quote-first businesses can send estimates, collect deposits, accept pay-later approvals, and keep payment status visible." },
@@ -65,7 +65,7 @@ const FAQS = [
   },
   {
     q: "How fast can my business go live with Found?",
-    a: "Most owners can review and share their Found site the same day. You can use a Found web address immediately or connect your own domain when ready.",
+    a: "Answer a few questions, review your site, then activate when ready. Custom-domain setup can take longer.",
   },
   {
     q: "Can I update my website after it launches?",
@@ -73,7 +73,7 @@ const FAQS = [
   },
   {
     q: "What business tools does Found include?",
-    a: "Depending on the plan, Found can include leads, contacts, field photos, online ordering, product checkout, bookings, estimates, deposits, payments, email marketing, and review-focused follow-up tools.",
+    a: "Depending on the plan, Found can include leads, contacts, field photos, online ordering, product checkout, bookings, estimates, deposits, payments, and email marketing. Automatic review requests are coming soon, not available yet.",
   },
   {
     q: "Is Found different from Wix, Squarespace, or Shopify?",
@@ -248,13 +248,13 @@ export default function HowItWorksPage() {
         <section className="px-6 py-20 text-center md:px-10 md:py-24">
           <div className="mx-auto max-w-2xl">
             <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-              Launch today
+              Launch when ready
             </p>
             <h2 className="text-4xl font-normal leading-tight text-white md:text-5xl">
               Answer the questions. See the site. Get found.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-8 text-white/55">
-              {isIntroRatePeriod ? "Intro rates are available for launch. Your site can be ready today, with your rate locked for the first year." : "Your site can be ready today, with the tools to keep it useful after launch."}
+              {isIntroRatePeriod ? "Review your site, then activate when ready. Intro rates apply for 12 months, then standard pricing." : "Review your site, then activate when ready. Custom-domain setup can take longer."}
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Link

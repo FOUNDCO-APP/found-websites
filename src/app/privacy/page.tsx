@@ -314,6 +314,12 @@ export default function PrivacyPage() {
             Terms of Service
           </Link>
         </p>
+        <nav aria-label="Footer" className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-3 text-xs text-white/40">
+          <Link href="/support" className="underline hover:text-white/60">Support</Link>
+          <Link href="/about" className="underline hover:text-white/60">About</Link>
+          <Link href="/contact" className="underline hover:text-white/60">Contact</Link>
+          <Link href="/plans" className="underline hover:text-white/60">Plans</Link>
+        </nav>
       </div>
 
     </div>

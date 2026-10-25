@@ -66,7 +66,7 @@ export default function IndustriesPage() {
               </div>
               <p className="text-sm text-white/45 leading-relaxed">{industry.desc}</p>
               <p className="mt-4 text-xs font-black uppercase tracking-widest transition-colors" style={{ color: SIGNAL_GREEN }}>
-                Get online today →
+                Review your site →
               </p>
             </Link>
           ))}

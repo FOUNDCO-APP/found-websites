@@ -39,7 +39,7 @@ const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || "y0u9dw
 // src/app/page.tsx sets richer page-specific metadata that overrides this).
 export const metadata: Metadata = {
   title: { default: "Found — Get Found. Get Hired.", template: "%s — Found" },
-  description: "Found builds your website, writes your copy, and picks your photos — all from your phone. Most owners are live the same day.",
+  description: "Found builds your website, writes your copy, and picks your photos. Review your site, then activate when ready. Custom-domain setup can take longer.",
   metadataBase: new URL(`https://${ROOT_DOMAIN}`),
   icons: {
     icon: [
