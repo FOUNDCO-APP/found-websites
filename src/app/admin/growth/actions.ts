@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../lib"
 import { slugify } from "@/lib/slugify"
+import { isRetiredTenantSlug } from "@/lib/retiredTenantSlugs"
 import { sendTrackedEmail } from "@/lib/emailLog"
 
 const OUTREACH_METHODS = new Set(["call", "text", "email", "skip", "reviewed"])
@@ -197,7 +198,7 @@ export async function convertLeadToClient(prospectId: string) {
   const base = slugify(prospect.business_name) || "client"
   let slug = base
   const { data: taken } = await admin.from("companies").select("slug").ilike("slug", `${base}%`)
-  if ((taken ?? []).some((row) => row.slug === slug)) slug = `${base}-${Math.random().toString(36).slice(2, 6)}`
+  if (isRetiredTenantSlug(slug) || (taken ?? []).some((row) => row.slug === slug)) slug = `${base}-${Math.random().toString(36).slice(2, 6)}`
 
   const { data: created, error: createError } = await admin.from("companies").insert({
     name: prospect.business_name,

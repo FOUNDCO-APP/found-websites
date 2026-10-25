@@ -2,6 +2,7 @@
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { slugify } from "@/lib/slugify"
+import { isRetiredTenantSlug } from "@/lib/retiredTenantSlugs"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -13,6 +14,7 @@ function getAdminClient() {
 const SUFFIXES = ["studio", "co", "hq", "shop", "pro", "lab", "works"]
 
 async function isFree(slug: string): Promise<boolean> {
+  if (isRetiredTenantSlug(slug)) return false
   const supabase = getAdminClient()
   const { data } = await supabase.from("companies").select("id").eq("slug", slug).maybeSingle()
   return !data

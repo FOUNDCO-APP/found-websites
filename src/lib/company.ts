@@ -23,20 +23,12 @@ function polishCompanySiteCopy(company: Company | null): Company | null {
 
 export const getCompanyBySlug = cache(async function getCompanyBySlug(slug: string): Promise<Company | null> {
   const supabase = await createClient()
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('companies')
     .select('*, website_config(*)')
     .eq('slug', slug)
     .eq('active', true)
     .single()
-  // Deployment bridge: the new address must work before the guarded database rename.
-  if (!data && slug === 'intellsecurity' && error?.code === 'PGRST116' && error.details?.includes('0 rows')) {
-    const bridge = await supabase.from('companies').select('*, website_config(*)')
-      .eq('id', '626dc220-4152-4711-8862-a885534e1e0a')
-      .eq('slug', 'intelligence-protection-security-llc-arizona').eq('active', true).single()
-    data = bridge.data
-    error = bridge.error
-  }
   if (error) console.error('[getCompanyBySlug] error:', JSON.stringify(error))
   if (!data) console.error('[getCompanyBySlug] no data for slug:', slug)
   if (data) Sentry.setTag('company_slug', (data as Company).slug)

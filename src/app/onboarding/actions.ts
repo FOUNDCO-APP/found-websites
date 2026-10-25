@@ -11,6 +11,7 @@ import { sendNewSignupAlert } from "@/lib/adminAlerts"
 import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
 import { sendTrackedEmail } from "@/lib/emailLog"
 import { defaultDisabledAddonsForIndustry } from "@/lib/featureAccess"
+import { isRetiredTenantSlug } from "@/lib/retiredTenantSlugs"
 
 type OnboardingInput = {
   name: string
@@ -85,6 +86,7 @@ async function uniqueSlug(base: string, city: string | null) {
   ].filter((s): s is string => !!s)
 
   for (const slug of candidates) {
+    if (isRetiredTenantSlug(slug)) continue
     const { data } = await supabase.from("companies").select("id").eq("slug", slug).maybeSingle()
     if (!data) return slug
   }
