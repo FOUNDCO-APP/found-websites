@@ -8,6 +8,14 @@ export async function middleware(req: NextRequest) {
   const hostname = host.split(":")[0]
   const { pathname } = req.nextUrl
 
+  // Keep Hiram's previously shared links working after his approved rename.
+  if (hostname === `intelligence-protection-security-llc-arizona.${ROOT_DOMAIN}`) {
+    const destination = req.nextUrl.clone()
+    destination.protocol = "https:"
+    destination.host = `intellsecurity.${ROOT_DOMAIN}`
+    return NextResponse.redirect(destination, 308)
+  }
+
   const APP_DOMAIN = `my.${ROOT_DOMAIN}`
   const ADMIN_DOMAIN = `admin.${ROOT_DOMAIN}`
   const isDashboard = hostname === APP_DOMAIN
