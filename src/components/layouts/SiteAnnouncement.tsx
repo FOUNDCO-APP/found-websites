@@ -1,6 +1,8 @@
 import Link from "next/link"
 import type { Company } from "@/types/company"
 import { getFeaturedUpdatePublicCopy } from "@/lib/featuredUpdate"
+import HomepageHighlightImage from "@/components/HomepageHighlightImage"
+import { resolveHighlightHref } from "@/lib/highlightLinks"
 
 type Props = {
   company: Company
@@ -8,19 +10,12 @@ type Props = {
   activeAddons?: string[]
 }
 
-const TARGETS = new Set(["/", "/contact", "/shop", "/menu", "/services", "/book", "/estimate", "/gallery"])
-
-function safeHref(value: unknown, fallback: string) {
-  if (typeof value !== "string") return fallback
-  const href = value.trim()
-  if (TARGETS.has(href)) return href
-  if (/^\/[a-z0-9/_#?-]+$/i.test(href)) return href
-  return fallback
-}
-
 export default function SiteAnnouncement({ company, image, activeAddons = [] }: Props) {
   const config = company.website_config
   if (!config?.announcement_enabled) return null
+  if (config.announcement_style === "artwork") {
+    return image ? <HomepageHighlightImage src={image} companyName={company.name} /> : null
+  }
 
   const nearbyCopy = [
     config.hero_title,
@@ -38,7 +33,7 @@ export default function SiteAnnouncement({ company, image, activeAddons = [] }: 
   const title = copy?.title
   const body = copy?.body
   const label = copy?.label
-  const href = safeHref(copy?.href, "/contact")
+  const href = resolveHighlightHref(copy?.href, company, activeAddons, "/contact")
   if (!title || !body || !label) return null
   const style = config.announcement_style || "default"
   const imageUrl = style === "image" && image ? image : null

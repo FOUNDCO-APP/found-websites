@@ -20,6 +20,8 @@ import { generateAndUploadSiteIconAssets } from "@/lib/siteIconGeneration"
 import { isSitePhotoSlot } from "@/lib/siteSectionRegistry"
 import { assignIndependentPhoto } from "@/lib/photoPlacement"
 import { assertStockPhotoPlacement, assertStockSiteImageField } from "@/lib/stockPhotoPlacement"
+import { validateHighlightHref } from "@/lib/highlightLinks"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -199,7 +201,17 @@ export async function updateSiteField(field: string, value: unknown) {
     city: ctx.company.city,
     state: ctx.company.state,
   }
-  const polishedValue = polishWebsiteField(field, value, copyContext)
+  let polishedValue = polishWebsiteField(field, value, copyContext)
+  if (field === "announcement_cta_href") {
+    const addons = await ctx.admin.from("addon_subscriptions").select("addon_slug")
+      .eq("company_id", ctx.company.id).eq("active", true)
+    if (addons.error) return { error: "Could not check this button destination. Try again." }
+    const effective = getEffectiveAddons(ctx.company.plan, (addons.data ?? []).map(row => row.addon_slug),
+      ctx.company.included_addon_slug, ctx.company.disabled_addons ?? [])
+    const destination = validateHighlightHref(value, { ...ctx.company, industry_category: ctx.company.industry_category ?? "" }, effective)
+    if (!destination) return { error: "Choose a valid page, phone number or website address." }
+    polishedValue = destination
+  }
   try { assertStockSiteImageField(field, polishedValue) }
   catch (error) { return { error: error instanceof Error ? error.message : "This photo is not approved for that placement." } }
 
@@ -219,6 +231,18 @@ export async function updateSiteField(field: string, value: unknown) {
     pathname: "/dashboard/site",
     metadata: { field },
   })
+  return { success: true }
+}
+
+export async function switchHomepageHighlightToText() {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+  const { data, error } = await ctx.admin.from("website_config")
+    .update({ announcement_enabled: false, announcement_style: "dark", updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id).select("id")
+  if (error || data?.length !== 1) return { error: "Could not switch the highlight. Refresh before trying again." }
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath("/dashboard/site")
   return { success: true }
 }
 

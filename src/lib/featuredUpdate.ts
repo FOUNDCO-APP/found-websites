@@ -1,5 +1,6 @@
 import type { Company, WebsiteConfig } from "@/types/company"
 import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
+import { resolveHighlightHref, validateHighlightHref } from "./highlightLinks"
 
 export type FeaturedUpdateDraft = {
   eyebrow: string
@@ -158,7 +159,8 @@ function overlapsNearby(text: string, nearbyCopy: unknown[]) {
 function safeFeaturedHref(company: DraftCompany, href: string, activeAddons: string[], fallbackHref: string) {
   const trimmed = href.trim()
   if (!trimmed) return fallbackHref
-  if (trimmed.startsWith("http") || trimmed.startsWith("tel:")) return trimmed
+  const validated = validateHighlightHref(trimmed, company, activeAddons)
+  if (validated) return validated
 
   const safeActions = getAvailablePrimaryActions(company.industry_category, activeAddons, company.phone ?? null, company.booking_cta_label ?? null)
     .map(action => ({
@@ -183,9 +185,8 @@ function safeFeaturedHref(company: DraftCompany, href: string, activeAddons: str
   const contentHref = safeActions.find(action => action.key === "content")?.href
   const staleContentHref = ["/shop", "/menu", "/order", "/services"].includes(trimmed)
 
-  if (safeTargets.includes(trimmed)) return trimmed
   if (staleContentHref && contentHref) return contentHref
-  return safeTargets[0] ?? fallbackHref
+  return resolveHighlightHref(safeTargets[0], company, activeAddons, fallbackHref)
 }
 
 export function getFeaturedUpdateDraft(company: DraftCompany, nearbyCopy: unknown[] = [], activeAddons: string[] = []): FeaturedUpdateDraft | null {

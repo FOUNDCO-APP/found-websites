@@ -22,12 +22,15 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSitePhotoSections, getIndependentHeaderSlots, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
 import { mergePhotoPlacement, isPhotoPlacementResult } from "@/lib/photoPlacement"
+import HomepageHighlightEditor from "@/components/dashboard/HomepageHighlightEditor"
+import { resolveHighlightHref } from "@/lib/highlightLinks"
+import { switchHomepageHighlightToText } from "./actions"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = SitePhotoSlot
-type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
+type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image" | "artwork"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design" | "features"
 
 function siteIconInitials(name: string) {
@@ -69,6 +72,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
   const [announcementPagePickerOpen, setAnnouncementPagePickerOpen] = useState(false)
+  const [artworkSetup, setArtworkSetup] = useState(initialConfig?.announcement_style === "artwork" || initialConfig?.announcement_enabled !== true)
+  const [highlightBusy, setHighlightBusy] = useState(false)
   const [regenerating, setRegenerating] = useState<Section | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
   const [editingService, setEditingService] = useState<number | null>(null)
@@ -383,7 +388,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [servicesSearch, setServicesSearch] = useState("")
   const [menuSaved, setMenuSaved] = useState(false)
 
-  const [, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
   const sheetOpen = Boolean(editing || photoPickerSlot || editingService !== null || newService || confirmAction)
 
   useEffect(() => {
@@ -946,7 +951,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const heroImage = heroPhotos[0]?.url ?? (config.hero_video_url as string) ?? (config.hero_image_url as string) ?? null
   const announcementEnabled = config.announcement_enabled === true
   const announcementStyleRaw = typeof config.announcement_style === "string" ? config.announcement_style : "default"
-  const announcementStyle: AnnouncementStyle = (["default", "light", "dark", "accent", "image"].includes(announcementStyleRaw) ? announcementStyleRaw : "default") as AnnouncementStyle
+  const announcementStyle: AnnouncementStyle = (["default", "light", "dark", "accent", "image", "artwork"].includes(announcementStyleRaw) ? announcementStyleRaw : "default") as AnnouncementStyle
   const announcementImage = announcementPhotos[0]?.url ?? null
   const announcementTargets = [
     ...getAvailablePrimaryActions(industryCategory, effectiveAddons, company.phone, bookingCtaLabel)
@@ -998,12 +1003,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { label: "Gallery", href: "/gallery" },
     { label: "Contact", href: "/contact" },
   ].filter((target, index, all) => all.findIndex(item => item.href === target.href) === index)
-  const announcementStaleContentHref = ["/shop", "/menu", "/order", "/services"].includes(announcementHref)
-  const announcementResolvedHref = announcementTargets.some(target => target.href === announcementHref)
-    ? announcementHref
-    : announcementStaleContentHref
-      ? announcementContentHref
-      : announcementTargets[0]?.href ?? "/contact"
+  const announcementResolvedHref = resolveHighlightHref(announcementHref, {
+    industry_category: industryCategory, phone: company.phone, booking_cta_label: bookingCtaLabel,
+  }, effectiveAddons, announcementContentHref)
   const announcementLookOptions: { value: AnnouncementStyle; label: string }[] = [
     { value: "light", label: "Light" },
     { value: "dark", label: "Dark" },
@@ -1394,6 +1396,40 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
+      {artworkSetup || announcementStyle === "artwork" ? (
+        <div id="featured-update" style={{ padding: "0 20px" }}>
+          <h2 style={{ margin: "0 0 18px", ...TYPE.title, color: "white" }}>Homepage Highlight</h2>
+          <HomepageHighlightEditor
+            companyName={company.name}
+            photos={localPhotos}
+            enabled={announcementEnabled}
+            currentImage={announcementImage}
+            onUploaded={photo => setLocalPhotos(previous => previous.some(item => item.id === photo.id) ? previous : [photo, ...previous])}
+            onBusyChange={setHighlightBusy}
+            onPublished={result => {
+              setLocalPhotos(previous => mergePhotoPlacement(previous, result.photo, result.clearedPhotoIds))
+              setConfig(previous => ({ ...previous, announcement_enabled: true, announcement_style: "artwork" }))
+              flashSaveNotice("Homepage highlight published.", publicSiteOrigin)
+            }}
+            onDisabled={() => {
+              setConfig(previous => ({ ...previous, announcement_enabled: false }))
+              flashSaveNotice("Homepage highlight turned off.", publicSiteOrigin)
+            }}
+          />
+          <button type="button" disabled={isPending || highlightBusy} onClick={() => {
+            if (announcementStyle !== "artwork") { setArtworkSetup(false); return }
+            startTransition(async () => {
+              const result = await runSiteEditorAction("switch_highlight_to_text", switchHomepageHighlightToText)
+              if (!result) return
+              if ("error" in result) { flashSaveError(result.error); return }
+              setConfig(previous => ({ ...previous, announcement_enabled: false, announcement_style: "dark" }))
+              setArtworkSetup(false)
+            })
+          }} style={{ marginTop: 16, padding: "10px 0", color: "rgba(255,255,255,0.65)", background: "none", border: 0, textDecoration: "underline", cursor: "pointer" }}>
+            Switch to text highlight
+          </button>
+        </div>
+      ) : (
       <div id="featured-update" style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
           <div>
@@ -1407,6 +1443,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             {announcementEnabled ? "On" : "Off"}
           </button>
         </div>
+        <button type="button" onClick={() => setArtworkSetup(true)} style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "transparent", color: "white", cursor: "pointer" }}>
+          Highlight a photo or flyer
+        </button>
 
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, borderRadius: 26, overflow: "hidden", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, backgroundColor: "rgba(255,255,255,0.035)", paddingBottom: 14, opacity: announcementEnabled ? 1 : 0.62 }}>
           <div style={{ overflow: "hidden", background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1499,6 +1538,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </div>
       </div>
+      )}
       {!isFoodCatalog && (
       <>
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>

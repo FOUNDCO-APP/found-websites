@@ -98,7 +98,7 @@ export type WebsiteConfig = {
   announcement_body?: string | null
   announcement_cta_label?: string | null
   announcement_cta_href?: string | null
-  announcement_style?: "default" | "light" | "dark" | "accent" | "image" | null
+  announcement_style?: "default" | "light" | "dark" | "accent" | "image" | "artwork" | null
 }
 
 export type Company = {
