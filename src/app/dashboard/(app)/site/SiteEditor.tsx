@@ -9,6 +9,8 @@ import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import CatalogManager from "@/components/dashboard/CatalogManager"
+import StockPhotoLibraryPicker from "@/components/dashboard/StockPhotoLibraryPicker"
+import { canPlaceStockPhoto } from "@/lib/stockPhotoPlacement"
 import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
@@ -939,7 +941,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   // great photo in both places is expected, not a conflict.
   const unassigned = localPhotos.filter(p => !p.website_section)
   const galleryEligible = localPhotos.filter(p => !p.in_gallery)
-  const pickerPhotos = localPhotos
+  const pickerPhotos = localPhotos.filter(photo => !photoPickerSlot || canPlaceStockPhoto(photo.url, photoPickerSlot))
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_video_url as string) ?? (config.hero_image_url as string) ?? null
   const announcementEnabled = config.announcement_enabled === true
@@ -2156,6 +2158,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <button onClick={() => setPhotoPickerSlot(null)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer", flexShrink: 0 }}>x</button>
               </div>
 
+              <StockPhotoLibraryPicker destination={activeSlot.slot} onAdded={photo => setLocalPhotos(previous => {
+                const existing = previous.find(item => item.id === photo.id)
+                return existing ? previous.map(item => item.id === photo.id ? { ...item, ...photo } : item) : [photo, ...previous]
+              })} />
               {pickerPhotos.length > 0 ? (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
                   {pickerPhotos.map(photo => {

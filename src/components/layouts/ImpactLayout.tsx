@@ -14,6 +14,7 @@ import HeroVideo from "@/components/layouts/HeroVideo"
 import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
 import { finalCtaSecondary } from "@/lib/industryCTAs"
+import PublicSitePhoto, { PublicSitePhotoLabel } from "@/components/PublicSitePhoto"
 
 export default function ImpactLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
@@ -51,7 +52,7 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
         {heroVideo ? (
           <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
         ) : heroImage ? (
-          <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+          <PublicSitePhoto src={heroImage} alt={company.name} hero className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
@@ -88,6 +89,7 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
               </Link>
             )}
           </div>
+          <PublicSitePhotoLabel src={heroVideo ? null : heroImage} />
         </div>
       </section>
 
@@ -103,11 +105,12 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
                 className="relative flex-none overflow-hidden w-[70vw] md:w-[320px]"
                 style={{ height: "260px" }}
               >
-                <img
+                <PublicSitePhoto
                   src={src}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                 />
+                <PublicSitePhotoLabel src={src} className="absolute bottom-3 left-3 z-10 m-0 bg-black/75 px-2 py-1 text-xs text-white" />
               </div>
             ))}
           </div>
@@ -172,7 +175,7 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
         <section className="relative py-28 overflow-hidden">
           {aboutImage ? (
             <>
-              <img src={aboutImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <PublicSitePhoto src={aboutImage} alt="" hero className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/75" />
             </>
           ) : (
@@ -245,7 +248,7 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
       {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-28 text-center overflow-hidden">
         {ctaImage ? (
-          <img src={ctaImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+          <PublicSitePhoto src={ctaImage} alt={company.name} hero className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}

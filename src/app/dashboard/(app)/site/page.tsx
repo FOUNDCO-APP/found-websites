@@ -3,6 +3,7 @@ import { getCompany, isAdminOverrideActive, requireOwnerAccess } from "@/lib/das
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import SiteEditor from "./SiteEditor"
+import { getImportedStockPhotos } from "@/lib/ownerStockLibrary"
 
 export default async function SitePage() {
   const user = await requireDashboardAccess()
@@ -21,6 +22,8 @@ export default async function SitePage() {
   ])
 
   const stockImages = (config?.stock_images as string[]) ?? []
+  const importedPhotos = await getImportedStockPhotos(admin, company.id)
+  const selectablePhotos = [...new Map([...(photos ?? []), ...importedPhotos].map(photo => [photo.id, photo])).values()]
 
   return (
     <SiteEditor
@@ -41,7 +44,7 @@ export default async function SitePage() {
         logo_white_url: company.logo_white_url,
       }}
       config={config}
-      photos={photos ?? []}
+      photos={selectablePhotos}
       stockImages={stockImages}
       mediaPhotos={mediaPhotos ?? []}
       primaryIntent={company.primary_intent ?? 'visit'}

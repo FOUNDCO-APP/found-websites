@@ -19,6 +19,7 @@ import type { MenuCategory } from "@/types/company"
 import { generateAndUploadSiteIconAssets } from "@/lib/siteIconGeneration"
 import { isSitePhotoSlot } from "@/lib/siteSectionRegistry"
 import { assignIndependentPhoto } from "@/lib/photoPlacement"
+import { assertStockPhotoPlacement, assertStockSiteImageField } from "@/lib/stockPhotoPlacement"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -199,6 +200,8 @@ export async function updateSiteField(field: string, value: unknown) {
     state: ctx.company.state,
   }
   const polishedValue = polishWebsiteField(field, value, copyContext)
+  try { assertStockSiteImageField(field, polishedValue) }
+  catch (error) { return { error: error instanceof Error ? error.message : "This photo is not approved for that placement." } }
 
   const { error } = await ctx.admin
     .from("website_config")
@@ -1009,6 +1012,11 @@ export async function toggleGalleryPhoto(photoId: string, include: boolean) {
     .eq("company_id", ctx.company.id)
     .single()
   if (!photo) return { error: "Photo not found" }
+
+  if (include) {
+    try { assertStockPhotoPlacement(photo.url, "gallery") }
+    catch (error) { return { error: error instanceof Error ? error.message : "Could not add this photo to Gallery." } }
+  }
 
   const { error } = await ctx.admin
     .from("company_photos")

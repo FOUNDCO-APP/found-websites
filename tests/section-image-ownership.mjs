@@ -70,6 +70,11 @@ function load(file) {
     if (id === "@supabase/supabase-js") return { createClient() { throw Error("Unexpected live client") } }
     if (id === "@/components/layouts/HeroVideo") return { __esModule: true, default: ({ src }) => React.createElement("video", { src }) }
     if (id === "@/components/PublicPageHeroMedia") return load("src/components/PublicPageHeroMedia")
+    if (id === "@/components/PublicSitePhoto") return {
+      __esModule: true,
+      default: ({ hero: _hero, ...props }) => React.createElement("img", props),
+      PublicSitePhotoLabel: () => null,
+    }
     if (id === "@/components/GalleryLightbox") return { __esModule: true, default: ({ photos }) => React.createElement("div", {}, photos.map((photo, index) => React.createElement("img", { key: index, src: typeof photo === "string" ? photo : photo.url }))) }
     if (id.startsWith("@/components/layouts/") && /Layout$/.test(id)) return load(`src/${id.slice(2)}`)
     if (id.startsWith("@/components/") || /^\.\/(ContactForm|EstimateForm|ReservationForm|JobLeadCapture)$/.test(id) || /OnlineOrderClient/.test(id)) return { __esModule: true, default: ({ children }) => children ?? null }

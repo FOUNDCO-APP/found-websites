@@ -10,6 +10,7 @@ import { getAboutHighlights, getFullAboutCopy } from "@/lib/aboutContent"
 import { getLocationSection } from "@/lib/locationSection"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Metadata } from "next"
+import PublicSitePhoto, { PublicSitePhotoLabel } from "@/components/PublicSitePhoto"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -74,7 +75,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         {aboutImage ? (
           <>
-            <img src={aboutImage} alt={displayName} className="absolute inset-0 w-full h-full object-cover" />
+            <PublicSitePhoto src={aboutImage} alt={displayName} hero className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/68" />
           </>
         ) : (
@@ -93,6 +94,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
               {aboutHeroSubtitle}
             </p>
           )}
+          <PublicSitePhotoLabel src={aboutImage} />
         </div>
       </section>
 
@@ -235,7 +237,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       <section className="relative py-28 text-center overflow-hidden">
         {ctaImage ? (
           <>
-            <img src={ctaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <PublicSitePhoto src={ctaImage} alt="" hero className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/72" />
           </>
         ) : (

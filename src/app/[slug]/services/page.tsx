@@ -9,6 +9,7 @@ import { getEffectiveAddons } from "@/lib/featureAccess"
 import ServiceIcon from "@/components/ServiceIcon"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Metadata } from "next"
+import PublicSitePhoto, { PublicSitePhotoLabel } from "@/components/PublicSitePhoto"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -58,7 +59,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
       {/* ── HEADER ── */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         {heroImage ? (
-          <img src={heroImage} alt={company.name}
+          <PublicSitePhoto src={heroImage} alt={company.name} hero
             className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
@@ -75,6 +76,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
           <p className="public-hero-subtitle text-lg max-w-xl" style={{ color: "#cccccc" }}>
             {config?.hero_subtitle || industryDefs.servicesIntro}
           </p>
+          <PublicSitePhotoLabel src={heroImage} />
         </div>
       </section>
 
@@ -144,7 +146,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
       {/* ── CTA ── */}
       <section className="relative py-28 overflow-hidden">
         {ctaImage ? (
-          <img src={ctaImage} alt={company.name}
+          <PublicSitePhoto src={ctaImage} alt={company.name} hero
             className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />

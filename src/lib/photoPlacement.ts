@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { assertStockPhotoPlacement } from "./stockPhotoPlacement"
 
 export type PlacementPhoto = { id: string; url: string; website_section: string | null; [key: string]: unknown }
 
@@ -20,6 +21,7 @@ export async function assignIndependentPhoto(admin: Pick<SupabaseClient, "from">
   const sourceResult = await admin.from("company_photos").select("*").eq("company_id", companyId).eq("id", photoId).single()
   if (sourceResult.error || !sourceResult.data) throw new Error(sourceResult.error?.message || "Photo not found")
   const source = sourceResult.data
+  assertStockPhotoPlacement(source.url, section)
   const occupantsResult = await admin.from("company_photos").select("*").eq("company_id", companyId).eq("website_section", section)
   if (occupantsResult.error) throw new Error(occupantsResult.error.message)
   const occupants = occupantsResult.data ?? []

@@ -5,6 +5,8 @@ import { mediaKindFromUrl } from "@/lib/mediaKind"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { deletePhotoPlacement, PhotoInUseError } from "@/lib/deletePhotoPlacement"
+import { StockPhotoPlacementError } from "@/lib/stockPhotoPlacement"
+import { assertStockPhotoAlbum, assertStockPhotoPatch } from "@/lib/stockPhotoPublication"
 
 const BUCKET = "company-assets"
 
@@ -69,6 +71,10 @@ export async function POST(req: Request) {
     }
 
     if (body.storage_path && body.url) {
+      try { await assertStockPhotoAlbum(admin, company.id, body.url, albumId) }
+      catch (error) {
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify this photo." }, { status: error instanceof StockPhotoPlacementError ? 403 : 500 })
+      }
       const { data, error } = await admin
         .from("company_photos")
         .insert({ company_id: company.id, storage_path: body.storage_path, url: body.url, album_id: albumId })
@@ -142,6 +148,11 @@ export async function PATCH(req: Request) {
   if (website_section !== undefined) update.website_section = website_section
   if (album_id !== undefined) update.album_id = album_id
   if (note !== undefined) update.note = typeof note === "string" && note.trim() ? note.trim() : null
+
+  try { await assertStockPhotoPatch(admin, company.id, id, update) }
+  catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify this photo." }, { status: error instanceof StockPhotoPlacementError ? 403 : 500 })
+  }
 
   const { data, error } = await admin
     .from("company_photos")

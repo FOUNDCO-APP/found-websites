@@ -9,6 +9,7 @@ import { formatPhoneDisplay } from "@/lib/formatPhone"
 import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import type { Metadata } from "next"
 import type { WebsiteConfig } from "@/types/company"
+import PublicSitePhoto, { PublicSitePhotoLabel } from "@/components/PublicSitePhoto"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -62,7 +63,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
             {isVideoMedia(contactMedia) ? (
               <video src={contactMedia} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
             ) : (
-              <img src={contactMedia} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+              <PublicSitePhoto src={contactMedia} alt={company.name} hero className="absolute inset-0 w-full h-full object-cover" />
             )}
             <div className="absolute inset-0 bg-black/70" />
           </>
@@ -73,6 +74,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>{contactEyebrow}</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{contactTitle}</h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>{contactSubtitle}</p>
+          <PublicSitePhotoLabel src={contactMedia} />
         </div>
       </section>
 

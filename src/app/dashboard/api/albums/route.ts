@@ -4,6 +4,8 @@ import { recordCustomerActivity } from "@/lib/customerActivity"
 import { normalizeAddressText } from "@/lib/addressNormalization"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
+import { StockPhotoPlacementError } from "@/lib/stockPhotoPlacement"
+import { assertStockAlbumPublication } from "@/lib/stockPhotoPublication"
 
 function toSlug(name: string) {
   return name
@@ -215,6 +217,13 @@ export async function PATCH(req: Request) {
   if ("show_on_website_gallery" in body) updates.show_on_website_gallery = !!show_on_website_gallery
 
   if (Object.keys(updates).length === 0) return NextResponse.json({ error: "No updates" }, { status: 400 })
+
+  if (updates.show_on_website_gallery === true) {
+    try { await assertStockAlbumPublication(admin, company.id, id) }
+    catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify the album photos." }, { status: error instanceof StockPhotoPlacementError ? 403 : 500 })
+    }
+  }
 
   const { data, error } = await admin
     .from("photo_albums")
