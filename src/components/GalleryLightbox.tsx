@@ -2,10 +2,18 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import InView from "@/components/InView"
 import { isVideoMedia } from "@/lib/mediaKind"
+import { resolveStockPhoto, type StockPhotoMetadata } from "@/lib/stockPhotoLibrary"
 
 export type GalleryMedia = {
   url: string
   mimeType?: string | null
+  isStock?: boolean
+  thumbnailUrl?: string
+  thumbnailSrcSet?: string
+  sizes?: string
+  fullViewUrl?: string
+  alt?: string
+  caption?: string
 }
 
 interface GalleryLightboxProps {
@@ -14,8 +22,31 @@ interface GalleryLightboxProps {
   primary: string
 }
 
-function normalize(items: (string | GalleryMedia)[]): GalleryMedia[] {
-  return items.map(item => typeof item === "string" ? { url: item } : item)
+function normalize(items: (string | GalleryMedia)[]): (GalleryMedia & { stock: StockPhotoMetadata | null })[] {
+  return items.map(item => {
+    const media = typeof item === "string" ? { url: item } : item
+    const stock = resolveStockPhoto(media.url)
+    const isStock = Boolean(stock || media.isStock)
+    return {
+      ...media, stock, isStock,
+      thumbnailUrl: media.thumbnailUrl ?? stock?.thumbnailUrl,
+      thumbnailSrcSet: media.thumbnailSrcSet ?? stock?.thumbnailSrcSet,
+      sizes: media.sizes ?? stock?.sizes,
+      fullViewUrl: media.fullViewUrl ?? stock?.fullViewUrl,
+      alt: stock?.alt ?? (isStock ? "Illustrative stock photo" : media.alt),
+      caption: stock?.caption ?? (isStock ? "Illustrative stock; not the company's personnel, premises or work." : media.caption),
+    }
+  })
+}
+
+function StockPhotoCredits({ stock }: { stock: StockPhotoMetadata }) {
+  return (
+    <p className="text-xs leading-relaxed [overflow-wrap:anywhere]">
+      Photo: {stock.photographer}{" / "}
+      <a href={stock.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{stock.source}</a>{" / "}
+      <a href={stock.license.url} target="_blank" rel="noopener noreferrer" className="underline">{stock.license.name}</a>
+    </p>
+  )
 }
 
 function GridVideoTile({ src }: { src: string }) {
@@ -110,13 +141,22 @@ export default function GalleryLightbox({ photos: rawPhotos, companyName, primar
                   <GridVideoTile src={media.url} />
                 ) : (
                   <img
-                    src={media.url}
-                    alt={`${companyName} — photo ${i + 1}`}
+                    src={media.thumbnailUrl ?? media.url}
+                    srcSet={media.thumbnailSrcSet}
+                    sizes={media.sizes}
+                    alt={media.alt ?? `${companyName} — photo ${i + 1}`}
                     className="w-full h-auto block hover:opacity-90 transition-opacity duration-200"
                     loading={i < 4 ? "eager" : "lazy"}
+                    decoding="async"
                   />
                 )}
               </button>
+              {(media.isStock || media.caption) && (
+                <div className="bg-white px-3 py-3 text-gray-700 space-y-1 [overflow-wrap:anywhere]">
+                  {media.isStock && <p className="text-xs font-semibold">Illustrative stock</p>}
+                  {!media.isStock && media.caption && <p className="text-sm leading-relaxed">{media.caption}</p>}
+                </div>
+              )}
             </InView>
           )
         })}
@@ -125,7 +165,7 @@ export default function GalleryLightbox({ photos: rawPhotos, companyName, primar
       {/* ── Lightbox overlay ── */}
       {selected !== null && selectedMedia && (
         <div
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 px-6"
+          className="fixed inset-0 z-[200] flex flex-col items-center gap-6 px-6 py-20 overflow-y-auto"
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
           onClick={close}
           onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
@@ -154,7 +194,7 @@ export default function GalleryLightbox({ photos: rawPhotos, companyName, primar
           {selectedIsVideo ? (
             <video
               key={selectedMedia.url}
-              src={selectedMedia.url}
+              src={selectedMedia.fullViewUrl ?? selectedMedia.url}
               controls
               autoPlay
               playsInline
@@ -164,18 +204,26 @@ export default function GalleryLightbox({ photos: rawPhotos, companyName, primar
             />
           ) : (
             <img
-              src={selectedMedia.url}
-              alt={`${companyName} — photo ${selected + 1}`}
-              className="object-contain"
-              style={{ maxHeight: "75vh", maxWidth: "100%"  }}
+              src={selectedMedia.fullViewUrl ?? selectedMedia.url}
+              alt={selectedMedia.alt ?? `${companyName} — photo ${selected + 1}`}
+              className="object-contain shrink-0"
+              style={{ maxHeight: selectedMedia.isStock || selectedMedia.caption ? "60vh" : "75vh", maxWidth: "100%"  }}
               onClick={e => e.stopPropagation()}
             />
+          )}
+
+          {(selectedMedia.isStock || selectedMedia.caption) && (
+            <div className="max-w-2xl w-full text-center text-white space-y-2 shrink-0 [overflow-wrap:anywhere]" onClick={e => e.stopPropagation()}>
+              {selectedMedia.isStock && <p className="text-xs font-semibold">Illustrative stock</p>}
+              {selectedMedia.caption && <p className="text-sm leading-relaxed">{selectedMedia.caption}</p>}
+              {selectedMedia.stock && <StockPhotoCredits stock={selectedMedia.stock} />}
+            </div>
           )}
 
           {/* Controls row — prev · counter · next */}
           {photos.length > 1 && (
             <div
-              className="flex items-center gap-8"
+              className="flex items-center gap-8 shrink-0"
               onClick={e => e.stopPropagation()}
             >
               <button

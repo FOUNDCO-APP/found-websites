@@ -18,7 +18,8 @@ import { getEffectiveAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import SiteFeatureVisibilityPanel from "@/components/dashboard/SiteFeatureVisibilityPanel"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
-import { getSitePhotoSections, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
+import { getSitePhotoSections, getIndependentHeaderSlots, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
+import { mergePhotoPlacement, isPhotoPlacementResult } from "@/lib/photoPlacement"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -814,14 +815,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const photo = localPhotos.find(p => p.id === photoId)
     const previousPhotos = localPhotos
     const previousConfig = config
-    setLocalPhotos(prev => prev.map(p => ({
-      ...p,
-      website_section: p.id === photoId
-        ? section
-        : section && section !== "gallery" && p.website_section === section
-          ? null
-          : p.website_section,
-    })))
     if (section === "hero" && photo) {
       const current = Array.isArray(config.hero_images) ? (config.hero_images as string[]) : []
       if (isVideoMedia(photo.url, photo.mime_type)) {
@@ -843,6 +836,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setConfig(previousConfig)
         flashSaveError("Couldn't update that photo. Try again.")
       } else if (section) {
+        if (isPhotoPlacementResult(result)) setLocalPhotos(prev => mergePhotoPlacement(prev, result.photo, result.clearedPhotoIds))
         flashSaveNotice(getPhotoSlotSaveNotice(section), getPhotoSlotPublicUrl(section))
       }
     })
@@ -1030,6 +1024,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: "about", label: photoSections.about.title, helper: photoSections.about.helper, photos: aboutPhotos },
     { slot: "cta", label: photoSections.cta.title, helper: photoSections.cta.helper, photos: ctaPhotos },
     { slot: "gallery", label: photoSections.gallery.title, helper: photoSections.gallery.helper, photos: galleryPhotos },
+    ...getIndependentHeaderSlots({ industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, booking_cta_label: bookingCtaLabel }, effectiveAddons,
+      localPhotos.map(photo => photo.website_section).filter((slot): slot is string => Boolean(slot))).map(slot => ({
+      slot, label: photoSections[slot].title, helper: photoSections[slot].helper, photos: localPhotos.filter(photo => photo.website_section === slot),
+    })),
     { slot: "announcement", label: photoSections.announcement.title, helper: photoSections.announcement.helper, photos: announcementPhotos },
     { slot: "contact", label: photoSections.contact.title, helper: photoSections.contact.helper, photos: contactPhotos },
     { slot: "services", label: photoSections.services.title, helper: photoSections.services.helper, photos: servicesPhotos },
@@ -1105,7 +1103,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       case "shop":
         return "Shop page photo"
       case "order":
-        return "Menu page photo"
+        return "Online ordering photo"
+      case "gallery_hero":
+      case "book":
+      case "estimate":
+      case "menu":
+        return photoSections[slot].title
     }
   }
 
@@ -1122,11 +1125,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       case "services":
         return "Services"
       case "gallery":
+      case "gallery_hero":
         return "Gallery"
+      case "book":
+        return "Booking"
+      case "estimate":
+        return "Estimate"
+      case "menu":
+        return "Menu"
       case "shop":
         return "Shop"
       case "order":
-        return "Menu"
+        return "Online ordering"
     }
   }
 
@@ -1139,11 +1149,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       case "services":
         return `${publicSiteOrigin}/services`
       case "gallery":
+      case "gallery_hero":
         return `${publicSiteOrigin}/gallery`
+      case "book":
+      case "estimate":
+      case "menu":
+        return `${publicSiteOrigin}/${slot}`
       case "shop":
         return `${publicSiteOrigin}/shop`
       case "order":
-        return `${publicSiteOrigin}/menu`
+        return `${publicSiteOrigin}/order`
       default:
         return publicSiteOrigin
     }
@@ -1790,6 +1805,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <div style={{ marginTop: 18 }}>
           <PageTab label="Gallery" href={`${publicSiteOrigin}/gallery`} />
         </div>
+        <div style={{ marginTop: 16, display: "grid", gap: 8 }}>
+          {photoSlots.filter(item => ["gallery_hero", "book", "estimate", "menu"].includes(item.slot)).map(item => (
+            <div key={item.slot} style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ width: 64, height: 48, flexShrink: 0, position: "relative", overflow: "hidden", borderRadius: 8, backgroundColor: "rgba(255,255,255,0.06)" }}>
+                {item.photos[0] && (isVideoMedia(item.photos[0].url) ? <VideoThumb src={item.photos[0].url} /> : <img src={item.photos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />)}
+                <PhotoEditBadge onClick={() => setPhotoPickerSlot(item.slot)} />
+              </div>
+              <span style={{ flex: 1, minWidth: 0, ...TYPE.footnote, color: "white" }}>{item.label}</span>
+              <span style={{ ...TYPE.caption, color: "rgba(255,255,255,0.5)" }}>{item.photos.length ? "Selected" : "None"}</span>
+            </div>
+          ))}
+        </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -2133,12 +2160,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
                   {pickerPhotos.map(photo => {
                     const isGallerySlot = activeSlot.slot === "gallery"
-                    const selected = isGallerySlot ? Boolean(photo.in_gallery) : photo.website_section === activeSlot.slot
+                    const selected = isGallerySlot ? Boolean(photo.in_gallery) : localPhotos.some(assigned => assigned.url === photo.url && assigned.website_section === activeSlot.slot)
                     const onSelect = () => {
                       if (isGallerySlot) { handleToggleGallery(photo.id, !photo.in_gallery); return }
-                      const currentSection = photo.website_section as PhotoSlot | null
-                      if (currentSection && currentSection !== activeSlot.slot) {
-                        setReassignConfirm({ photoId: photo.id, slot: activeSlot.slot, fromLabel: getPhotoSlotPageLabel(currentSection) })
+                      const occupant = localPhotos.find(assigned => assigned.website_section === activeSlot.slot && assigned.url !== photo.url)
+                      if (occupant) {
+                        setReassignConfirm({ photoId: photo.id, slot: activeSlot.slot, fromLabel: getPhotoSlotPageLabel(activeSlot.slot) })
                         return
                       }
                       handleAssignPhoto(photo.id, activeSlot.slot)
@@ -2191,7 +2218,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 Quick heads up
               </p>
               <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
-                This photo is already used on <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong>. If you move it here, <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong> will need a different photo.
+                Replace the selected photo on <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong>?
               </p>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
                 <button
@@ -2204,7 +2231,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   onClick={() => setReassignConfirm(null)}
                   style={{ padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}
                 >
-                  Keep it on {reassignConfirm.fromLabel}
+                  Keep current photo
                 </button>
               </div>
             </div>

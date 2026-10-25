@@ -10,7 +10,63 @@ import { getVocab } from "@/lib/subIndustryVocabulary"
 import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import { getSiteCopy } from "@/lib/siteCopy"
 import { albumLabelFor } from "@/lib/dashboard/typography"
+import { resolveStockPhoto } from "@/lib/stockPhotoLibrary"
+import { getPublicSectionMedia } from "@/lib/publicSectionMedia"
+import PublicPageHeroMedia from "@/components/PublicPageHeroMedia"
 import type { Metadata } from "next"
+
+const illustrativeCollection = "Illustrative Security Photography"
+
+function galleryIntroduction(name: string, hasStock: boolean, hasOtherPhotos: boolean) {
+  if (!hasStock) return `A closer look at ${name}.`
+  return hasOtherPhotos
+    ? `Photos shared by ${name}, with illustrative stock photography labeled separately.`
+    : "Illustrative stock photography, not photographs of our personnel, client properties, or completed work."
+}
+
+function isIllustrative(photo: GalleryMedia) {
+  return Boolean(photo.isStock || resolveStockPhoto(photo.url))
+}
+
+function GalleryPhotoGroups({ photos, companyName, primary, security }: { photos: GalleryMedia[]; companyName: string; primary: string; security: boolean }) {
+  const stock = photos.filter(isIllustrative)
+  const other = photos.filter(photo => !isIllustrative(photo))
+  if (!stock.length) return <GalleryLightbox photos={photos} companyName={companyName} primary={primary} />
+  return <>
+    {other.length > 0 && <>
+      <div className="max-w-6xl mx-auto px-8 py-6"><h2 className="text-xl font-black">Shared Photos</h2></div>
+      <GalleryLightbox photos={other} companyName={companyName} primary={primary} />
+    </>}
+    <div className="max-w-6xl mx-auto px-8 py-6">
+      <h2 className="text-xl font-black">{security ? illustrativeCollection : "Illustrative Photography"}</h2>
+      <p className="mt-2 text-sm text-gray-600">Illustrative stock, not our personnel, client properties, or completed work.</p>
+    </div>
+    <GalleryLightbox photos={stock} companyName={companyName} primary={primary} />
+  </>
+}
+
+function GalleryHeader({ label, intro, primary, media, albumCount = 0, albumName = "" }: {
+  label: string; intro: string; primary: string; media: string | null; albumCount?: number; albumName?: string
+}) {
+  return (
+    <section className={media ? "relative min-h-[45vh] flex items-end overflow-hidden px-8 py-16" : "py-10 px-8 bg-white"}
+      style={media ? undefined : { borderBottom: "1px solid #f0f0f0" }}>
+      {media && <PublicPageHeroMedia src={media} alt="" background="#111111" />}
+      <div className={media ? "relative z-10 max-w-6xl mx-auto w-full" : "max-w-6xl mx-auto"}>
+        <div className="flex items-center justify-between">
+          <h1 className={media ? "text-3xl md:text-5xl font-black leading-tight" : "text-xs font-black tracking-widest uppercase"}
+            style={{ color: media ? "#ffffff" : primary }}>{label}</h1>
+          {albumCount > 0 && <span className="text-xs font-black" style={{ color: media ? "#ffffff" : "#bbbbbb" }}>
+            {albumCount} {albumName}
+          </span>}
+        </div>
+        <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
+        <p className="text-base max-w-xl" style={{ color: media ? "#ffffff" : "#666666" }}>{intro}</p>
+        {media && resolveStockPhoto(media) && <p className="mt-3 text-sm text-white max-w-xl">{resolveStockPhoto(media)?.caption}</p>}
+      </div>
+    </section>
+  )
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -40,13 +96,12 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const galleryLabel = vocab.galleryLabel
   const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
-  // A short line of real context above the grid - a bare label and a photo
-  // wall reads like a dumped folder, not a curated one.
-  const galleryIntro = `A closer look at ${company.name}.`
+  const collectionLabel = isGuard ? illustrativeCollection : "Illustrative Photography"
   const albumLabel = albumLabelFor(company.industry_category)
   const { primary: cta } = getSiteCTAs(company, [])
   const ctaLabel = cta.label
   const ctaHref = cta.href
+  const galleryHero = await getPublicSectionMedia(admin, company.id, "gallery_hero")
   // Gallery membership never assigns a photo to the CTA backdrop.
   const { data: ctaSectionRow } = await admin
     .from("company_photos")
@@ -78,12 +133,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   if (isPro) {
     let albumsData: Array<{ id: string; name: string; slug: string; cover_photo_id?: string | null; album_type?: string | null }> = []
     const albumsQuery = await admin.from("photo_albums").select("id, name, slug, cover_photo_id, album_type, show_on_website_gallery").eq("company_id", company.id).eq("show_on_website_gallery", true).order("created_at", { ascending: false })
-    if (albumsQuery.error) {
-      const fallbackAlbumsQuery = await admin.from("photo_albums").select("id, name, slug, cover_photo_id, album_type").eq("company_id", company.id).neq("album_type", "job").order("created_at", { ascending: false })
-      albumsData = fallbackAlbumsQuery.data ?? []
-    } else {
-      albumsData = albumsQuery.data ?? []
-    }
+    // Publication is explicit; a schema/read failure must not expose hidden albums.
+    albumsData = albumsQuery.error ? [] : albumsQuery.data ?? []
     const [albumPhotosResult, unsortedResult] = await Promise.all([
       admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
       admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
@@ -91,12 +142,10 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
     // Group album photos by album_id
     const photosByAlbum = new Map<string, GalleryMedia[]>()
-    const photoUrlById = new Map<string, string>()
     for (const photo of albumPhotosResult.data ?? []) {
       if (!photo.album_id) continue
       if (!photosByAlbum.has(photo.album_id)) photosByAlbum.set(photo.album_id, [])
       photosByAlbum.get(photo.album_id)!.push({ url: photo.url })
-      photoUrlById.set(photo.id, photo.url)
     }
 
     const albums = albumsData
@@ -105,10 +154,14 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
         // Cover tile is a plain <img>, never a playable video slot - prefer
         // the owner's explicitly chosen cover photo, then fall back to the
         // first still photo (never just the first item, which could be a video).
-        const chosenCoverUrl = album.cover_photo_id ? photoUrlById.get(album.cover_photo_id) : undefined
+        // A cover must belong to this published album, not another album or slot.
+        const chosenCoverUrl = album.cover_photo_id
+          ? (albumPhotosResult.data ?? []).find(photo => photo.id === album.cover_photo_id && photo.album_id === album.id)?.url
+          : undefined
         const chosenCover = chosenCoverUrl && !isVideoMedia(chosenCoverUrl) ? chosenCoverUrl : null
         const coverUrl = chosenCover ?? albumPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
-        return { ...album, coverUrl, photoCount: albumPhotos.length }
+        const stockCount = albumPhotos.filter(photo => resolveStockPhoto(photo.url)).length
+        return { ...album, coverUrl, photoCount: albumPhotos.length, stockCount }
       })
       .filter(a => a.photoCount > 0)
 
@@ -116,27 +169,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     const flatPhotos: GalleryMedia[] = (unsortedResult.data ?? []).map(p => ({ url: p.url }))
 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
+    const hasStock = albums.some(album => album.stockCount > 0) || flatPhotos.some(photo => resolveStockPhoto(photo.url)) || Boolean(galleryHero && resolveStockPhoto(galleryHero))
+    const hasOtherPhotos = albums.some(album => album.stockCount < album.photoCount) || flatPhotos.some(photo => !resolveStockPhoto(photo.url))
+    const galleryIntro = galleryIntroduction(company.name, hasStock, hasOtherPhotos)
     const ctaImg = ctaSectionPhoto
 
     return (
       <>
         {/* Header */}
-        <section className="py-10 px-8 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <h1 className="text-xs font-black tracking-widest uppercase" style={{ color: primary }}>
-              {galleryLabel}
-            </h1>
-            {hasContent && albums.length > 0 && (
-              <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>
-                {albums.length} {albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()}
-              </span>
-            )}
-          </div>
-          <div className="max-w-6xl mx-auto">
-            <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
-            <p className="text-base max-w-xl" style={{ color: "#666666" }}>{galleryIntro}</p>
-          </div>
-        </section>
+        <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero}
+          albumCount={albums.length} albumName={albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()} />
 
         {hasContent ? (
           <>
@@ -149,13 +191,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                       <div style={{ borderRadius: 16, overflow: "hidden", aspectRatio: "4/3", backgroundColor: "#f0f0f0", position: "relative" }}>
                         {album.coverUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={album.coverUrl} alt={album.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+                          <img src={resolveStockPhoto(album.coverUrl)?.thumbnailUrl ?? album.coverUrl}
+                            srcSet={resolveStockPhoto(album.coverUrl)?.thumbnailSrcSet} sizes={resolveStockPhoto(album.coverUrl)?.sizes}
+                            alt={resolveStockPhoto(album.coverUrl)?.alt ?? album.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
                         ) : (
                           <div style={{ width: "100%", height: "100%", backgroundColor: "#e8e8e8" }} />
                         )}
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.72))" }} />
                         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 18px 18px" }}>
-                          <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: "white", letterSpacing: "-0.01em", lineHeight: 1.25 }}>{album.name}</p>
+                          <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: "white", lineHeight: 1.25 }}>{album.stockCount === album.photoCount ? collectionLabel : album.name}</p>
+                          {album.stockCount > 0 && <p className="text-xs text-white mb-1">{album.stockCount === album.photoCount ? "Illustrative stock photography" : "Includes illustrative stock photography"}</p>}
                           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>
                             {album.photoCount} {album.photoCount === 1 ? "photo" : "photos"}
                           </p>
@@ -175,7 +220,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                     <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#bbb" }}>More Photos</p>
                   </div>
                 )}
-                <GalleryLightbox photos={flatPhotos} companyName={company.name} primary={primary} />
+                <GalleryPhotoGroups photos={flatPhotos} companyName={company.name} primary={primary} security={isGuard} />
               </section>
             )}
 
@@ -221,39 +266,41 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const [dashboardResult] = await Promise.all([
     admin
       .from("company_photos")
-      .select("id, url")
+      .select("id, url, album_id")
       .eq("company_id", company.id)
       .eq("in_gallery", true)
       .order("created_at", { ascending: false }),
   ])
 
-  const ownerPhotos: GalleryMedia[] = (dashboardResult.data ?? []).map(p => ({ url: p.url }))
+  const galleryRows = dashboardResult.data ?? []
+  const albumIds = [...new Set(galleryRows.map(photo => photo.album_id).filter((id): id is string => Boolean(id)))]
+  const publishedIds = new Set<string>()
+  if (albumIds.length) {
+    const { data, error } = await admin.from("photo_albums").select("id").eq("company_id", company.id)
+      .eq("show_on_website_gallery", true).in("id", albumIds)
+    if (!error) for (const album of data ?? []) publishedIds.add(album.id)
+  }
+  const ownerPhotos: GalleryMedia[] = galleryRows
+    .filter(photo => !photo.album_id || publishedIds.has(photo.album_id))
+    .map(photo => ({ url: photo.url }))
   const stockPhotos = isGuard ? imgs : (company.website_config?.stock_images as string[] | null) ?? imgs
-  const allPhotos: (string | GalleryMedia)[] = ownerPhotos.length
+  const mediaPhotos: GalleryMedia[] = ownerPhotos.length
     ? ownerPhotos
-    : stockPhotos.filter(Boolean)
-  const hasPhotos = allPhotos.length > 0
+    : stockPhotos.filter(Boolean).map(url => ({ url, isStock: true }))
+  const hasPhotos = mediaPhotos.length > 0
+  const hasStock = mediaPhotos.some(isIllustrative) || Boolean(galleryHero && resolveStockPhoto(galleryHero))
+  const galleryIntro = galleryIntroduction(company.name, hasStock, mediaPhotos.some(photo => !isIllustrative(photo)))
   const ctaImg = ctaSectionPhoto
 
   return (
     <>
       {/* Header */}
-      <section className="py-10 px-8 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="text-xs font-black tracking-widest uppercase" style={{ color: primary }}>
-            {galleryLabel}
-          </h1>
-        </div>
-        <div className="max-w-6xl mx-auto">
-          <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
-          <p className="text-base max-w-xl" style={{ color: "#666666" }}>{galleryIntro}</p>
-        </div>
-      </section>
+      <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero} />
 
       {hasPhotos ? (
         <>
           <section className="bg-white pt-1 pb-10">
-            <GalleryLightbox photos={allPhotos} companyName={company.name} primary={primary} />
+            <GalleryPhotoGroups photos={mediaPhotos} companyName={company.name} primary={primary} security={isGuard} />
           </section>
           <section className="relative py-24 text-center overflow-hidden">
             {ctaImg ? (

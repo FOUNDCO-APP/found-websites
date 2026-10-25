@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isVideoMedia } from "@/lib/mediaKind"
+import { resolveStockPhoto } from "@/lib/stockPhotoLibrary"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
@@ -11,8 +13,6 @@ type AlbumRow = {
   name: string
   slug: string
   album_type?: string | null
-  customer_name?: string | null
-  service_address?: string | null
 }
 
 function albumSlugFromName(name: string) {
@@ -24,25 +24,39 @@ function albumSlugFromName(name: string) {
     .slice(0, 60)
 }
 
-async function findAlbum(admin: ReturnType<typeof createAdminClient>, companyId: string, albumSlug: string) {
-  const select = "id, name, slug, album_type, customer_name, service_address"
+async function findAlbum(admin: ReturnType<typeof createAdminClient>, companyId: string, albumSlug: string): Promise<AlbumRow | null> {
+  // OG previews do not need customer names or addresses, even for published albums.
+  const select = "id, name, slug, album_type"
 
   const direct = await admin
     .from("photo_albums")
     .select(select)
     .eq("company_id", companyId)
+    .eq("show_on_website_gallery", true)
     .eq("slug", albumSlug)
     .maybeSingle<AlbumRow>()
 
+  if (direct.error) return null
   if (direct.data) return direct.data as AlbumRow
 
   const matches = await admin
     .from("photo_albums")
     .select(select)
     .eq("company_id", companyId)
+    .eq("show_on_website_gallery", true)
 
+  if (matches.error) return null
   const rows = (matches.data ?? []) as unknown as AlbumRow[]
   return rows.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
+}
+
+function neutralPreview() {
+  return new ImageResponse(
+    <div style={{ width: 1200, height: 630, background: "#080A09", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, fontWeight: 800 }}>
+      Found
+    </div>,
+    { ...size },
+  )
 }
 
 export default async function AlbumOgImage({ params }: { params: Promise<{ slug: string; album: string }> }) {
@@ -51,28 +65,21 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
 
-  if (!company) {
-    return new ImageResponse(
-      <div style={{ width: 1200, height: 630, background: "#080A09", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, fontWeight: 800 }}>
-        Found
-      </div>,
-      { ...size },
-    )
-  }
+  if (!company) return neutralPreview()
 
   const admin = createAdminClient()
   const album = await findAlbum(admin, company.id, albumSlug)
+  if (!album) return neutralPreview()
   const logo = company.logo_white_url || company.logo_url
 
-  const { data: photos } = album
-    ? await admin
+  const photosResult = await admin
       .from("company_photos")
       .select("url")
       .eq("company_id", company.id)
       .eq("album_id", album.id)
       .order("created_at", { ascending: true })
       .limit(5)
-    : { data: [] }
+  const photos = photosResult.error ? [] : photosResult.data ?? []
 
   // OG images are always static - next/og can't render a video element, so
   // a video happening to be the first upload would silently break the
@@ -82,6 +89,9 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
   const stillPhoto = ((photos ?? []) as Array<{ url: string }>)
     .find(photo => photo.url && !isVideoMedia(photo.url))
   const cover = stillPhoto?.url || company.logo_url || undefined
+  const stock = stillPhoto ? resolveStockPhoto(stillPhoto.url) : null
+  const stockTitle = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
+    ? "Illustrative Security Photography" : "Illustrative Photography"
 
   return new ImageResponse(
     <div
@@ -122,6 +132,11 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
           <div style={{ display: "flex", fontSize: 76, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", color: "white" }}>{company.name}</div>
         )}
       </div>
+      {stock && <div style={{ position: "absolute", left: 74, right: 74, bottom: 56, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", fontSize: 40, lineHeight: 1.15, fontWeight: 800 }}>{stockTitle}</div>
+        <div style={{ display: "flex", fontSize: 22, lineHeight: 1.35 }}>Illustrative stock, not our personnel, client properties or completed work.</div>
+        <div style={{ display: "flex", fontSize: 18 }}>Photo: {stock.photographer} / {stock.source}</div>
+      </div>}
     </div>,
     { ...size },
   )

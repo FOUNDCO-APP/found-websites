@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getPublicSectionMedia } from "@/lib/publicSectionMedia"
+import PublicPageHeroMedia from "@/components/PublicPageHeroMedia"
 import { schedulingCTAFor } from "@/lib/industryCTAs"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -80,6 +82,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
   const primary = company.primary_color
   const gradient = heroGradient(primary)
+  const headerMedia = await getPublicSectionMedia(admin, company.id, "book")
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
 
@@ -94,7 +97,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   return (
     <>
       <section className="relative min-h-[45vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0" style={{ background: gradient }} />
+        <PublicPageHeroMedia src={headerMedia} alt={company.name} background={gradient} />
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>
             {company.name}

@@ -69,6 +69,7 @@ function load(file) {
     if (id === "@/lib/bookings/ensureDefaultAvailability") return { ensureDefaultAvailability() { throw Error("Unexpected availability write") } }
     if (id === "@supabase/supabase-js") return { createClient() { throw Error("Unexpected live client") } }
     if (id === "@/components/layouts/HeroVideo") return { __esModule: true, default: ({ src }) => React.createElement("video", { src }) }
+    if (id === "@/components/PublicPageHeroMedia") return load("src/components/PublicPageHeroMedia")
     if (id === "@/components/GalleryLightbox") return { __esModule: true, default: ({ photos }) => React.createElement("div", {}, photos.map((photo, index) => React.createElement("img", { key: index, src: typeof photo === "string" ? photo : photo.url }))) }
     if (id.startsWith("@/components/layouts/") && /Layout$/.test(id)) return load(`src/${id.slice(2)}`)
     if (id.startsWith("@/components/") || /^\.\/(ContactForm|EstimateForm|ReservationForm|JobLeadCapture)$/.test(id) || /OnlineOrderClient/.test(id)) return { __esModule: true, default: ({ children }) => children ?? null }
@@ -157,6 +158,16 @@ for (const [industry, subtype] of [["home_services", "remodeling"], ["profession
   }
   tables.company_photos = [row(about, "about", false, false)]
   check(!hasMedia(sections(await page("about"))[0]), `${industry}: unpublished assignments excluded`)
+  for (const route of ["book", "estimate", "menu"]) {
+    for (const media of [about, video]) {
+      tables.company_photos = [row(media, route)]
+      const header = sections(await page(route))[0]
+      check(header.includes(media), `${industry}/${route}: independent assigned header renders`)
+      check(header.includes(media === video ? "<video" : "<img"), `${industry}/${route}: assigned media type preserved`)
+      tables.company_photos = [row(media, route, false, false), row(hero, "hero"), row(cta, "cta"), row(badge, null, true)]
+      check(!hasMedia(sections(await page(route))[0]), `${industry}/${route}: unpublished slot stays plain without cross-section fallback`)
+    }
+  }
   reset()
   for (const media of [about, video]) {
     tables.company_photos = [row(media, "contact")]

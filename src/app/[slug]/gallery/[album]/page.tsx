@@ -6,6 +6,12 @@ import { albumLabelFor } from "@/lib/dashboard/typography"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import AlbumPhotoGrid from "./AlbumPhotoGrid"
 import JobLeadCapture from "./JobLeadCapture"
+import GalleryLightbox from "@/components/GalleryLightbox"
+import { resolveStockPhoto } from "@/lib/stockPhotoLibrary"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
+
+const illustrativeCollection = "Illustrative Security Photography"
+type AlbumPhoto = { id: string; url: string; created_at?: string | null }
 
 type AlbumPageRow = {
   id: string
@@ -53,7 +59,7 @@ async function findAlbum(
   companyId: string,
   albumSlug: string,
   includeJobFields: boolean,
-) {
+): Promise<AlbumPageRow | null> {
   const select = includeJobFields
     ? "id, name, slug, album_type, customer_name, service_address, show_address_public, created_at"
     : "id, name, slug, created_at"
@@ -62,25 +68,29 @@ async function findAlbum(
     .from("photo_albums")
     .select(select)
     .eq("company_id", companyId)
+    .eq("show_on_website_gallery", true)
     .eq("slug", albumSlug)
     .maybeSingle<AlbumPageRow>()
 
-  if (direct.error && includeJobFields) {
-    return findAlbum(admin, companyId, albumSlug, false)
-  }
+  if (direct.error) return includeJobFields ? findAlbum(admin, companyId, albumSlug, false) : null
   if (direct.data) return direct.data as AlbumPageRow
 
   const matches = await admin
     .from("photo_albums")
     .select(select)
     .eq("company_id", companyId)
+    .eq("show_on_website_gallery", true)
 
-  if (matches.error && includeJobFields) {
-    return findAlbum(admin, companyId, albumSlug, false)
-  }
+  if (matches.error) return includeJobFields ? findAlbum(admin, companyId, albumSlug, false) : null
 
   const rows = (matches.data ?? []) as unknown as AlbumPageRow[]
   return rows.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
+}
+
+async function readAlbumPhotos(admin: ReturnType<typeof createAdminClient>, companyId: string, albumId: string): Promise<AlbumPhoto[]> {
+  const { data, error } = await admin.from("company_photos").select("id, url, created_at")
+    .eq("company_id", companyId).eq("album_id", albumId).order("created_at", { ascending: true })
+  return error ? [] : data ?? []
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; album: string }> }): Promise<Metadata> {
@@ -92,12 +102,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const admin = createAdminClient()
   const album = await findAlbum(admin, company.id, albumSlug, true)
+  if (!album) return { title: "Gallery" }
+  const photos = await readAlbumPhotos(admin, company.id, album.id)
+  const stockCount = photos.filter(photo => resolveStockPhoto(photo.url)).length
+  const isStockOnly = stockCount > 0 && stockCount === photos.length
+  const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
 
   const albumLabel = albumLabelFor(company.industry_category)
-  const albumName = album ? displayAlbumName(album, albumLabel.singular === "Job") : albumLabel.plural
+  const albumName = isStockOnly ? isGuard ? illustrativeCollection : "Illustrative Photography" : displayAlbumName(album, albumLabel.singular === "Job")
   const title = `${albumName} - ${company.name}`
-  const context = album ? publicAlbumContext(album) : ""
-  const description = context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
+  const context = isStockOnly ? "" : publicAlbumContext(album)
+  const description = isStockOnly
+    ? "Illustrative stock photography, not the company's personnel, client properties, or completed work."
+    : stockCount > 0
+      ? `Photos shared by ${company.name}, with illustrative stock photography labeled separately.`
+      : context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
   const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
   const url = `${origin}/gallery/${albumSlug}`
   const image = absoluteImageUrl(`/gallery/${albumSlug}/opengraph-image`, origin)
@@ -138,20 +157,19 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
 
   if (!album) notFound()
 
-  const { data: photos } = await admin
-    .from("company_photos")
-    .select("id, url, created_at")
-    .eq("company_id", company.id)
-    .eq("album_id", album.id)
-    .order("created_at", { ascending: true })
-
-  const allPhotos = photos ?? []
+  const allPhotos = await readAlbumPhotos(admin, company.id, album.id)
+  const stockPhotos = allPhotos.filter(photo => resolveStockPhoto(photo.url))
+  const otherPhotos = allPhotos.filter(photo => !resolveStockPhoto(photo.url))
+  const hasStock = stockPhotos.length > 0
+  const isStockOnly = hasStock && !otherPhotos.length
+  const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
+  const collectionLabel = isGuard ? illustrativeCollection : "Illustrative Photography"
   const primary = company.primary_color ?? "#32D074"
   const albumDate = new Date(album.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
   const albumLabel = albumLabelFor(company.industry_category)
   const isJob = album.album_type === "job" || albumLabel.singular === "Job"
-  const context = publicAlbumContext(album)
-  const albumName = displayAlbumName(album, isJob)
+  const context = isStockOnly ? "" : publicAlbumContext(album)
+  const albumName = isStockOnly ? collectionLabel : displayAlbumName(album, isJob)
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -164,6 +182,9 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
               <h1 style={{ margin: "0 0 8px", fontSize: "clamp(34px, 8vw, 58px)", lineHeight: 0.98, fontWeight: 800, color: "#111", letterSpacing: "-0.04em" }}>
                 {albumName}
               </h1>
+              {hasStock && <p className="text-sm text-gray-600 mb-3">
+                {isStockOnly ? "Illustrative stock, not our personnel, client properties, or completed work." : "Includes illustrative stock photography, labeled separately from shared photos."}
+              </p>}
               {context && (
                 <p style={{ margin: "0 0 8px", fontSize: 15, color: "#777", fontWeight: 650, lineHeight: 1.35 }}>
                   {context}
@@ -178,9 +199,9 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
               businessName={company.name}
               subjectTitle={albumName}
               primaryColor={primary}
-              ctaLabel={isJob ? "Ask about a project like this" : "Ask about work like this"}
-              requestType={isJob ? "estimate_request" : "contact"}
-              messagePrefix={isJob ? "I'm interested in a project like" : "I'm interested in work like"}
+              ctaLabel={hasStock ? isGuard ? "Discuss your security needs" : "Contact Us" : isJob ? "Ask about a project like this" : "Ask about work like this"}
+              requestType={hasStock ? "contact" : isJob ? "estimate_request" : "contact"}
+              messagePrefix={hasStock ? isGuard ? "I'd like to discuss security needs related to" : "I'd like to discuss" : isJob ? "I'm interested in a project like" : "I'm interested in work like"}
             />
           </div>
           <div style={{ height: 3, width: 40, borderRadius: 2, backgroundColor: primary, marginTop: 22 }}/>
@@ -195,7 +216,14 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
             <p style={{ fontSize: 14, color: "#aaa" }}>Check back shortly as we add photos to this {albumLabel.singular.toLowerCase()}.</p>
           </div>
         ) : (
-          <AlbumPhotoGrid photos={allPhotos} />
+          hasStock ? <>
+            {otherPhotos.length > 0 && <>
+              <h2 className="text-xl font-black mb-5">Shared Photos</h2>
+              <AlbumPhotoGrid photos={otherPhotos} />
+            </>}
+            <h2 className="text-xl font-black mt-8 mb-5">{collectionLabel}</h2>
+            <GalleryLightbox photos={stockPhotos} companyName={company.name} primary={primary} />
+          </> : <AlbumPhotoGrid photos={allPhotos} />
         )}
       </main>
 

@@ -3,6 +3,8 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getPublicSectionMedia } from "@/lib/publicSectionMedia"
+import PublicPageHeroMedia from "@/components/PublicPageHeroMedia"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
@@ -44,6 +46,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     : null
 
   const admin = createAdminClient()
+  const headerMedia = await getPublicSectionMedia(admin, company.id, "menu")
   const { data: ctaPhoto } = await admin
     .from("company_photos")
     .select("url")
@@ -70,7 +73,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     <>
       {/* ── HERO ── */}
       <section className="relative min-h-[55vh] flex items-end overflow-hidden">
-        <div className="absolute inset-0" style={{ background: gradient }} />
+        <PublicPageHeroMedia src={headerMedia} alt={company.name} background={gradient} />
         <div className="absolute inset-0" style={{
           background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.10) 100%)"
         }} />

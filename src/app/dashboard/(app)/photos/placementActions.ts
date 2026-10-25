@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { assignPhotoToSection, toggleGalleryPhoto } from "@/app/dashboard/(app)/site/actions"
+import { getIndependentHeaderSlots } from "@/lib/siteSectionRegistry"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 
 export type DestinationIcon = "home" | "person" | "wrench" | "phone" | "tag" | "grid" | "star"
 
@@ -30,6 +32,14 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
 
   const industryCategory = ctx.company.industry_category ?? ""
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
+  const [{ data: addons, error: addonError }, { data: placed, error: photoError }] = await Promise.all([
+    ctx.admin.from("addon_subscriptions").select("addon_slug").eq("company_id", ctx.company.id).eq("active", true),
+    ctx.admin.from("company_photos").select("website_section").eq("company_id", ctx.company.id).in("website_section", ["gallery_hero", "book", "estimate", "menu"]),
+  ])
+  if (addonError || photoError) return { error: "Could not read available photo destinations" }
+  const activeAddons = getEffectiveAddons(ctx.company.plan, (addons ?? []).map(row => row.addon_slug), ctx.company.included_addon_slug, ctx.company.disabled_addons ?? [])
+  const independentSlots = getIndependentHeaderSlots({ industry_category: industryCategory, primary_intent: ctx.company.primary_intent ?? "contact", phone: ctx.company.phone,
+    booking_cta_label: ctx.company.booking_cta_label }, activeAddons, (placed ?? []).map(row => row.website_section))
 
   const destinations: PhotoDestination[] = [
     { slot: "hero", label: "Home top photo", icon: "home", group: "home" },
@@ -37,10 +47,11 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
     { slot: "about", label: "About page photo", icon: "person" },
     { slot: "services", label: "Services page photo", icon: "wrench" },
     { slot: "contact", label: "Contact page photo", icon: "phone" },
+    ...independentSlots.map(slot => ({ slot, label: ({ gallery_hero: "Gallery header photo", book: "Booking header photo", estimate: "Estimate header photo", menu: "Menu header photo" })[slot], icon: (slot === "gallery_hero" ? "grid" : "tag") as DestinationIcon })),
   ]
 
   if (isFoodCatalog) {
-    destinations.push({ slot: "order", label: "Menu page photo", icon: "tag" })
+    destinations.push({ slot: "order", label: "Online ordering photo", icon: "tag" })
   } else {
     destinations.push({ slot: "shop", label: "Products page photo", icon: "tag" })
   }

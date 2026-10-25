@@ -1,10 +1,25 @@
 import type { LayoutType } from "@/lib/layout"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 
 type ConfigLike = Record<string, unknown> | null | undefined
 
-export type SitePhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact" | "services" | "shop" | "order"
+export const SITE_PHOTO_SLOTS = ["hero", "about", "cta", "gallery", "gallery_hero", "announcement", "contact", "services", "shop", "order", "book", "estimate", "menu"] as const
+export type SitePhotoSlot = typeof SITE_PHOTO_SLOTS[number]
+export type IndependentHeaderSlot = "gallery_hero" | "book" | "estimate" | "menu"
+
+export function isSitePhotoSlot(value: string): value is SitePhotoSlot {
+  return (SITE_PHOTO_SLOTS as readonly string[]).includes(value)
+}
+
+export function getIndependentHeaderSlots(company: Parameters<typeof getSiteCTAs>[0], activeAddons: string[], assignedSlots: string[] = []): IndependentHeaderSlot[] {
+  const availableUrls = getAvailablePrimaryActions(company.industry_category, activeAddons, company.phone, company.booking_cta_label)
+    .map(action => getSiteCTAs({ ...company, primary_action_override: action.key }, activeAddons).primary.href)
+  const isFood = company.industry_category === "food" || company.industry_category === "home_based_food"
+  return (["gallery_hero", "book", "estimate", "menu"] as const).filter(slot => slot === "gallery_hero"
+    || assignedSlots.includes(slot) || (slot === "menu" ? isFood : availableUrls.includes(`/${slot}`)))
+}
 
 export type SitePhotoSection = {
   slot: SitePhotoSlot
@@ -85,6 +100,22 @@ export function getSitePhotoSections({ config, industryCategory, subIndustry, bu
       position: "Gallery page and photo strips",
       photoRole: "Gallery photos",
     },
+    gallery_hero: {
+      slot: "gallery_hero", title: "Gallery header photo", helper: "Gallery page, top of page.",
+      page: "Gallery", position: "Top of Gallery page", photoRole: "Background photo",
+    },
+    book: {
+      slot: "book", title: "Booking header photo", helper: "Booking page, top of page.",
+      page: "Booking", position: "Top of Booking page", photoRole: "Background photo",
+    },
+    estimate: {
+      slot: "estimate", title: "Estimate header photo", helper: "Estimate page, top of page.",
+      page: "Estimate", position: "Top of Estimate page", photoRole: "Background photo",
+    },
+    menu: {
+      slot: "menu", title: "Menu header photo", helper: "Menu page, top of page.",
+      page: "Menu", position: "Top of Menu page", photoRole: "Background photo",
+    },
     announcement: {
       slot: "announcement",
       title: clean(config?.announcement_title) ?? "Featured Update",
@@ -119,10 +150,10 @@ export function getSitePhotoSections({ config, industryCategory, subIndustry, bu
     },
     order: {
       slot: "order",
-      title: "Menu",
-      helper: "The image behind the menu page.",
-      page: "Menu",
-      position: "Menu page",
+      title: "Online ordering",
+      helper: "The image behind the online ordering page.",
+      page: "Online ordering",
+      position: "Online ordering page",
       photoRole: "Page image",
     },
   }

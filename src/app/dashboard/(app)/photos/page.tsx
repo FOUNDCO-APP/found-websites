@@ -10,6 +10,8 @@ import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { normalizeAddressText } from "@/lib/addressNormalization"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
+import { mergePhotoPlacement, isPhotoPlacementResult } from "@/lib/photoPlacement"
+import { deletePhotosConfirmed, photoDeleteErrorText } from "@/lib/photoDeletionClient"
 import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
 import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
@@ -77,7 +79,7 @@ const ESTIMATE_STATUS_LABELS: Record<string, string> = {
 
 type View = "all" | "website" | "albums"
 type PhotoFilter = "all" | "favorites" | "unused"
-type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" | "delete" }
+type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" | "delete"; persistent?: boolean }
 function dateGroupLabel(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
@@ -110,6 +112,10 @@ function destinationLabelForSlot(slot: string | null, destinations?: PhotoDestin
     order: "Menu",
     announcement: "Update",
     gallery: "Gallery",
+    gallery_hero: "Gallery header",
+    book: "Booking header",
+    estimate: "Estimate header",
+    menu: "Menu header",
   } as Record<string, string>)[slot] ?? "Site"
   return label.split(" — ")[0]
 }
@@ -510,8 +516,9 @@ function PhotosPageInner() {
 
   function showPhotoNotice(notice: PhotoNotice) {
     if (photoNoticeTimerRef.current) clearTimeout(photoNoticeTimerRef.current)
+    photoNoticeTimerRef.current = null
     setPhotoNotice(notice)
-    photoNoticeTimerRef.current = setTimeout(() => setPhotoNotice(null), 1800)
+    if (!notice.persistent) photoNoticeTimerRef.current = setTimeout(() => setPhotoNotice(null), 1800)
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -588,11 +595,11 @@ function PhotosPageInner() {
   }
 
   async function remove(photo: Photo) {
-    await fetch("/api/photos", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: photo.id }),
-    })
+    const { failedIds, errors } = await deletePhotosConfirmed([photo.id])
+    if (failedIds.length) {
+      showPhotoNotice({ text: photoDeleteErrorText(errors), tone: "delete", persistent: true })
+      return
+    }
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
     showPhotoNotice({ text: "Photo deleted", tone: "delete" })
   }
@@ -669,7 +676,7 @@ function PhotosPageInner() {
     const removingFromGallery = isGalleryToggle && placingPhoto.in_gallery
 
     if (!isGalleryToggle && !force) {
-      const occupant = photos.find(p => p.id !== placingPhoto.id && p.website_section === destination.slot)
+      const occupant = photos.find(p => p.url !== placingPhoto.url && p.website_section === destination.slot)
       if (occupant) {
         setPlaceReassignConfirm({ slot: destination.slot, label: destination.label })
         return
@@ -683,14 +690,11 @@ function PhotosPageInner() {
     setPlaceReassignConfirm(null)
     if (result && "error" in result) return
 
-    setPhotos(prev => prev.map(p => {
-      if (isGalleryToggle) {
-        return p.id === photoId ? { ...p, in_gallery: !removingFromGallery } : p
-      }
-      if (p.id === photoId) return { ...p, website_section: destination.slot }
-      if (p.website_section === destination.slot) return { ...p, website_section: null }
-      return p
-    }))
+    if (isGalleryToggle) {
+      setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, in_gallery: !removingFromGallery } : p))
+    } else if (isPhotoPlacementResult(result)) {
+      setPhotos(prev => mergePhotoPlacement(prev, result.photo, result.clearedPhotoIds))
+    }
     if (!isGalleryToggle) setPlacingPhoto(null)
   }
 
@@ -740,16 +744,16 @@ function PhotosPageInner() {
     setDeletingSelected(true)
     const ids = Array.from(selectedIds)
     try {
-      await Promise.all(ids.map(id =>
-        fetch("/api/photos", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        }).catch(() => null)
-      ))
-      setPhotos(prev => prev.filter(p => !selectedIds.has(p.id)))
-      showPhotoNotice({ text: ids.length === 1 ? "Photo deleted" : `${ids.length} photos deleted`, tone: "delete" })
-      exitSelectMode()
+      const { deletedIds, failedIds, errors } = await deletePhotosConfirmed(ids)
+      const confirmed = new Set(deletedIds)
+      setPhotos(prev => prev.filter(p => !confirmed.has(p.id)))
+      if (failedIds.length) {
+        setSelectedIds(new Set(failedIds))
+        showPhotoNotice({ text: `${deletedIds.length} of ${ids.length} deleted. ${failedIds.length} still selected. ${photoDeleteErrorText(errors)}`, tone: "delete", persistent: true })
+      } else {
+        showPhotoNotice({ text: deletedIds.length === 1 ? "Photo deleted" : `${deletedIds.length} photos deleted`, tone: "delete" })
+        exitSelectMode()
+      }
     } finally {
       setDeletingSelected(false)
       setShowBulkDeleteConfirm(false)
@@ -1239,24 +1243,28 @@ function PhotosPageInner() {
       `}</style>
 
       {photoNotice && (
-        <div style={{
+        <div role={photoNotice.persistent ? "alert" : "status"} style={{
           position: "fixed",
           left: "50%",
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
           transform: "translateX(-50%)",
+          width: photoNotice.persistent ? "min(440px, calc(100vw - 32px))" : undefined,
+          maxHeight: photoNotice.persistent ? "min(50vh, 400px)" : undefined,
+          overflowY: photoNotice.persistent ? "auto" : undefined,
+          boxSizing: "border-box",
           zIndex: 90,
           display: "flex",
           alignItems: "center",
           gap: 8,
           padding: "10px 14px",
-          borderRadius: 999,
+          borderRadius: photoNotice.persistent ? 8 : 999,
           backgroundColor: "rgba(18,22,20,0.94)",
           border: `1px solid ${photoNotice.tone === "favorite" ? "rgba(255,75,139,0.44)" : photoNotice.tone === "gallery" ? `${SIGNAL_GREEN}66` : photoNotice.tone === "delete" ? "rgba(255,107,90,0.44)" : "rgba(255,255,255,0.18)"}`,
           boxShadow: "0 16px 44px rgba(0,0,0,0.32)",
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
           animation: "photoNoticeIn 180ms ease-out both",
-          pointerEvents: "none",
+          pointerEvents: photoNotice.persistent ? "auto" : "none",
         }}>
           {photoNotice.tone === "gallery" ? (
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -1271,7 +1279,10 @@ function PhotosPageInner() {
               <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
             </svg>
           ) : null}
-          <span style={{ fontSize: 13, fontWeight: 850, color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap" }}>{photoNotice.text}</span>
+          <span style={{ minWidth: 0, flex: 1, fontSize: 13, fontWeight: 850, color: "rgba(255,255,255,0.92)", whiteSpace: photoNotice.persistent ? "normal" : "nowrap", overflowWrap: "anywhere", lineHeight: 1.5 }}>{photoNotice.text}</span>
+          {photoNotice.persistent && <button type="button" aria-label="Dismiss message" title="Dismiss message" onClick={() => setPhotoNotice(null)} style={{ width: 32, height: 32, flexShrink: 0, alignSelf: "flex-start", border: "none", background: "transparent", color: "white", cursor: "pointer" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>}
         </div>
       )}
 
@@ -1399,6 +1410,7 @@ function PhotosPageInner() {
       {placingPhoto && (
         <PlacementSheet
           photo={photos.find(p => p.id === placingPhoto.id) ?? placingPhoto}
+          assignedSlots={photos.filter(p => p.url === placingPhoto.url && p.website_section).map(p => p.website_section as string)}
           destinations={destinations}
           loading={destinationsLoading}
           placingSlot={placingSlot}
@@ -1437,7 +1449,7 @@ function PhotosPageInner() {
             <div style={{ fontSize: 30, marginBottom: 10 }}>🗑️</div>
             <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>Delete this one?</p>
             <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
-              It'll be gone for good, including anywhere it's used on your site or in an album.
+              Photos used on your site must be removed or replaced there first. Other copies are kept.
             </p>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
               <button
@@ -1565,7 +1577,7 @@ function PhotosPageInner() {
               Delete {selectedIds.size} photo{selectedIds.size !== 1 ? "s" : ""}?
             </p>
             <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
-              They'll be gone for good, including anywhere they're used on your site or in an album.
+              Photos used on your site must be removed or replaced there first. Other copies are kept.
             </p>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
               <button
@@ -3175,14 +3187,15 @@ function DestinationGlyph({ icon, color }: { icon: PhotoDestination["icon"]; col
 }
 
 // ── One destination row in the placement sheet ──
-function DestinationRow({ dest, photo, placingSlot, onPlace }: {
+function DestinationRow({ dest, photo, assignedSlots, placingSlot, onPlace }: {
   dest: PhotoDestination
   photo: Photo
+  assignedSlots: string[]
   placingSlot: string | null
   onPlace: (destination: PhotoDestination) => void
 }) {
   const isGallery = Boolean(dest.toggle)
-  const active = isGallery ? Boolean(photo.in_gallery) : photo.website_section === dest.slot
+  const active = isGallery ? Boolean(photo.in_gallery) : assignedSlots.includes(dest.slot)
   const isPlacing = placingSlot === dest.slot
   const iconColor = active ? SIGNAL_GREEN : "rgba(255,255,255,0.55)"
 
@@ -3221,8 +3234,9 @@ function DestinationRow({ dest, photo, placingSlot, onPlace }: {
 }
 
 // ── Placement sheet — "Add to Site" destination picker ──
-function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, onPlace, onConfirmReplace, onCancelConfirm, onClose }: {
+function PlacementSheet({ photo, assignedSlots, destinations, loading, placingSlot, confirm, onPlace, onConfirmReplace, onCancelConfirm, onClose }: {
   photo: Photo
+  assignedSlots: string[]
   destinations: PhotoDestination[] | null
   loading: boolean
   placingSlot: string | null
@@ -3301,12 +3315,12 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
                     <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Home Page</span>
                   </div>
                   {homeDests.map(dest => (
-                    <DestinationRow key={dest.slot} dest={dest} photo={photo} placingSlot={placingSlot} onPlace={onPlace} />
+                    <DestinationRow key={dest.slot} dest={dest} photo={photo} assignedSlots={assignedSlots} placingSlot={placingSlot} onPlace={onPlace} />
                   ))}
                 </div>
               )}
               {otherDests.map(dest => (
-                <DestinationRow key={dest.slot} dest={dest} photo={photo} placingSlot={placingSlot} onPlace={onPlace} />
+                <DestinationRow key={dest.slot} dest={dest} photo={photo} assignedSlots={assignedSlots} placingSlot={placingSlot} onPlace={onPlace} />
               ))}
             </div>
           )

@@ -17,6 +17,8 @@ import { sendTrackedEmail } from "@/lib/emailLog"
 import { GREEN, BLACK } from "@/lib/dashboard/typography"
 import type { MenuCategory } from "@/types/company"
 import { generateAndUploadSiteIconAssets } from "@/lib/siteIconGeneration"
+import { isSitePhotoSlot } from "@/lib/siteSectionRegistry"
+import { assignIndependentPhoto } from "@/lib/photoPlacement"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -328,38 +330,39 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
 export async function assignPhotoToSection(photoId: string, section: string | null) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
+  if (section !== null && !isSitePhotoSlot(section)) return { error: "Unknown photo section" }
+  if (section === "gallery") return toggleGalleryPhoto(photoId, true)
 
   // Get the photo URL from company_photos
-  const { data: photo } = await ctx.admin
+  const { data: sourcePhoto } = await ctx.admin
     .from("company_photos")
-    .select("id, url, storage_path")
+    .select("id, url, storage_path, website_section")
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
     .single()
 
-  if (!photo) return { error: "Photo not found" }
+  if (!sourcePhoto) return { error: "Photo not found" }
+  let photo = sourcePhoto
 
-  const isGallery = section === "gallery"
   const isHero = section === "hero"
   const isRemoving = section === null
+  const isRemovingHero = isRemoving && photo.website_section === "hero"
+  let placement: Awaited<ReturnType<typeof assignIndependentPhoto>> | undefined
 
-  if (!isRemoving && !isGallery) {
-    await ctx.admin
-      .from("company_photos")
-      .update({ website_section: null })
-      .eq("company_id", ctx.company.id)
-      .eq("website_section", section)
+  if (section) {
+    try {
+      placement = await assignIndependentPhoto(ctx.admin, ctx.company.id, photoId, section)
+      photo = placement.photo as typeof sourcePhoto
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Could not assign photo" }
+    }
+  } else {
+    const { error } = await ctx.admin.from("company_photos").update({ website_section: null })
+      .eq("id", photoId).eq("company_id", ctx.company.id)
+    if (error) return { error: error.message }
   }
 
-  // Update company_photos section tag. Public pages only fetch photos marked
-  // for the website, so placement must set both fields together.
-  await ctx.admin
-    .from("company_photos")
-    .update({ website_section: section, ...(isRemoving ? {} : { for_website: true }) })
-    .eq("id", photoId)
-    .eq("company_id", ctx.company.id)
-
-  if (isGallery || isHero) {
+  if (isHero) {
     // Upsert into media table so public site picks it up
     const { data: existing } = await ctx.admin
       .from("media")
@@ -388,7 +391,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
           size_bytes: 0,
         })
     }
-  } else if (isRemoving) {
+  } else if (isRemovingHero) {
     // Remove from media table (unflag)
     await ctx.admin
       .from("media")
@@ -420,7 +423,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
         .update({ hero_image_url: photo.url, hero_video_url: null, hero_images: heroImages, updated_at: new Date().toISOString() })
         .eq("company_id", ctx.company.id)
     }
-  } else if (isRemoving) {
+  } else if (isRemovingHero) {
     const heroImages = currentHeroImages.filter(url => url !== photo.url)
     if (config?.hero_image_url === photo.url || currentHeroImages.includes(photo.url)) {
       await ctx.admin
@@ -439,6 +442,9 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/book`)
+  revalidatePath(`/${ctx.company.slug}/estimate`)
+  revalidatePath("/dashboard/photos")
   revalidatePath("/dashboard/site")
   revalidatePath("/")
   await recordCustomerActivity({
@@ -446,7 +452,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
     pathname: "/dashboard/site",
     metadata: { photo_id: photoId, section },
   })
-  return { success: true }
+  return { success: true, photo: placement?.photo, clearedPhotoIds: placement?.clearedPhotoIds ?? [] }
 }
 
 

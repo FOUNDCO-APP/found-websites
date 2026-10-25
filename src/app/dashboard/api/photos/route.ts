@@ -4,6 +4,7 @@ import { recordCustomerActivity } from "@/lib/customerActivity"
 import { mediaKindFromUrl } from "@/lib/mediaKind"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
+import { deletePhotoPlacement, PhotoInUseError } from "@/lib/deletePhotoPlacement"
 
 const BUCKET = "company-assets"
 
@@ -170,25 +171,21 @@ export async function DELETE(req: Request) {
 
   const { id } = await req.json()
   const admin = createAdminClient()
-
-  const { data: photo } = await admin
-    .from("company_photos")
-    .select("url, storage_path")
-    .eq("id", id)
-    .eq("company_id", company.id)
-    .single()
-
-  if (photo?.storage_path) await admin.storage.from(BUCKET).remove([photo.storage_path])
-  await admin.from("company_photos").delete().eq("id", id).eq("company_id", company.id)
-  if (photo?.url) {
-    await admin.from("media").delete().eq("company_id", company.id).eq("url", photo.url)
-    await admin.from("media").delete().eq("company_id", company.id).eq("thumbnail_url", photo.url)
+  if (typeof id !== "string" || !id) return NextResponse.json({ error: "Photo id required" }, { status: 400 })
+  let deletion: Awaited<ReturnType<typeof deletePhotoPlacement>>
+  try {
+    deletion = await deletePhotoPlacement(admin, company.id, id)
+  } catch (error) {
+    if (error instanceof PhotoInUseError) {
+      return NextResponse.json({ error: error.message, code: error.code, uses: error.uses }, { status: 409 })
+    }
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not delete photo" }, { status: 500 })
   }
 
   await recordCustomerActivity({
     eventType: "photo_deleted",
     pathname: "/dashboard/photos",
-    metadata: { photo_id: id },
+    metadata: { photo_id: id, ...deletion },
   })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, ...deletion })
 }
