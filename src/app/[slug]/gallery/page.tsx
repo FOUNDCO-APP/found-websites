@@ -20,7 +20,7 @@ const illustrativeCollection = "Illustrative Security Photography"
 function galleryIntroduction(name: string, hasStock: boolean, hasOtherPhotos: boolean) {
   if (!hasStock) return `A closer look at ${name}.`
   return hasOtherPhotos
-    ? `Photos shared by ${name}, with illustrative stock photography labeled separately.`
+    ? "Illustrative stock is grouped separately from shared photos; it does not show our personnel, client properties, or completed work."
     : "Illustrative stock photography, not photographs of our personnel, client properties, or completed work."
 }
 
@@ -39,14 +39,13 @@ function GalleryPhotoGroups({ photos, companyName, primary, security }: { photos
     </>}
     <div className="max-w-6xl mx-auto px-8 py-6">
       <h2 className="text-xl font-black">{security ? illustrativeCollection : "Illustrative Photography"}</h2>
-      <p className="mt-2 text-sm text-gray-600">Illustrative stock, not our personnel, client properties, or completed work.</p>
     </div>
     <GalleryLightbox photos={stock} companyName={companyName} primary={primary} />
   </>
 }
 
-function GalleryHeader({ label, intro, primary, media, albumCount = 0, albumName = "" }: {
-  label: string; intro: string; primary: string; media: string | null; albumCount?: number; albumName?: string
+function GalleryHeader({ label, intro, primary, media, albumCount = 0, albumName = "", illustrative = false }: {
+  label: string; intro: string; primary: string; media: string | null; albumCount?: number; albumName?: string; illustrative?: boolean
 }) {
   return (
     <section className={media ? "relative min-h-[45vh] flex items-end overflow-hidden px-8 py-16" : "py-10 px-8 bg-white"}
@@ -61,8 +60,7 @@ function GalleryHeader({ label, intro, primary, media, albumCount = 0, albumName
           </span>}
         </div>
         <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
-        <p className="text-base max-w-xl" style={{ color: media ? "#ffffff" : "#666666" }}>{intro}</p>
-        {media && resolveStockPhoto(media) && <p className="mt-3 text-sm text-white max-w-xl">{resolveStockPhoto(media)?.caption}</p>}
+        <p className={`${illustrative ? "text-sm" : "text-base"} max-w-xl`} style={{ color: media ? "#ffffff" : "#666666" }}>{intro}</p>
       </div>
     </section>
   )
@@ -177,7 +175,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     return (
       <>
         {/* Header */}
-        <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero}
+        <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero} illustrative={hasStock}
           albumCount={albums.length} albumName={albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()} />
 
         {hasContent ? (
@@ -200,7 +198,6 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.72))" }} />
                         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 18px 18px" }}>
                           <p style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 800, color: "white", lineHeight: 1.25 }}>{album.stockCount === album.photoCount ? collectionLabel : album.name}</p>
-                          {album.stockCount > 0 && <p className="text-xs text-white mb-1">{album.stockCount === album.photoCount ? "Illustrative stock photography" : "Includes illustrative stock photography"}</p>}
                           <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>
                             {album.photoCount} {album.photoCount === 1 ? "photo" : "photos"}
                           </p>
@@ -295,7 +292,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       {/* Header */}
-      <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero} />
+      <GalleryHeader label={galleryLabel} intro={galleryIntro} primary={primary} media={galleryHero} illustrative={hasStock} />
 
       {hasPhotos ? (
         <>

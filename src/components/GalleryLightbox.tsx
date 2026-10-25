@@ -151,10 +151,9 @@ export default function GalleryLightbox({ photos: rawPhotos, companyName, primar
                   />
                 )}
               </button>
-              {(media.isStock || media.caption) && (
+              {!media.isStock && media.caption && (
                 <div className="bg-white px-3 py-3 text-gray-700 space-y-1 [overflow-wrap:anywhere]">
-                  {media.isStock && <p className="text-xs font-semibold">Illustrative stock</p>}
-                  {!media.isStock && media.caption && <p className="text-sm leading-relaxed">{media.caption}</p>}
+                  <p className="text-sm leading-relaxed">{media.caption}</p>
                 </div>
               )}
             </InView>

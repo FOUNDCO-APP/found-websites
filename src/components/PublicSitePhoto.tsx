@@ -11,8 +11,3 @@ export default function PublicSitePhoto({ src, alt, hero = false, style, ...prop
     sizes={props.sizes ?? (hero ? "100vw" : stock.sizes)}
     style={hero && stock.heroObjectPosition ? { ...style, objectPosition: stock.heroObjectPosition } : style} />
 }
-
-export function PublicSitePhotoLabel({ src, className = "mt-3 text-xs text-white/80" }: { src: string | null | undefined; className?: string }) {
-  if (!src || !resolveStockPhoto(src)) return null
-  return <p className={className}>Illustrative stock</p>
-}

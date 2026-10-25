@@ -73,7 +73,6 @@ function load(file) {
     if (id === "@/components/PublicSitePhoto") return {
       __esModule: true,
       default: ({ hero: _hero, ...props }) => React.createElement("img", props),
-      PublicSitePhotoLabel: () => null,
     }
     if (id === "@/components/GalleryLightbox") return { __esModule: true, default: ({ photos }) => React.createElement("div", {}, photos.map((photo, index) => React.createElement("img", { key: index, src: typeof photo === "string" ? photo : photo.url }))) }
     if (id.startsWith("@/components/layouts/") && /Layout$/.test(id)) return load(`src/${id.slice(2)}`)

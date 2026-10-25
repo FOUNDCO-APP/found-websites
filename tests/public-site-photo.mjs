@@ -53,15 +53,14 @@ function load(file) {
 }
 
 const { STOCK_PHOTO_LIBRARY: library, resolveStockPhoto } = load("src/lib/stockPhotoLibrary")
-const { default: Photo, PublicSitePhotoLabel: Label } = load("src/components/PublicSitePhoto")
+const photoModule = load("src/components/PublicSitePhoto")
+const Photo = photoModule.default
+assert.equal(photoModule.PublicSitePhotoLabel, undefined, "Removed public badge abstraction is not retained")
 const Hero = load("src/components/PublicPageHeroMedia").default
 const stock = id => resolveStockPhoto(`pexels:${id}`)
 const owner = { src: "https://fixture.test/owner.jpg", alt: "Owner's photo", className: "absolute inset-0 object-cover",
   style: { objectPosition: "71% 42%", opacity: 0.8 }, sizes: "50vw", srcSet: "https://fixture.test/owner-large.jpg 1200w", loading: "lazy" }
 assert.deepEqual({ ...Photo({ ...owner, hero: true }).props }, owner, "Owner element, alt, source, style and loading remain unchanged")
-assert.equal(render(React.createElement(Label, { src: owner.src })), "")
-assert.equal(render(React.createElement(Label, { src: null })), "")
-assert.match(render(React.createElement(Label, { src: stock(8134817).fullViewUrl })), /text-xs[^>]*>Illustrative stock/)
 
 for (const photo of library) {
   const html = render(React.createElement(Photo, { src: photo.fullViewUrl, alt: "Our employees", hero: true, className: "object-cover", style: { opacity: 0.7 } }))
@@ -90,7 +89,7 @@ for (const [section, id, overlay] of [["about", 5511130, "68"], ["services", 345
   const html = render(await page({ params: Promise.resolve({ slug: "fixture" }) }))
   assert.ok(html.includes(stock(id).alt), `${section}: real route uses stock alt`)
   assert.match(html, /2560w/)
-  assert.match(html, /Illustrative stock<\/p>/)
+  assert.doesNotMatch(html, />Illustrative stock<\/p>/, `${section}: no repeated public header badge`)
   assert.ok(html.includes(`bg-black/${overlay}`), `${section}: overlay unchanged`)
   assert.doesNotMatch(html, /other\.jpg/)
   if (section === "contact") assert.match(html, /object-position:23% 50%/)
@@ -107,7 +106,7 @@ const impactProps = { company, activeAddons: [], primaryCTA: { href: "/contact",
 const home = render(React.createElement(Impact, impactProps))
 assert.ok(home.includes(stock(8591606).alt), "Existing legacy Home alias gets honest stock alt")
 assert.match(home, /2560w/)
-assert.match(home, /Illustrative stock<\/p>/)
+assert.doesNotMatch(home, />Illustrative stock<\/p>/, "Home has no stock badge")
 assert.match(home, /bg-black\/62/, "Home overlay unchanged")
 const ownerHome = render(React.createElement(Impact, { ...impactProps, heroImage: owner.src }))
 assert.doesNotMatch(ownerHome, /Illustrative stock<\/p>|srcSet=/)
@@ -128,12 +127,12 @@ for (const gallery of [
     assert.ok(photo)
     const html = render(tile)
     if (resolveStockPhoto(photo.props.src)) {
-      assert.equal((html.match(/Illustrative stock<\/p>/g) ?? []).length, 1, "Every stock tile, including animation copies, has one visible label")
-      assert.match(html, /absolute bottom-3 left-3 z-10 m-0 bg-black\/75/, "Label sits above the image on its own contrasting backing")
+      assert.ok(html.includes(resolveStockPhoto(photo.props.src).alt), "Stock tiles retain truthful alt")
+      assert.doesNotMatch(html, /Illustrative stock<\/p>|bg-black\/75/, "Stock tiles, including animation copies, have no repeated badge or backing")
     } else {
       assert.doesNotMatch(html, /Illustrative stock<\/p>|bg-black\/75/, "Owner thumbnails have no label or empty backing")
     }
     assert.equal(tile.props.style.height, "260px", "Strip dimensions stay unchanged")
   }
 }
-console.log("PASS public stock images: real About/Services/Contact/Home routes, responsive sources, truthful labels/alt, gate focal only, owner images/video/plain states and overlays preserved; no live clients")
+console.log("PASS public stock images: no repeated header/strip badges, responsive sources, truthful alt, gate focal only, owner images/video/plain states and overlays preserved; no live clients")

@@ -14,7 +14,7 @@ import HeroVideo from "@/components/layouts/HeroVideo"
 import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
 import { finalCtaSecondary } from "@/lib/industryCTAs"
-import PublicSitePhoto, { PublicSitePhotoLabel } from "@/components/PublicSitePhoto"
+import PublicSitePhoto from "@/components/PublicSitePhoto"
 
 export default function ImpactLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
@@ -89,7 +89,6 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
               </Link>
             )}
           </div>
-          <PublicSitePhotoLabel src={heroVideo ? null : heroImage} />
         </div>
       </section>
 
@@ -110,7 +109,6 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                 />
-                <PublicSitePhotoLabel src={src} className="absolute bottom-3 left-3 z-10 m-0 bg-black/75 px-2 py-1 text-xs text-white" />
               </div>
             ))}
           </div>

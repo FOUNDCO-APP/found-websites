@@ -183,7 +183,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
                 {albumName}
               </h1>
               {hasStock && <p className="text-sm text-gray-600 mb-3">
-                {isStockOnly ? "Illustrative stock, not our personnel, client properties, or completed work." : "Includes illustrative stock photography, labeled separately from shared photos."}
+                {isStockOnly ? "Illustrative stock, not our personnel, client properties, or completed work." : "Illustrative stock is grouped separately from shared photos; it does not show our personnel, client properties, or completed work."}
               </p>}
               {context && (
                 <p style={{ margin: "0 0 8px", fontSize: 15, color: "#777", fontWeight: 650, lineHeight: 1.35 }}>

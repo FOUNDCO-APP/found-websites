@@ -84,6 +84,9 @@ const page = () => gallery.default({ params: Promise.resolve({ slug: company.slu
 const albumPage = slug => album.default({ params: Promise.resolve({ slug: company.slug, album: slug }) }).then(render)
 const ogPage = slug => og.default({ params: Promise.resolve({ slug: company.slug, album: slug }) }).then(result => render(result.element))
 const sections = html => [...html.matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)].map(match => match[0])
+const badgeCount = html => (html.match(/<p\b[^>]*>\s*Illustrative stock\s*<\/p>/g) ?? []).length
+const explanationCount = html => [...html.matchAll(/<p\b[^>]*>([^<]*)<\/p>/g)]
+  .filter(match => /stock photography|stock is grouped|stock, not our personnel/i.test(match[1])).length
 
 for (const plan of ['found', 'found_pro']) {
   company.plan = plan
@@ -135,14 +138,22 @@ for (const plan of ['found', 'found_pro']) {
   html = await page()
   check(html.includes('Illustrative Security Photography'), `${plan}: stock has a clearly named collection`)
   check(!html.includes(`A closer look at ${company.name}`), `${plan}: stock intro does not imply company personnel`)
-  check(html.includes('Illustrative stock') && !html.includes(stockMetadata.sourceUrl), `${plan}: grid shows short stock label without full credits`)
+  check(badgeCount(html) === 0 && !html.includes(stockMetadata.sourceUrl), `${plan}: thumbnails show no badges or full credits`)
+  check(explanationCount(html) === 1 && html.includes('text-sm max-w-xl'), `${plan}: one discreet Gallery explanation remains`)
+  tables.company_photos.push(photo('stock-header', stock, { website_section: 'gallery_hero', for_website: true }))
+  html = await page()
+  check(explanationCount(html) === 1 && !html.includes(stockMetadata.caption.split('.')[0]), `${plan}: stock Gallery header adds no repeated caption`)
+  check(badgeCount(html) === 0 && html.includes(stockMetadata.alt), `${plan}: stock Gallery header keeps honest alt without a badge`)
+  tables.company_photos.pop()
   tables.company_photos.push(photo('owner', owner, { in_gallery: true }))
   html = await page()
   check(html.includes('Shared Photos') && html.includes('Illustrative Security Photography'), `${plan}: mixed flat gallery separates stock and shared photos`)
   check(html.includes(owner) && html.includes(stock), `${plan}: mixed membership remains intact`)
+  check(badgeCount(html) === 0 && explanationCount(html) === 1, `${plan}: mixed groups do not duplicate the explanation or add badges`)
   openLightbox = true
   html = await page()
   check(html.split(stockMetadata.sourceUrl).length === 2, `${plan}: full source credit appears in open stock lightbox`)
+  check(badgeCount(html) === 1 && html.includes(stockMetadata.photographer) && html.includes(stockMetadata.license.url), `${plan}: open stock details retain disclosure, photographer and license`)
   openLightbox = false
 }
 company.plan = 'found_pro'
@@ -150,8 +161,11 @@ tables.photo_albums = [{ ...publicAlbum, name: 'Our completed work' }]
 tables.company_photos = [photo('stock', stock, { album_id: 'album' })]
 html = await page()
 check(html.includes('Illustrative Security Photography') && !html.includes('Our completed work'), 'Stock-only album card never presented as completed work')
+check(badgeCount(html) === 0 && explanationCount(html) === 1, 'Stock album cards have no per-card badge or duplicated explanation')
+check(!html.includes('Illustrative stock photography</p>') && !html.includes('Includes illustrative stock photography</p>'), 'Album-card badge variants are absent')
 html = await albumPage('published')
 check(html.includes('Illustrative Security Photography') && !html.includes('Our completed work'), 'Stock-only album page uses truthful heading')
+check(badgeCount(html) === 0 && explanationCount(html) === 1, 'Stock album retains one quiet explanation without grid badges')
 check(html.includes('Discuss your security needs') && !html.includes('work like this'), 'Stock album lead capture does not claim actual jobs')
 const stockSeo = await album.generateMetadata({ params: Promise.resolve({ slug: company.slug, album: 'published' }) })
 check(stockSeo.title === 'Illustrative Security Photography' && stockSeo.description.includes('Illustrative'), 'Stock album metadata is truthful')
@@ -159,6 +173,7 @@ tables.company_photos.push(photo('owner', owner, { album_id: 'album' }))
 html = await albumPage('published')
 check(html.includes('Shared Photos') && html.includes('Illustrative Security Photography'), 'Mixed album separates actual shared photos from stock')
 check(html.includes(owner) && html.includes(stock), 'Mixed album retains both kinds of media')
+check(badgeCount(html) === 0 && explanationCount(html) === 1, 'Mixed album keeps group headings and one explanation, not tile labels')
 openLightbox = true
 html = await albumPage('published')
 check(html.split(stockMetadata.sourceUrl).length === 2, 'Stock album lightbox retains full source credit')

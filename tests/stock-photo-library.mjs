@@ -158,7 +158,7 @@ function click(label) {
   button.props.onClick()
 }
 const grid = render()
-assert.match(grid, /Illustrative stock/)
+assert.doesNotMatch(grid, /<p\b[^>]*>Illustrative stock<\/p>/, "Stock grid has no repeated badges")
 assert.ok(!grid.includes(stockCaption), "Stock thumbnails do not repeat collection disclaimers")
 assert.ok(grid.includes(stock.alt))
 assert.ok(!grid.includes("Ron Lach"), "Full credits belong in the lightbox")
@@ -198,7 +198,7 @@ assert.equal(body.style.overflow, "")
 
 props.photos = [library[1].urls[0], { url: ownerUrl, alt: "Owner-supplied project photo", caption: "Owner caption" }]
 const mixed = render()
-assert.ok(mixed.includes("Illustrative stock"))
+assert.doesNotMatch(mixed, /<p\b[^>]*>Illustrative stock<\/p>/, "Mixed grid has no repeated stock badges")
 assert.ok(!mixed.includes("Pixabay"))
 assert.ok(mixed.includes(`src="${library[1].thumbnailUrl.replaceAll("&", "&amp;")}"`), "Legacy stock strings use reviewed thumbnails")
 assert.ok(!mixed.includes(`src="${library[1].fullViewUrl}"`), "Grid does not fetch the stored full-view original")
@@ -209,7 +209,7 @@ assert.ok(!render().includes("Illustrative stock"), "Unknown owner media is not 
 props.photos = [{ url: "https://fixture.invalid/legacy-stock.jpg", isStock: true, alt: "Our staff", caption: "Actual client job" }]
 const legacyStock = render()
 assert.ok(legacyStock.includes('alt="Illustrative stock photo"'))
-assert.ok(legacyStock.includes("Illustrative stock"))
+assert.doesNotMatch(legacyStock, /<p\b[^>]*>Illustrative stock<\/p>/)
 assert.ok(!legacyStock.includes("Illustrative stock; not the company"))
 assert.doesNotMatch(legacyStock, /Fixture Company|Our staff|Actual client job|Photo:|Pexels License|<a\b/)
 click("View photo 1")
@@ -221,4 +221,4 @@ click("Close")
 props.photos = []
 assert.ok(!render().includes("<img"), "Empty input never pulls library inventory")
 for (const cleanup of cleanups) cleanup()
-console.log("Stock library/lightbox tests passed: pinned provenance, spoof rejection, explicit approvals, lean stock labels, full lightbox credits, honest alt, responsive sources, legacy inputs and navigation.")
+console.log("Stock library/lightbox tests passed: pinned provenance, spoof rejection, explicit approvals, no grid badges, full lightbox credits, honest alt, responsive sources, legacy inputs and navigation.")
