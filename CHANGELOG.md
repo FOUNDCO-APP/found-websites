@@ -1,4 +1,40 @@
+## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
+
+- Shawn clarified that he is the only human; team members are the AI assistants
+  and agents he uses. Added explicit authority/identity and current photo behavior
+  clarifications to AGENTS.md and an entry-point pointer in BRIEF.md.
+- Recorded approved staged basic backup approach, temporary relaxation of prior
+  one-hour maximum loss, acceptable few-hours downtime, and outstanding retention,
+  private destination/key custody and upgrade trigger. No backup export, restore,
+  paid plan, vendor or production change performed by this documentation task.
+- Preserved cost comparison: Pro 25/month daily backups versus optional roughly
+  130/month one-Small-project PITR scenario, extra usage/files excluded. Alternatives
+  discussed but not selected. Revenue 216/month and housing goal are owner reports,
+  not verified net profit. Actual hosting plan/commercial eligibility remains open.
+- Saved four independent AI reviews covering all eight team roles, their concerns
+  and disagreements, back-end protection and parallel honest marketing priorities,
+  proposed first milestone and later store preparation. Milestone not started;
+  app checkout/privacy/deletion/beta/account requirements need actual verification.
+- Updated only existing BRIEF, AGENTS, SESSION_HANDOFF, TASKS, DECISIONS and
+  CHANGELOG. No new status MD, unrelated code changes, deployment or store submission.
+
 ## Session: October 25, 2026 - Verified Account/Security Fix And Documentation Closeout
+
+- Read-only security follow-up: membership containment still holds; FOUND is Free,
+  leaked-password protection off, no backups listed and PITR disabled. Existing
+  backup access recovered by removing expired environment override, not by
+  changing credentials. Empty local migration replay fails on missing baseline;
+  no production/private restore performed. Direct REST membership log assessment
+  completed: 79 daily windows, August 9 through October 26 06:12 UTC; returned
+  writes all service-role, anonymous reads only three limit=0 probes. No browser
+  writes returned, but alternate access paths/history gaps preclude an all-clear.
+- Shawn requested backup team discussion and selected maximum one-hour recent
+  work loss. No spending, plan upgrade or production settings approved. Existing
+  MD process retained; information-consistency review remains deferred.
+- Revised independent Priya and Steve/Angela AI reviews reject daily-only
+  backups for the one-hour target. Matching database/file versions, complete-copy
+  freshness monitoring and an isolated restore drill are required. Retention,
+  downtime, selected architecture and verified cost remain open for approval.
 
 - Audit follow-up: Shawn deferred the information-consistency review (website,
   pricing wording, Terms and internal documents). Recorded as a later to-do;

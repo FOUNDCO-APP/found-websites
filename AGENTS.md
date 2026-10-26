@@ -110,6 +110,18 @@ Owns the mobile experience. Thinks about the app on a job site — offline, dirt
 
 ## Rules of Engagement
 
+**Team identity and authority (October 26, 2026):** Shawn is the only human on
+the Found team. Other team members are AI assistants/agents, including any AI he
+brings into the project. The Apple-inspired names above are review roles, not
+claims that those people participate. Role approval is a recommendation to Shawn,
+not a substitute for his approval. Report which independent reviews actually ran;
+do not invent dialogue, unanimity, completed work or permission to act.
+
+**Current photo behavior:** Historical heart-to-website descriptions above are
+not the current publication contract. Heart saves private Favorites; explicit
+Gallery controls publish to the website. Verify actual behavior before promising
+or changing it. See SESSION_HANDOFF.md for current truth and pending work.
+
 **Shawn's terminology (October 20, 2026):** When Shawn says "you" about Found work,
 he means the Found team, not a solo AI decision-maker. Route questions and proposed
 decisions through the relevant team roles, then obtain Shawn's approval before

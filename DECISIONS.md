@@ -1,4 +1,44 @@
-## October 25, 2026 - Current Supersession And Approval Boundaries
+## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
+
+Shawn is the only human on Found's team. Other members are AI assistants/agents;
+Apple-inspired roles describe review responsibilities, not actual participants.
+Independent reviewers inform Shawn; only he authorizes new execution scope.
+
+Approved: lean staged backup approach for four reported clients/216 USD monthly
+revenue. Begin basic dated encrypted database/account and separate original-file
+copies outside Supabase plus safe recovery testing. Temporary greater loss than
+the original one-hour maximum is accepted; prefer minimal loss, few-hours outage
+acceptable. No new interim numeric loss limit, retention/destination, exact review
+date or guarantee selected. Resolve unchosen sensitive-data handling details
+before execution. No paid upgrade, PITR, vendor, public export or production
+restore authorized. Backups/restore not yet performed or verified.
+
+Pro at 25 USD/month is a later spending decision, not a 130 USD requirement.
+The latter estimate includes optional PITR and minimum compute, not file copies
+or excess usage. Reverify prices before purchase. Existing cloud servers do not
+imply a new server per client; actual plan/commercial eligibility remains to check.
+
+Four independent reviews covered all eight team roles on back-end protection,
+front-end truth/customer proof and later mobile/store readiness. Their proposed
+milestone is "Found can onboard, serve and recover a customer without Shawn
+rescuing the process." Shawn asked to save all information BEFORE moving forward;
+this is not permission to implement every recommendation, alter billing or submit
+to either store. Details/role positions/disagreements are in SESSION_HANDOFF.md.
+Information-consistency review remains deferred. Other pending Gallery/theme/
+image approvals are unchanged. No invented testimonials, automatic publication,
+unverified AI claims or assumed store payment-policy exemption.
+
+Save in the existing MD process; documentation commit is not a deployment or
+permission to push to a shared branch. No competing status/handoff file.
+
+## October 25, 2026 - Previous Supersession And Approval Boundaries
+
+Security follow-up: Shawn approved investigation, requested the backup approach
+in a visible team meeting, and selected at most ONE HOUR of recent customer work
+lost after failure. Do not confuse this with a promised one-hour restore time.
+Daily backups alone are insufficient. No plan upgrade, PITR purchase, new provider
+or production configuration is approved yet. Return the complete database/file
+recovery proposal, ongoing costs and safe restore-test scope for his approval.
 
 Shawn explicitly reaffirmed the existing documentation process: BRIEF.md is the
 entry point; SESSION_HANDOFF.md is current truth; TASKS.md and the existing

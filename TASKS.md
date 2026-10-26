@@ -3,7 +3,40 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Now - October 26 Documentation And Staged Protection
+
+- [x] Record Shawn's team clarification: only human is Shawn; other members are
+  AI assistants/agents. Actual independent discussion must be visible to him.
+- [x] Save backup decisions, business context, all eight role perspectives and
+  proposed pre-store milestone in existing files, not a new status document.
+- [x] Record approved temporary relaxation of the one-hour data-loss target and
+  acceptable few-hours downtime; no new interim numeric loss limit selected.
+- [ ] Implement approved basic encrypted database/file backup direction safely:
+  establish private offsite destination, retention/key custody and repeatable
+  operation, resolve missing details with Shawn, then verify protected copies.
+  No export/backup run or subscription purchase completed in this discussion.
+- [ ] Prove isolated recovery without customer messages, charges, webhook replay
+  or production overwrite. Preserve current tenant access controls when restoring.
+- [ ] Return bounded first-milestone execution scope to Shawn. Proposed outcome:
+  onboard, serve and recover a customer without Shawn rescuing the process.
+  Meeting/documentation approval alone does not start the proposed milestone.
+- [ ] Proposed back-end work: customer journey/payment lifecycle, Pro feature
+  selection, inquiry delivery, tenant/private photo isolation, AI verification,
+  error visibility and hosting eligibility/usage/budget. Barrio Builders first.
+- [ ] Proposed parallel front-end work: real product/camera captures, founder
+  and reachable support, permitted client examples, inspect unsupported imagery.
+  No blanket redesign, publication or copy-consistency work authorized.
+- [ ] Later store readiness: native status/real devices, subscription-policy
+  design, privacy/deletion, review access, signed beta builds and actual account
+  testing requirements. No enrollment, paid upgrade or submission authorized.
+- [ ] Select paid-upgrade trigger/review date with Shawn; two-week review was a
+  suggestion, not a scheduled reminder. Pro starts at 25/month; optional PITR
+  scenario approximately 130/month before extra usage/files, not a required fee.
+
 ## Now - Hiram Gallery Follow-Up
+
+Current priority is the security check/recovery proposal below; Gallery decisions
+remain pending and are not authorized by this investigation.
 
 - [x] Shawn reports the duplicate-client issue seems fixed. Preserve the shared
   login, paid website and reversible retired record.
@@ -21,6 +54,34 @@ historical divider below; old unchecked items are not automatic authorization.
   pricing headings and conflicting promises. Keep as a to-do, not current work.
   This is information cleanup, not approval to change prices, subscriptions or
   customer terms. Other proposed audit work has not been newly approved.
+
+## Now - Security Check And Backup Team Discussion
+
+- [x] Recheck live membership containment: browser CRUD denied, trusted server
+  CRUD retained, five membership records/fingerprint unchanged.
+- [x] Confirm FOUND organization is Free; leaked-password protection is disabled.
+  Official documentation requires Pro or higher for that protection.
+- [x] Inspect actual backup list using existing CLI login after removing expired
+  environment-token override: no listed backups, PITR disabled. Do not treat
+  WAL-G enabled as proof of a usable restore point or absence of internal copies.
+- [x] Reproduce empty-database migration failure: missing update_updated_at()
+  prerequisite (42883). Full restore is not proven; local security fixtures pass.
+- [x] Complete bounded direct REST membership log sweep: 79 daily windows from
+  August 9 through October 26 06:12 UTC. Returned writes all service-role;
+  three anonymous reads all limit=0 probes (one 200, two 401). No browser writes
+  returned. This is route-specific evidence, not a historical breach clearance.
+- [ ] Historical review residual: SQL/GraphQL/RPC and incomplete DML evidence
+  prevent an all-clear; DDL-only logging/no pgAudit cannot establish all past DML.
+- [x] Bring backup proposal through visible team discussion. October 26 staged
+  approval above supersedes the original strict one-hour target temporarily.
+  Daily-only protection still does not meet that target. No managed/custom
+  frequent recovery option has been implemented or proven. Retention remains open;
+  a few hours of downtime is acceptable, not a measured restore guarantee.
+- [ ] Actual isolated restore drill remains unperformed. Establish a complete
+  baseline and safe PostgreSQL 17 test environment first; disable emails, payments
+  and webhooks and retain the latest access-control fixes before reopening access.
+- [ ] Obtain explicit approval for the chosen approach, costs and configuration
+  before any plan upgrade, PITR activation or production change. No purchase yet.
 
 ## 2026-10-25 - Approved Hiram Duplicate And Security Fix
 

@@ -6,7 +6,149 @@ approvals and the plan; dated entries afterward are supporting history. Shawn
 confirmed the duplicate-client fix. No new Gallery, theme or image approval was
 given, and documentation-only saving authorizes no new product work.
 
-## Current Overview - October 25, 2026
+## Current Overview - October 26, 2026
+
+Shawn requested saving the entire backup/readiness discussion BEFORE beginning
+the first milestone. This is documentation-only work, not approval to execute
+all new readiness recommendations. Shawn is the only human; the team comprises
+AI assistants/agents using the roles in AGENTS.md. Four independent reviews
+covered all eight roles; this was not eight separate reviewers or real Apple staff.
+
+### Business Context And Approved Backup Direction
+
+- Shawn reports four paying clients: MBJ Heating and Cooling, RC Bicycles,
+  Divine Remodel and Hiram's Intelligence Protection Security LLC. The first
+  three were existing clients moving from Namecheap reseller hosting; Hiram was
+  a new personal contact. Reported recurring revenue is USD 216/month, not a
+  freshly reconciled ledger. His housing-income goal is approximately USD 1,100
+  after business costs. Revenue must not be described as verified net profit;
+  fees, usage costs and other expenses still need accounting.
+- Shawn approved a lean staged approach and temporary relaxation of the earlier
+  one-hour maximum data-loss requirement. A few hours of downtime is acceptable;
+  prefer as little information loss as practical. No new numeric interim loss
+  limit, retention period or firm upgrade date was chosen. Do not promise the
+  one-hour target, guaranteed restoration time or low failure probability.
+- Approved initial direction: dated encrypted database/account-record exports
+  and separate copies of original uploaded files in private storage outside
+  Supabase, with a safe isolated restore test. Not executed: no new backup export,
+  destination, recurring job or restore is confirmed. Select secure destination,
+  retention, key custody and repeatable operation before using real private data;
+  unresolved choices expanding scope return to Shawn, never public Git storage.
+- Later stages: Pro daily backups when Shawn approves spending; more frequent
+  monitored recovery when business exposure/usage warrants it. No plan upgrade,
+  PITR, new vendor, cloud resource, paid tool or production setting approved.
+  A two-week review was proposed, not scheduled or assigned an exact date.
+- Cost explanation verified October 26: Pro starts at USD 25/month with seven
+  days of DAILY database backups, not backups every seven days. The approximately
+  USD 130 alternative assumes one Small project: 25 Pro + approximately 100 for
+  seven-day PITR + 15 Small compute - 10 included compute credit. Usage and file
+  backup costs are additional. PITR is optional, not the price of ordinary Pro.
+  Database backups do not preserve Storage file bytes. Recheck current pricing
+  before any purchase: https://supabase.com/pricing and
+  https://supabase.com/docs/guides/platform/backups.
+- Alternatives discussed, not selected: separate managed backup service or
+  automated logical exports plus versioned file copies. SimpleBackups listed
+  monthly 49/12-hour, 99/hourly, 299/five-minute options when checked; schedule
+  alone is not a data-loss guarantee. Count engineering, storage, bandwidth,
+  secret handling and restore effort, not subscription price alone. No migration
+  away from Supabase recommended merely to obtain backups.
+- Existing cloud hosting already runs Found; another client does not itself
+  require buying a separate server. Verify actual plans, commercial-use rights,
+  resource use and spend alerts. Vercel Hobby is noncommercial-only; actual Found
+  Vercel plan was NOT verified in this discussion. Do not claim a violation.
+
+### Visible Team Meeting - Before The App Stores
+
+Recommendations below are recorded for review, not fresh production findings:
+
+- Steve / product: protect existing clients and prove onboarding, publication
+  and recovery before store submission. Retention comes before expansion.
+- Phil / marketing: genuine product demonstration, Shawn's identity/reachable
+  support and permitted real customer examples; keep acquisition moving alongside
+  foundation work rather than waiting for the stores.
+- Jony / design: inspect reported fabricated imagery/claims and replace with
+  truthful product captures; clean mobile workflows, not an unnecessary redesign.
+- Angela / customer experience: observe an unaided full journey: signup, package,
+  activation, included Pro feature choice, photo capture/private Favorites and
+  explicit Gallery publication. Verify the feature-choice flow; no new alert or
+  implementation selected. Clear help and failure recovery matter too.
+- Craig / engineering: test login, payment lifecycle, updates, inquiry delivery
+  and actionable error reporting; avoid packaging over an unreliable core.
+- Priya / data/security: finish recovery inventory and test matching records and
+  files; preserve current access protections. Partial historical review is not
+  proof nobody exploited the former membership exposure.
+- Marcus / integrations: Barrio Builders first; correct-tenant publication,
+  private-photo isolation, customer-form delivery and no cross-client changes.
+- Chris / mobile: real iPhone/Android camera permissions, upload interruptions,
+  sign-in/session return and network recovery; no unverified offline promise.
+
+Visible disagreement: Steve/Craig favor holding submission until foundation
+verification; Phil favors marketing/acquisition in parallel. Marcus emphasizes
+correct website behavior; Chris says that is insufficient without reliable phone
+capture/upload. Proposed synthesis: back-end protection and honest marketing in
+parallel, then native/store testing. Shawn requested saving BEFORE moving forward.
+
+### Proposed First Milestone And Next Approval
+
+"Found can onboard, serve and recover a customer without Shawn rescuing the
+process." Not started or certified by this meeting. Proposed evidence:
+
+1. Basic protected copies and an isolated recovery test, without production
+   overwrite, outgoing customer messages, payments or webhook replay.
+2. Observed signup/activation/Pro choice/login, failed payments and cancellation,
+   inquiries and explicit photo publication; protect existing paid accounts.
+3. Inventory and verify the AI capabilities actually promised; intentional
+   fallback is not proof AI works. New repairs/providers/costs need approval.
+4. True camera-to-published-site captures, reachable founder/support and permitted
+   customer examples; verify/remove reported unsupported proof, not invented quotes.
+5. Verify hosting eligibility, limits and practical operating budget.
+
+Then prepare one Found management app, not separate apps for each tenant. Native
+implementation/Capacitor status needs fresh verification; last audit found none.
+Before submission review actual subscription/payment design against each store's
+current rules (do not assume Stripe checkout transfers unchanged), account/data
+deletion, privacy/Data Safety forms, SDK data collection, camera permissions,
+signed builds, reviewer access, screenshots and real-device beta results. Apple
+requires utility beyond a repackaged website. Google closed testing of 12 testers
+for 14 continuous days applies to qualifying newer personal accounts, not all
+accounts; Found's developer account type/status was not verified. See:
+https://developer.apple.com/app-store/review/guidelines/
+https://support.google.com/googleplay/android-developer/answer/14151465
+https://support.google.com/googleplay/android-developer/answer/13327111
+
+Do not submit, enroll, spend, change checkout or implement the proposed milestone
+from this documentation request. Resume with the staged-backup implementation
+details and bounded milestone scope for Shawn. Existing deferred consistency
+review, Gallery decisions, theme and collections remain deferred/pending.
+
+## Previous Overview - October 25, 2026
+
+Historical context below is superseded by the October 26 backup direction above.
+
+Latest active work: Shawn approved the security CHECK, then explicitly requested
+a visible team meeting on the backup approach. He selected a maximum ONE HOUR of
+lost recent customer work. This is a recovery-data target, not downtime assurance
+or approval for purchases, provider changes or production configuration.
+
+Read-only findings: correct FOUND organization reports Free; leaked-password
+checking disabled; actual CLI backup list reports backups=[], PITR false, WAL-G
+true. Backup access works after clearing an expired environment token so the
+existing stored login is used; no screenshot/reconnection is currently needed.
+No listed restore point is not proof there are no provider-internal copies.
+Five memberships unchanged; 475 storage objects across five buckets require file
+byte protection separately from database backups. Empty local migration replay
+fails 42883 on missing public.update_updated_at(); no full restore completed.
+Historical direct REST membership review completed across 79 daily windows,
+August 9 through October 26 06:12 UTC. Returned writes all use service_role;
+the only three anonymous reads are limit=0 probes (one 200, two 401). No browser
+writes returned. This does not cover SQL/GraphQL/RPC or establish a breach
+clearance; DDL-only logging and no pgAudit leave historical evidence gaps.
+Revised independent Priya and Steve/Angela AI reviews reject daily-only backups:
+compare managed recovery plus versioned files with independent automated copies,
+monitor age of the latest COMPLETE recovery point below 60 minutes, and prove
+matching database/file recovery in isolation. Retention, downtime and verified
+cost remain undecided. No spending or configuration change approved. Keep planning
+and evidence in these existing files; no new status document.
 
 Latest priority instruction: Shawn deferred item 3 of the plain-English audit
 discussion (making website, pricing, Terms and internal information agree).
