@@ -66,10 +66,19 @@ multi-session PostgreSQL lock scheduling is not simulated by PGlite fixtures.
 No test used live clients, provider sends, password changes or live payment creation.
 
 Release status at this checkpoint: database installed; final production build,
-TypeScript and all 86 static pages passed. Release publication verification pending.
-Do not call this live until commit/deployment verification is recorded below.
+TypeScript and all 86 static pages passed. Code saved in local commit
+49873fc5b0a5bf2e34d642237aa7365d75b88a87. Production push was rejected by the
+safety review because implementation approval did not explicitly authorize this
+new shared-branch publication. A production-release approval question was sent
+to Shawn. Do not retry, deploy by another route, or claim this code live without
+his explicit answer. Additive DB objects are installed but no activation rows
+were created by our tests. Release/deployment verification remains pending.
 Browser inventory had no connected browser; actual mobile cookie persistence and
 delivery/reset roundtrip remain unverified. Do not claim all-client end-to-end QA.
+Local production server started successfully at 127.0.0.1:3117, but browser and
+direct loopback HTTP attempts timed out (sandbox socket access was also denied
+before escalation). No local HTTP/visual pass is claimed; server was stopped.
+Recovery UI is covered by actual hook-render fixtures, not a device screenshot.
 Rollback must retain durable payment evidence; never restore unguarded creation
 or drop attempts after use. Prefer reviewed roll-forward if activation is uncertain.
 

@@ -11,6 +11,12 @@
 - Local groups passed: 28 payment, 26 PostgreSQL, 49 auth, 9 retry navigation,
   15 retirement, 12 membership, 60 billing and 426 promo. No remote email/reset/charge.
   Final production build/TypeScript/86 static pages pass; release verification pending.
+- Code saved locally as 49873fc. Safety review rejected production push pending
+  explicit publication approval; asked Shawn and did not bypass. DB safeguard is
+  installed, but code/deployment is not live. Protected data remains unchanged.
+- Local production server reached Ready; browser/direct loopback checks timed out
+  under this host's access limits. Stopped server, retained fixture/build evidence,
+  and left real browser/inbox/cookie verification pending rather than claiming pass.
 - Additive migration installed transactionally; zero new attempt records initially;
   service-only grants/RLS and unchanged protected data verified. Advisor baseline
   unchanged. No schema rebuild/CLI push or claim of reconciled migration history.

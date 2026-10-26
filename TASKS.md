@@ -18,7 +18,9 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Regression groups: confirmation 28, SQL 26, auth 49, recovery navigation 9,
   retirement 15, membership 12, billing 60, promo 426. Independent review complete.
 - [x] Final production build, TypeScript and 86 static pages pass.
-- [ ] Commit/push approved release and verify Vercel/public paths.
+- [x] Save tested release locally: 49873fc. Existing application code not yet live.
+- [ ] Obtain explicit production-publication approval, then push and verify
+  Vercel/public paths. Initial push blocked by safety review; no workaround.
 - [ ] Actual signed-in phone/inbox/sandbox journey remains unperformed; connected
   browser unavailable. Synthetic Barrio fixture is not a live customer payment test.
 
