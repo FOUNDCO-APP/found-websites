@@ -6,7 +6,14 @@ approvals and plan of attack. This older introduction is background context,
 not the current deployment or authorization record. Follow the visible team
 discussion and Shawn-approval process in `AGENTS.md`.
 
-This document is the fast-start briefing for bringing Grok into Found Co. work. It should be read together with:
+**October 26 integrity clarification:** This is a historical introduction, not
+an alternative source of current truth for Grok, Muse or another AI. Body headings
+using "current" describe their original October 3 context; old promo dates,
+release IDs, pricing and worktree snapshots are not live findings. Shawn is the
+only human. Read the newest SESSION_HANDOFF overview and explicit approvals first;
+check that its commit has actually reached the branch you can access.
+
+This document is background for bringing Grok into Found Co. work. It should be read together with:
 
 1. `BRIEF.md`
 2. `SESSION_HANDOFF.md`

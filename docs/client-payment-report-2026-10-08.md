@@ -1,5 +1,11 @@
 # Found Client Payment Report
 
+October 26 availability note: the private report referenced below is intentionally
+Git-excluded, not a missing shared prerequisite. For current safe outcomes read
+SESSION_HANDOFF.md at the repo root and the tracked billing/retirement records.
+Do not publish raw customer snapshots or infer current balances from this old
+report. New financial decisions require authorized current verification.
+
 Superseded by the complete live audit in `.billing-audits/client-payment-report-2026-10-09.md`. Verified RC arrears are $39; subscription canceled September 14 because of payment failure. The private report includes actual payment timestamps and all invoices.
 
 **PARTIAL VERIFICATION: This report is not a complete Stripe account reconciliation. Invoice dates below are creation dates, not actual payment dates. Exact balances, complete invoice history, and transaction history remain pending live Stripe access.**

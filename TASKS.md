@@ -5,6 +5,13 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Now - October 26 Documentation And Staged Protection
 
+- [x] Audit cross-AI documentation availability: 19 entry docs exist in both
+  checkouts; five byte differences are line endings only. Initial scan covered
+  57 tracked Markdown files/582 references; clarify historical/private artifacts
+  and retain safe local-only stock review notes at their existing paths in Git.
+- [ ] Publish documentation-only commits with Shawn's explicit approval and verify
+  remote branch. Local save/commit is not availability to GitHub-only AIs.
+
 - [x] Record Shawn's team clarification: only human is Shawn; other members are
   AI assistants/agents. Actual independent discussion must be visible to him.
 - [x] Save backup decisions, business context, all eight role perspectives and

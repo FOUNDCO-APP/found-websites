@@ -26,8 +26,8 @@ Before you write code, make a product suggestion, or take action, read these fil
 5. `AGENTS.md` - the Found team and approval rules.
 6. `PROJECT.md` - what Found is, stack, brand, database, build status.
 7. `PRODUCT_BRIEF.md` - product vision, features, pricing, upgrades.
-8. `DECISIONS.md` - approved product decisions, locked unless Steve reopens them.
-9. `DESIGN_DECISIONS.md` - approved visual/UX decisions, locked unless Jony reopens them.
+8. `DECISIONS.md` - approved product decisions; reopening requires Shawn's approval after product review.
+9. `DESIGN_DECISIONS.md` - approved visual/UX decisions; reopening requires Shawn's approval after design review.
 10. `ONBOARDING.md` - onboarding question flow, wording, tone, branching logic.
 11. `INDUSTRY_MANIFESTS.md` - industry section manifests.
 12. `INDUSTRY_WORKFLOW_AUDIT.md` - intake vocabulary vs business tools audit.
@@ -42,6 +42,17 @@ If a required file is missing, stop and tell Shawn before proceeding.
 ---
 
 ## STEP 2 - START EVERY SESSION WITH CURRENT STATUS
+
+**Cross-AI availability check (October 26):** Files on disk, a local commit and
+a push are different states. Confirm branch/HEAD, `git status` and commits ahead
+of the remote-tracking branch before claiming another AI sees the same handoff.
+Remote-tracking refs can be stale; verify the actual remote after an authorized
+push. A GitHub-only AI cannot see unpushed work. The latest dated overview and
+explicit approvals override old "current" headings in historical notes.
+Private billing snapshots, external assistant memory and local image boards are
+not shared repo dependencies. Keep public-safe decisions in the existing tracked
+handoff/logs; unavailable private evidence is not permission to invent results or
+replay a one-time action. See SESSION_HANDOFF's documentation-integrity section.
 
 After reading `SESSION_HANDOFF.md`, your first useful response must include:
 

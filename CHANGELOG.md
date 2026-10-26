@@ -1,5 +1,20 @@
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
+- Follow-up connected-notes audit requested by Shawn: all 19 entry documents
+  exist in both checkouts; five hash differences are only line endings. Initial
+  scan of 57 tracked Markdown files/582 mentions found nine source/target pairs
+  needing classification, not nine missing required documents. Independent
+  engineering/data review flagged competing historical instructions and local
+  versus pushed confusion. Clarified authority, archived TEMP/Grok instructions,
+  historical plan precedence and intentionally private/external evidence.
+- Preserve four existing public-safe stock-review notes in Git at their original
+  paths; original photos/boards and private billing snapshots stay excluded.
+  Latest discussion commits are local until a separately authorized push.
+- Final bounded reference scan: 61 Markdown files/597 mentions; zero unresolved
+  missing Markdown targets, four explicitly classified private/external/history
+  exceptions. All 19 entry docs are present; no assertion that local image boards
+  or private audit snapshots are shared, and no application/runtime audit implied.
+
 - Shawn clarified that he is the only human; team members are the AI assistants
   and agents he uses. Added explicit authority/identity and current photo behavior
   clarifications to AGENTS.md and an entry-point pointer in BRIEF.md.
@@ -242,7 +257,7 @@ Shawn set up Metricool (free) and connected Facebook + Instagram, then asked for
 
 ### Decided
 - **Scheduling tool: Metricool.** Compared against Publer, Buffer, Meta Business Suite on live pricing. Metricool prices per "brand," so one ~`$20/month` annual rate covers FB, IG, TikTok, YouTube, and Google Business Profile together with analytics + recycling included. On free plan now; upgrade to Starter annual when the 20-post/month cap bites. Full rationale in `DECISIONS.md`.
-- **Growth strategy framework** (team meeting: Steve, Phil, Jony, Angela) approved as the working direction — see `DECISIONS.md` and the new strategy sections in `social-media-content-brief.md`.
+- **Growth strategy framework** (team meeting: Steve, Phil, Jony, Angela) approved as the working direction — see `DECISIONS.md` and the new strategy sections in `docs/social-media-content-brief.md`.
 
 ### Changed
 - `docs/social-media-content-brief.md`: replaced the old "Scheduling tools" section with a decided-tool section (Metricool) plus a new "Growth strategy (team meeting, September 7, 2026)" block — Steve's post filter, Phil's 2026 reach playbook (Reels/carousels, hooks, per-platform CTA, Stories, engage-out, consistency, `$5-10/day` boost after 7 days), Jony's 7-container design system, Angela's 60/30/10 content ratio, the 7 post types, and a 24h-metrics rule. Updated the header block and "Open concerns and pending decisions" (5 tactical decisions still open with Shawn).

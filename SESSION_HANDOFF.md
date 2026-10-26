@@ -121,6 +121,52 @@ from this documentation request. Resume with the staged-backup implementation
 details and bounded milestone scope for Shawn. Existing deferred consistency
 review, Gallery decisions, theme and collections remain deferred/pending.
 
+### Documentation Integrity And Cross-AI Availability - October 26
+
+Shawn requested a connected-notes audit because Muse previously encountered
+missing/conflicting context. Checked all 19 onboarding/entry documents in both
+checkouts: every file exists. Five initial hash differences were only CRLF/LF,
+with identical text. Main checkout remains dirty with unrelated code; the release
+checkout is the safe documentation commit source. Do not bulk-stage or deploy
+main to make its status look clean.
+
+Initial scan: 57 tracked Markdown files, 582 local Markdown mentions, nine unique
+source/target pairs needing clarification. These were an abbreviated social-brief
+path, local-only stock notes, intentionally private billing evidence, external
+Claude memory and a historical Barrio repo reference. This is a bounded entry/
+path audit, not proof all old chat, external accounts, images or deployed behavior
+are captured or freshly verified.
+
+Final bounded scan after corrections: 61 Markdown files and 597 mentions;
+zero unresolved missing Markdown targets. Four source/target exceptions remain:
+two private billing references, one external-memory reference and one historical
+other-repository reference. These are labeled below, not silently called present.
+
+- Required/shared: the read order in BRIEF. CLAUDE imports the same entry docs;
+  README directs to them. GROK_HANDOFF and TEMP_SESSION_NOTES are historical,
+  not independent current truth. No new Muse-specific status document is needed.
+- Public-safe stock notes retained at existing paths:
+  [initial approval](quality/security-stock-2026-10-24/APPROVED.md),
+  [earlier design screen](quality/security-stock-2026-10-24/DESIGN-REVIEW.md),
+  [free collection](quality/security-stock-2026-10-24/FREE-COLLECTION-REVIEW.md),
+  [sourcing history](quality/security-stock-2026-10-24/TEAM-SOURCING-DIRECTION.md).
+  Old counts/placements do not override this overview's five-item Hiram Gallery.
+  IDs/source links remain available; original images and large local boards
+  referenced inside these notes are not promised as Git attachments.
+- `.billing-audits/` reports/snapshots are intentionally private and Git-excluded.
+  Historical references are not shared dependencies. Safe outcomes are retained
+  here and in tracked billing/retirement notes. When raw proof is needed, use
+  authorized live read-only verification or ask for access; never publish private
+  customer snapshots to repair a link.
+- Historical feedback_team_approval_process references mean external assistant
+  memory, not a missing repo prerequisite. AGENTS/BRIEF retain the binding rule:
+  actual independent discussion visible to Shawn, his approval before action,
+  no self-authorized implementation or fabricated team conversations.
+- e5d0fc0 and a0d18ec were ahead of locally recorded origin/main at this audit.
+  They were not pushed by this task. The later integrity-save commit likewise
+  needs an authorized push before GitHub-only AIs can see it. Verify the remote
+  afterward; saving/committing does not itself establish shared availability.
+
 ## Previous Overview - October 25, 2026
 
 Historical context below is superseded by the October 26 backup direction above.
@@ -244,7 +290,7 @@ Documentation-only commits after this release do not imply new application work.
 5. **Controlled collections:** shared Collections vs Jobs/Estimates-generated albums
    is deferred research, not an approved all-site grouping rollout.
 
-### Plan Of Attack
+### Historical Plan Of Attack - Superseded By October 26 Overview
 
 This is a handoff of existing work, not new implementation authorization.
 
@@ -746,7 +792,7 @@ Both photo reviewers recommend an explicit twelve-photo first release, keeping t
 
 Latest retry update: first owner-library production build passed (83 static pages) and independent backend review cleared the import code. Additional approved-use enforcement is being completed before activation. Independent review reproduced two bypasses to fix: withdrawal via `availableInLibrary=false` must not waive existing usage restrictions, and legacy image-field updates must validate stock URLs/arrays before writes. New placement/publication suite has eleven passing fixture scenarios but originally missed those bypasses; final fixes/build/review remain pending at this update. Local preview was started and stopped because the isolated checkout lacks local Supabase configuration; no working browser preview or mobile screenshots are claimed.
 
-Original inspection supersedes the fifteen-photo board: 69483, 4923382 and 16859956 are held for identifiable branding after independent design/license review. Twelve visually clear candidates remain; no complete fifteen/eighteen-image library exists. See updated `FREE-COLLECTION-REVIEW.md`. The old fifteen-image approval question is outdated; do not activate that board as-is. All fifteen originals are local-only and checksum-verified; no shared upload or new public-image changes occurred.
+Original inspection supersedes the fifteen-photo board: 69483, 4923382 and 16859956 are held for identifiable branding after independent design/license review. Twelve visually clear candidates remain; no complete fifteen/eighteen-image library exists. See updated `quality/security-stock-2026-10-24/FREE-COLLECTION-REVIEW.md`. The old fifteen-image approval question is outdated; do not activate that board as-is. All fifteen originals are local-only and checksum-verified; no shared upload or new public-image changes occurred.
 
 Newest instruction: free stock only, reusable across Found security-industry sites. This supersedes the earlier Adobe sourcing recommendation and the old statement that Shawn still needs to choose a provider. No paid licensing, subscription or credits authorized.
 

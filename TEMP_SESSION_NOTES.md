@@ -1,5 +1,12 @@
 # TEMP SESSION NOTES — May 29, 2026
-### Save this until we rebuild all docs next session
+### Historical May 29 notes - not a current task list
+
+October 26 clarification: retained as history only. Read BRIEF.md and the newest
+SESSION_HANDOFF.md overview before acting. Do not follow old "resume" directions,
+recreate existing docs/onboarding or use its photo-publication promises. Heart
+now saves private Favorites; Gallery controls publish. The reference to another
+repository's team file below is historical, not a missing dependency; AGENTS.md
+in this repo is authoritative. Shawn is the sole human approver.
 
 ---
 
