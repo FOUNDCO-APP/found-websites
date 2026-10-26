@@ -23,8 +23,8 @@ import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSitePhotoSections, getIndependentHeaderSlots, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
 import { mergePhotoPlacement, isPhotoPlacementResult } from "@/lib/photoPlacement"
 import HomepageHighlightEditor from "@/components/dashboard/HomepageHighlightEditor"
-import { resolveHighlightHref } from "@/lib/highlightLinks"
-import { switchHomepageHighlightToText } from "./actions"
+import { ANNOUNCEMENT_PHOTO_HREF, isHighlightPhotoHref, resolveHighlightHref } from "@/lib/highlightLinks"
+import { publishAnnouncementPhoto } from "./highlightActions"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -72,7 +72,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
   const [announcementPagePickerOpen, setAnnouncementPagePickerOpen] = useState(false)
-  const [artworkSetup, setArtworkSetup] = useState(initialConfig?.announcement_style === "artwork" || initialConfig?.announcement_enabled !== true)
+  const [announcementDestination, setAnnouncementDestination] = useState<"page" | "photo">(isHighlightPhotoHref(initialConfig?.announcement_cta_href) ? "photo" : "page")
   const [highlightBusy, setHighlightBusy] = useState(false)
   const [regenerating, setRegenerating] = useState<Section | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
@@ -588,24 +588,21 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   function saveAnnouncementButtonAction(target: { label: string; href: string }) {
     const updates = {
       announcement_cta_href: target.href,
-      announcement_cta_label: target.label,
     }
     const previousHref = config.announcement_cta_href
-    const previousLabel = config.announcement_cta_label
     setConfig(prev => ({ ...prev, ...updates }))
     setSaved("announcement_cta_href")
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => {
       const results = await runSiteEditorAction("save_featured_update_button", () => Promise.all([
         updateSiteField("announcement_cta_href", target.href),
-        updateSiteField("announcement_cta_label", target.label),
       ]), () => {
-        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref, announcement_cta_label: previousLabel }))
+        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref }))
         setSaved(null)
       })
       if (!results) return
       if (results.some(result => result && "error" in result)) {
-        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref, announcement_cta_label: previousLabel }))
+        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref }))
         setSaved(null)
         flashSaveError()
       } else {
@@ -989,7 +986,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementMutedColor = announcementIsLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.72)"
   const announcementSubtleColor = announcementIsLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
-  const announcementUsesImage = announcementStyle === "image"
+  const announcementUsesImage = announcementStyle === "image" && !isHighlightPhotoHref(config.announcement_cta_href)
   const announcementSelectedStyle = announcementStyle === "default" ? "dark" : announcementStyle
   const announcementContentHref = getSiteCTAs(
     { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: "content", booking_cta_label: bookingCtaLabel },
@@ -1396,40 +1393,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
-      {artworkSetup || announcementStyle === "artwork" ? (
-        <div id="featured-update" style={{ padding: "0 20px" }}>
-          <h2 style={{ margin: "0 0 18px", ...TYPE.title, color: "white" }}>Homepage Highlight</h2>
-          <HomepageHighlightEditor
-            companyName={company.name}
-            photos={localPhotos}
-            enabled={announcementEnabled}
-            currentImage={announcementImage}
-            onUploaded={photo => setLocalPhotos(previous => previous.some(item => item.id === photo.id) ? previous : [photo, ...previous])}
-            onBusyChange={setHighlightBusy}
-            onPublished={result => {
-              setLocalPhotos(previous => mergePhotoPlacement(previous, result.photo, result.clearedPhotoIds))
-              setConfig(previous => ({ ...previous, announcement_enabled: true, announcement_style: "artwork" }))
-              flashSaveNotice("Homepage highlight published.", publicSiteOrigin)
-            }}
-            onDisabled={() => {
-              setConfig(previous => ({ ...previous, announcement_enabled: false }))
-              flashSaveNotice("Homepage highlight turned off.", publicSiteOrigin)
-            }}
-          />
-          <button type="button" disabled={isPending || highlightBusy} onClick={() => {
-            if (announcementStyle !== "artwork") { setArtworkSetup(false); return }
-            startTransition(async () => {
-              const result = await runSiteEditorAction("switch_highlight_to_text", switchHomepageHighlightToText)
-              if (!result) return
-              if ("error" in result) { flashSaveError(result.error); return }
-              setConfig(previous => ({ ...previous, announcement_enabled: false, announcement_style: "dark" }))
-              setArtworkSetup(false)
-            })
-          }} style={{ marginTop: 16, padding: "10px 0", color: "rgba(255,255,255,0.65)", background: "none", border: 0, textDecoration: "underline", cursor: "pointer" }}>
-            Switch to text highlight
-          </button>
-        </div>
-      ) : (
       <div id="featured-update" style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
           <div>
@@ -1439,13 +1402,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               Put one sale, product drop, event, or booking push below the first screen customers see.
             </p>
           </div>
-          <button onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button disabled={highlightBusy || isPending} onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
             {announcementEnabled ? "On" : "Off"}
           </button>
         </div>
-        <button type="button" onClick={() => setArtworkSetup(true)} style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "transparent", color: "white", cursor: "pointer" }}>
-          Highlight a photo or flyer
-        </button>
 
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, borderRadius: 26, overflow: "hidden", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, backgroundColor: "rgba(255,255,255,0.035)", paddingBottom: 14, opacity: announcementEnabled ? 1 : 0.62 }}>
           <div style={{ overflow: "hidden", background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1457,7 +1417,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
                 )}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.12) 0%, rgba(8,10,9,0.78) 100%)" }}/>
-                <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+                {!isHighlightPhotoHref(config.announcement_cta_href) && <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />}
                 <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
                   <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)", marginBottom: 8 }}>Live preview</div>
                   <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: "white", letterSpacing: 0 }}>{announcementTitle}</h3>
@@ -1469,14 +1429,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </div>
             ) : (
               <div style={{ position: "relative", padding: 18 }}>
-                <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+                {!isHighlightPhotoHref(config.announcement_cta_href) && <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />}
                 <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Live preview</div>
                 <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
                 <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
                 <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
                   {announcementLabel}
                 </div>
-                {announcementImage && (
+                {announcementImage && !isHighlightPhotoHref(config.announcement_cta_href) && (
                   <p style={{ margin: "12px 44px 0 0", fontSize: 12, lineHeight: 1.35, color: announcementSubtleColor, fontWeight: 700 }}>
                     Photo is saved for this update, but this look does not show photos. Choose Image below to use it.
                   </p>
@@ -1505,6 +1465,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button action</div>
             <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose what happens when customers tap the button.</div>
+            <div role="group" aria-label="Button destination" className="mb-3 flex gap-2">
+              {(["page", "photo"] as const).map(mode => <button type="button" key={mode} aria-pressed={announcementDestination === mode}
+                disabled={highlightBusy || isPending} onClick={() => setAnnouncementDestination(mode)}
+                className={`min-h-11 rounded-lg border px-4 text-sm ${announcementDestination === mode ? "border-[#32D074] text-[#32D074]" : "border-white/15 text-white/70"}`}>
+                {mode === "page" ? "Page" : "Photo"}
+              </button>)}
+            </div>
+            {announcementDestination === "page" ? <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 12 }}>
               {announcementTargets.map(target => (
                 <button key={target.href} onClick={() => saveAnnouncementButtonAction(target)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementResolvedHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementResolvedHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementResolvedHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1515,6 +1483,23 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 Other page
               </button>
             </div>
+            </> : <HomepageHighlightEditor
+              companyName={company.name}
+              photos={localPhotos.filter(photo => canPlaceStockPhoto(photo.url, "announcement"))}
+              enabled={announcementEnabled && isHighlightPhotoHref(config.announcement_cta_href)}
+              currentImage={isHighlightPhotoHref(config.announcement_cta_href) ? announcementImage : null}
+              showTurnOff={false}
+              publishPhoto={input => publishAnnouncementPhoto({ ...input, expectedHref: typeof config.announcement_cta_href === "string" ? config.announcement_cta_href : null })}
+              onUploaded={photo => setLocalPhotos(previous => previous.some(item => item.id === photo.id) ? previous : [photo, ...previous])}
+              onBusyChange={setHighlightBusy}
+              onPublished={result => {
+                setLocalPhotos(previous => mergePhotoPlacement(previous, result.photo, result.clearedPhotoIds))
+                setConfig(previous => ({ ...previous, announcement_enabled: true, announcement_cta_href: ANNOUNCEMENT_PHOTO_HREF,
+                  announcement_style: result.style ?? "default" }))
+                flashSaveNotice("Announcement photo published.", publicSiteOrigin)
+              }}
+              onDisabled={() => {}}
+            />}
             <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", marginTop: 12, padding: 14, borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button words</span>
@@ -1530,7 +1515,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update banner looks on your homepage.</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {announcementLookOptions.map(style => (
-                <button key={style.value} onClick={() => saveConfigField("announcement_style", style.value)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementSelectedStyle === style.value ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementSelectedStyle === style.value ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementSelectedStyle === style.value ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                <button key={style.value} disabled={highlightBusy || isPending || (style.value === "image" && (announcementDestination === "photo" || isHighlightPhotoHref(config.announcement_cta_href)))} onClick={() => saveConfigField("announcement_style", style.value)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementSelectedStyle === style.value ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementSelectedStyle === style.value ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementSelectedStyle === style.value ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
                   {style.label}
                 </button>
               ))}
@@ -1538,7 +1523,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </div>
       </div>
-      )}
       {!isFoodCatalog && (
       <>
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>

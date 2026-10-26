@@ -20,7 +20,7 @@ import { generateAndUploadSiteIconAssets } from "@/lib/siteIconGeneration"
 import { isSitePhotoSlot } from "@/lib/siteSectionRegistry"
 import { assignIndependentPhoto } from "@/lib/photoPlacement"
 import { assertStockPhotoPlacement, assertStockSiteImageField } from "@/lib/stockPhotoPlacement"
-import { validateHighlightHref } from "@/lib/highlightLinks"
+import { isHighlightPhotoHref, validateHighlightHref } from "@/lib/highlightLinks"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 
 
@@ -203,6 +203,7 @@ export async function updateSiteField(field: string, value: unknown) {
   }
   let polishedValue = polishWebsiteField(field, value, copyContext)
   if (field === "announcement_cta_href") {
+    if (isHighlightPhotoHref(value)) return { error: "Choose and publish an owned photo using Photo." }
     const addons = await ctx.admin.from("addon_subscriptions").select("addon_slug")
       .eq("company_id", ctx.company.id).eq("active", true)
     if (addons.error) return { error: "Could not check this button destination. Try again." }

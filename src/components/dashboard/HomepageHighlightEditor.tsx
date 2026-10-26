@@ -15,13 +15,15 @@ export type HomepageHighlightEditorProps = {
   photos: HighlightPhoto[]
   enabled: boolean
   currentImage: string | null
-  onPublished: (result: { photo: HighlightPhoto; clearedPhotoIds: string[] }) => void
+  onPublished: (result: { photo: HighlightPhoto; clearedPhotoIds: string[]; style?: string | null }) => void
   onDisabled: () => void
   onUploaded?: (photo: HighlightPhoto) => void
   onBusyChange?: (busy: boolean) => void
+  publishPhoto?: (input: { photoId: string }) => Promise<{ photo: HighlightPhoto; clearedPhotoIds: string[]; style?: string | null } | { error: string }>
+  showTurnOff?: boolean
 }
 
-export default function HomepageHighlightEditor({ companyName, photos, enabled, currentImage, onPublished, onDisabled, onUploaded, onBusyChange }: HomepageHighlightEditorProps) {
+export default function HomepageHighlightEditor({ companyName, photos, enabled, currentImage, onPublished, onDisabled, onUploaded, onBusyChange, publishPhoto = publishHomepageHighlight, showTurnOff = true }: HomepageHighlightEditorProps) {
   const [uploads, setUploads] = useState<HighlightPhoto[]>([])
   const [draft, setDraft] = useState<HighlightPhoto | null>(null)
   const [choosing, setChoosing] = useState(false)
@@ -89,7 +91,7 @@ export default function HomepageHighlightEditor({ companyName, photos, enabled, 
   async function publish() {
     if (!selected) return
     await run("publish", async () => {
-      const result = await publishHomepageHighlight({ photoId: selected.id })
+      const result = await publishPhoto({ photoId: selected.id })
       if (!mounted.current) return
       if ("error" in result) { setError(result.error); return }
       setDraft(null)
@@ -140,7 +142,7 @@ export default function HomepageHighlightEditor({ companyName, photos, enabled, 
         <Check size={18} aria-hidden="true" />Publish highlight
       </button>
       {draft && <button type="button" className={button} disabled={!!busy} onClick={() => { setDraft(null); setChoosing(false); setError(null); setNotice(null) }}>Cancel changes</button>}
-      {enabled && <button type="button" className={button} disabled={!!busy} onClick={() => void turnOff()}><Trash2 size={18} aria-hidden="true" />Turn off highlight</button>}
+      {enabled && showTurnOff && <button type="button" className={button} disabled={!!busy} onClick={() => void turnOff()}><Trash2 size={18} aria-hidden="true" />Turn off highlight</button>}
     </div>
     {busy && <p role="status" className="text-sm text-white/60">{busy === "upload" ? "Uploading image..." : busy === "publish" ? "Publishing highlight..." : "Turning off highlight..."}</p>}
     {draft && !busy && <p role="status" className="text-sm text-white/60">Unpublished changes</p>}

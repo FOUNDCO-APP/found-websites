@@ -74,7 +74,7 @@ const bucket = {
   getPublicUrl(storagePath) { return { data: { publicUrl: `https://assets.test/${storagePath}` } } },
 }
 async function rpc(name, input) {
-  assert.equal(name, "publish_homepage_highlight")
+  assert.ok(["publish_homepage_highlight", "publish_announcement_photo"].includes(name))
   rpcCalls.push({ name, input: clone(input) })
   // Models transaction rollback and serialization, not a live PostgreSQL execution.
   const next = clone(tables)
@@ -89,11 +89,13 @@ async function rpc(name, input) {
     url: source.url, storage_path: source.storage_path, note: source.note ?? null,
     website_section: "announcement", for_website: true, in_gallery: false, for_social: false, album_id: null }
   next.company_photos.push(photo)
-  Object.assign(config, { announcement_enabled: true, announcement_style: "artwork", updated_at: "2026-10-25T02:00:00Z" })
+  Object.assign(config, { announcement_enabled: true, announcement_style: name === "publish_announcement_photo"
+    ? ["artwork", "image"].includes(config.announcement_style) ? "dark" : config.announcement_style : "artwork", updated_at: "2026-10-25T02:00:00Z" })
+  if (name === "publish_announcement_photo") config.announcement_cta_href = "#announcement-photo"
   tables = next
   writes.push({ rpc: name })
   if (configFailure === "throw-after") throw new Error("Lost transaction response")
-  return { data: { photo, clearedPhotoIds: cleared.map(row => row.id) }, error: null }
+  return { data: { photo, clearedPhotoIds: cleared.map(row => row.id), ...(name === "publish_announcement_photo" ? { style: config.announcement_style } : {}) }, error: null }
 }
 const admin = { from, rpc, storage: { from(name) { assert.equal(name, "company-assets"); return bucket } } }
 const cache = new Map()
@@ -284,6 +286,81 @@ await test("disable/remove toggle off only, retaining image placements, copy and
   assert.deepEqual(tables.website_config[0], { ...before.website_config[0], announcement_enabled: false })
   assert.equal((await actions.removeHomepageHighlight()).success, true)
   assert.equal(storageWrites.length, 0)
+})
+await test("Photo mode requires the exact token plus a safe still image; ordinary image URLs stay Page links", () => {
+  assert.equal(links.ANNOUNCEMENT_PHOTO_HREF, "#announcement-photo")
+  assert.equal(links.validateHighlightHref("#announcement-photo", company), "#announcement-photo")
+  assert.equal(links.getHighlightPhotoHref("#announcement-photo", "https://assets.test/flyer.jpg"), "https://assets.test/flyer.jpg")
+  for (const value of ["#announcement-photo ", " #announcement-photo", "#announcement-photo/", "#announcement-photo?url=https://evil.test", "https://assets.test/flyer.jpg", "/gallery"]) {
+    assert.equal(links.isHighlightPhotoHref(value), false)
+    assert.equal(links.getHighlightPhotoHref(value, "https://assets.test/flyer.jpg"), null)
+  }
+  for (const url of [null, "javascript:alert(1)", "//evil.test/flyer.jpg", "https://u:p@evil.test/flyer.jpg", "https://assets.test/video.mp4", "https://assets.test/flyer.jpg%0a"]) {
+    assert.equal(links.getHighlightPhotoHref("#announcement-photo", url), null)
+  }
+})
+await test("Photo publication keeps all text and each existing text style, with Gallery and source untouched", async () => {
+  for (const style of ["default", "dark", "light", "accent", "image", "artwork"]) {
+    reset()
+    tables.website_config[0].announcement_style = style
+    const before = clone(tables)
+    const result = await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: "tel:5551234567" })
+    assert.ok(result.photo, JSON.stringify(result))
+    assert.deepEqual(tables.company_photos[0], before.company_photos[0])
+    assert.deepEqual(tables.website_config[0], { ...before.website_config[0], announcement_cta_href: "#announcement-photo",
+      announcement_style: ["artwork", "image"].includes(style) ? "dark" : style, updated_at: "2026-10-25T02:00:00Z" })
+    assert.equal(rpcCalls.length, 1)
+    assert.equal(rpcCalls[0].name, "publish_announcement_photo")
+    assert.equal(result.style, ["artwork", "image"].includes(style) ? "dark" : style)
+    assert.equal(storageWrites.length, 0)
+  }
+})
+await test("Photo publish rejects authentication, stale destination, wrong tenant, restricted stock and malformed inputs before writes", async () => {
+  authenticated = false
+  assert.ok("error" in await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: null }))
+  authenticated = true; owner = false
+  assert.ok("error" in await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: null }))
+  owner = true
+  for (const input of [null, {}, { photoId: sourceId }, { photoId: "not-a-uuid", expectedHref: null }, { photoId: sourceId, expectedHref: "/changed" }]) {
+    assert.ok("error" in await actions.publishAnnouncementPhoto(input))
+  }
+  tables.company_photos[0].company_id = "other"
+  assert.ok("error" in await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: "tel:5551234567" }))
+  tables.company_photos[0].company_id = company.id
+  const stock = library.STOCK_PHOTO_LIBRARY.find(photo => photo.enforcePlacementApproval && !photo.approvedSections.includes("announcement"))
+  tables.company_photos[0].url = stock.fullViewUrl
+  assert.ok("error" in await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: "tel:5551234567" }))
+  assert.equal(rpcCalls.length, 0)
+  assert.equal(writes.length, 0)
+})
+await test("Photo publication rejects atomically and never retries uncertain commits", async () => {
+  for (const failure of ["reject", "cas", "throw-before", "throw-after"]) {
+    reset(); configFailure = failure
+    const before = clone(tables)
+    const result = await actions.publishAnnouncementPhoto({ photoId: sourceId, expectedHref: "tel:5551234567" })
+    assert.match(result.error, /could not be confirmed/)
+    assert.equal(rpcCalls.length, 1)
+    if (failure !== "throw-after") assert.deepEqual(tables, before)
+    else assert.equal(tables.website_config[0].announcement_cta_href, "#announcement-photo")
+  }
+})
+await test("generic field-save cannot bypass owned-photo publication by submitting the marker", async () => {
+  const module = { exports: {} }
+  const output = ts.transpileModule(fs.readFileSync("src/app/dashboard/(app)/site/actions.ts", "utf8"), { compilerOptions: {
+    module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
+  } }).outputText
+  vm.runInNewContext(output, { module, exports: module.exports, console, URL, Date, Buffer, require(id) {
+    if (id === "@/lib/auth/getAuthUser") return { resolveDashboardIdentity: async () => ({ userId: "owner", userEmail: "owner@example.test" }) }
+    if (id === "@/lib/dashboard/getCompany") return { getCompany: async () => company, requireOwnerAccess: async () => true }
+    if (id === "@/lib/supabase/admin") return { createAdminClient: () => admin }
+    if (id === "@/lib/copyPolish") return { polishWebsiteField: (_field, value) => value }
+    if (id === "@/lib/highlightLinks") return links
+    return {}
+  } })
+  const result = await module.exports.updateSiteField("announcement_cta_href", "#announcement-photo")
+  assert.match(result.error, /owned photo/)
+  assert.equal(writes.length, 0)
+  assert.equal(rpcCalls.length, 0)
 })
 await test("SQL contract is invoker-only, locked, tenant-scoped and has no file or billing mutations", () => {
   const sql = fs.readFileSync("supabase/migrations/20261025233743_homepage_highlight_publish.sql", "utf8")

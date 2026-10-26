@@ -97,6 +97,7 @@ export type WebsiteConfig = {
   announcement_title?: string | null
   announcement_body?: string | null
   announcement_cta_label?: string | null
+  // Exact #announcement-photo opens the independently assigned announcement photo.
   announcement_cta_href?: string | null
   announcement_style?: "default" | "light" | "dark" | "accent" | "image" | "artwork" | null
 }

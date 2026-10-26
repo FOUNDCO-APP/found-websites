@@ -8,6 +8,7 @@ import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { assertStockPhotoPlacement, StockPhotoPlacementError } from "@/lib/stockPhotoPlacement"
 import { isVideoMedia } from "@/lib/mediaKind"
+import { ANNOUNCEMENT_PHOTO_HREF, getHighlightPhotoHref } from "@/lib/highlightLinks"
 
 export type HighlightPhoto = {
   id: string
@@ -109,6 +110,35 @@ export async function publishHomepageHighlight(input: { photoId: string }): Prom
     return { error: error instanceof StockPhotoPlacementError ? error.message
       : error instanceof Error && ["Not authenticated.", "Owner access required."].includes(error.message)
       ? error.message : UNCERTAIN }
+  }
+}
+
+export async function publishAnnouncementPhoto(input: { photoId: string; expectedHref: string | null }): Promise<{ photo: HighlightPhoto; clearedPhotoIds: string[]; style: string | null } | { error: string }> {
+  try {
+    const { company, admin } = await context()
+    if (!input || typeof input.photoId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.photoId)
+      || (input.expectedHref !== null && typeof input.expectedHref !== "string")) return { error: "Choose a photo first." }
+    const sourceResult = await admin.from("company_photos").select("*").eq("company_id", company.id).eq("id", input.photoId).single()
+    if (sourceResult.error || !sourceResult.data) return { error: "Photo not found for this company." }
+    const source = sourceResult.data
+    if (source.media_type === "video" || source.mime_type?.startsWith("video/")
+      || !getHighlightPhotoHref(ANNOUNCEMENT_PHOTO_HREF, source.url)) return { error: "Choose a still JPEG, PNG, WebP or AVIF photo." }
+    assertStockPhotoPlacement(source.url, "announcement")
+    const configResult = await admin.from("website_config").select("updated_at,announcement_cta_href").eq("company_id", company.id).single()
+    if (configResult.error || !configResult.data) return { error: "Could not read the current announcement. Refresh and try again." }
+    if ((configResult.data.announcement_cta_href ?? null) !== input.expectedHref) return { error: "The button destination changed. Refresh before publishing." }
+    const published = await admin.rpc("publish_announcement_photo", { p_company_id: company.id, p_photo_id: source.id,
+      p_expected_url: source.url, p_expected_updated_at: configResult.data.updated_at })
+    if (published.error || !published.data) { refresh(company.slug); return { error: UNCERTAIN } }
+    const result = published.data as { photo?: HighlightPhoto; clearedPhotoIds?: unknown; style?: unknown }
+    if (!result.photo || typeof result.photo.id !== "string" || result.photo.url !== source.url
+      || result.photo.website_section !== "announcement" || result.photo.in_gallery !== false
+      || !Array.isArray(result.clearedPhotoIds) || !result.clearedPhotoIds.every(id => typeof id === "string")
+      || (result.style !== null && !["default", "light", "dark", "accent", "image"].includes(String(result.style)))) return { error: UNCERTAIN }
+    refresh(company.slug)
+    return { photo: photoResult(result.photo), clearedPhotoIds: result.clearedPhotoIds, style: result.style as string | null }
+  } catch (error) {
+    return { error: error instanceof StockPhotoPlacementError ? error.message : UNCERTAIN }
   }
 }
 

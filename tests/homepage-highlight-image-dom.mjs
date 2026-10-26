@@ -19,7 +19,7 @@ const file = "src/components/HomepageHighlightImage.tsx"
 const compiled = ts.transpileModule(fs.readFileSync(file, "utf8"), { fileName: file,
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2020 } })
 const module = { exports: {} }
-vm.runInNewContext(compiled.outputText, { module, exports: module.exports, require, document, HTMLElement: window.HTMLElement }, { filename: file })
+vm.runInNewContext(compiled.outputText, { module, exports: module.exports, require, document, window, HTMLElement: window.HTMLElement }, { filename: file })
 const Image = module.exports.default
 const rootElement = document.getElementById("root")
 const root = createRoot(rootElement)
@@ -35,6 +35,18 @@ async function key(element, value, shiftKey = false) {
 async function fail(element) {
   await act(() => { element.dispatchEvent(new window.Event("error")) })
 }
+async function historyChange(action) {
+  let listener, timeout
+  const changed = new Promise((resolve, reject) => {
+    listener = () => resolve()
+    window.addEventListener("popstate", listener, { once: true })
+    timeout = setTimeout(() => reject(Error("Expected a history traversal")), 1500)
+  })
+  try { await act(async () => { action(); await changed }) }
+  finally { clearTimeout(timeout); window.removeEventListener("popstate", listener) }
+}
+const dispatchClick = element => element.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
+const dispatchEscape = element => element.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }))
 try {
   await act(() => root.render(React.createElement(Image, { src: source, companyName: "Fixture Security" })))
   const trigger = button("View full size")
@@ -60,17 +72,19 @@ try {
   assert.equal(document.activeElement, button("Close image"))
   assert.equal(trigger.getAttribute("aria-expanded"), "true")
   assert.equal(dialog.querySelector("img").getAttribute("src"), source)
-  assert.match(dialog.querySelector("img").className, /max-w-none/)
+  assert.match(dialog.querySelector("img").className, /max-w-full object-contain/)
+  assert.equal(button("Enlarge image").getAttribute("aria-pressed"), "false")
   const scroll = dialog.querySelector('[role="region"]')
   assert.equal(scroll.tabIndex, 0)
   assert.match(scroll.className, /overflow-auto/)
+  button("Enlarge image").focus()
   await key(document.activeElement, "Tab", true)
   assert.equal(document.activeElement, scroll, "Shift Tab wraps to keyboard-scroll region")
   await key(scroll, "Tab")
-  assert.equal(document.activeElement, button("Close image"))
+  assert.equal(document.activeElement, button("Enlarge image"), "Tab wraps to the new first focusable control")
   await click(dialog.querySelector("img"))
   assert.ok(document.querySelector('[role="dialog"]'), "Clicking image does not dismiss it")
-  await key(document.activeElement, "Escape")
+  await historyChange(() => dispatchEscape(document.activeElement))
   assert.equal(document.querySelector('[role="dialog"]'), null)
   assert.equal(document.activeElement, trigger)
   assert.equal(document.body.style.overflow, "clip")
@@ -78,10 +92,10 @@ try {
   assert.ok(document.querySelector("aside").hasAttribute("inert"), "Existing inert state survives")
 
   await click(trigger)
-  await click(button("Close image"))
+  await historyChange(() => dispatchClick(button("Close image")))
   assert.equal(document.activeElement, trigger)
   await click(trigger)
-  await click(document.querySelector('[role="dialog"]'))
+  await historyChange(() => dispatchClick(document.querySelector('[role="dialog"]')))
   assert.equal(document.querySelector('[role="dialog"]'), null)
 
   await fail(trigger.querySelector("img"))
@@ -102,11 +116,71 @@ try {
   await click(button("Retry image"))
   assert.ok(dialog.querySelector("img"))
   assert.equal(document.activeElement, button("Close image"), "Viewer retry leaves focus on a surviving dialog control")
+  await historyChange(() => dispatchClick(button("Close image")))
+
+  const nextState = { __NA: true, tree: ["", { children: ["home", {}] }], custom: "preserve me" }
+  window.history.replaceState(nextState, "", "/home?source=test#details")
+  const originalUrl = window.location.href
+  await act(() => root.render(React.createElement(Image, { src: source, companyName: "Fixture Security",
+    triggerLabel: "Take a closer look", triggerClassName: "btn w-full md:w-auto", triggerStyle: { color: "white" } })))
+  const textTrigger = rootElement.querySelector("button")
+  assert.equal(textTrigger.textContent, "Take a closer look")
+  assert.equal(textTrigger.className, "btn w-full md:w-auto")
+  assert.equal(textTrigger.style.color, "white")
+  assert.equal(rootElement.querySelectorAll("img, section, h1, h2, a").length, 0, "Text trigger never embeds a second poster or heading")
+  textTrigger.focus()
+  await click(textTrigger)
+  assert.equal(window.location.href, originalUrl, "Opening the photo does not change the page URL")
+  assert.ok(window.history.state.foundHighlight)
+  assert.deepEqual({ ...window.history.state, foundHighlight: undefined }, { ...nextState, foundHighlight: undefined }, "Modal marker preserves Next state and custom state")
+  dialog = document.querySelector('[role="dialog"]')
+  let photo = dialog.querySelector("img")
+  assert.match(photo.className, /max-w-full object-contain/)
+  assert.equal(photo.style.maxHeight, "calc(100dvh - 7rem)", "Fit mode bounds image height without document zoom")
+  assert.equal(photo.src, source)
+  await click(button("Enlarge image"))
+  assert.equal(button("Fit image").getAttribute("aria-pressed"), "true")
+  assert.match(dialog.querySelector("img").className, /max-w-none/)
+  assert.equal(dialog.querySelector("img").style.maxHeight, "")
+  assert.match(dialog.querySelector('[role="region"]').className, /overflow-auto/)
+  assert.equal(document.body.style.overflow, "hidden")
+  await click(button("Fit image"))
+  assert.equal(button("Enlarge image").getAttribute("aria-pressed"), "false")
+  assert.match(dialog.querySelector("img").className, /max-w-full/)
+  await fail(dialog.querySelector("img"))
+  assert.equal(dialog.querySelector("a").href, source)
+  assert.equal(dialog.querySelector("a").rel, "noopener noreferrer")
+  assert.equal(dialog.querySelector("a").target, "_blank")
+  await click(button("Retry image"))
+  assert.equal(dialog.querySelector("img").src, source, "Retry uses the same original, not a transformed substitute")
+  await historyChange(() => window.history.back())
+  assert.equal(document.querySelector('[role="dialog"]'), null, "Browser Back closes the open photo")
+  assert.deepEqual(window.history.state, nextState)
+  assert.equal(window.location.href, originalUrl)
+  assert.equal(document.activeElement, textTrigger)
+  assert.equal(document.body.style.overflow, "clip")
+  assert.ok(!rootElement.hasAttribute("inert"))
+  assert.ok(document.querySelector("aside").hasAttribute("inert"))
+  assert.equal(rootElement.querySelectorAll("img").length, 0)
+
+  await click(textTrigger)
+  await click(button("Enlarge image"))
+  await historyChange(() => dispatchClick(button("Close image")))
+  assert.deepEqual(window.history.state, nextState, "Close consumes only its modal history entry")
+  await click(textTrigger)
+  assert.ok(button("Enlarge image"), "Reopening resets zoom to Fit")
+  const foreignState = { ...nextState, differentNavigation: true }
+  window.history.replaceState(foreignState, "", "/another-page")
+  await click(button("Close image"))
+  assert.deepEqual(window.history.state, foreignState, "Close never traverses a history entry it no longer owns")
+  assert.equal(window.location.pathname, "/another-page")
+
+  await click(textTrigger)
   await act(() => root.unmount())
   assert.equal(document.body.style.overflow, "clip", "Unmount also restores body scrolling")
   assert.ok(!rootElement.hasAttribute("inert"))
   assert.equal(document.querySelector('[role="dialog"]'), null)
-  console.log("PASS actual ReactDOM + JSDOM: accessible icon, open/close/Escape/backdrop, focus loop/return, body/inert cleanup, uncropped image, stable frame, inline/viewer failure and retry. DOM tests only, not browser visual QA.")
+  console.log("PASS actual ReactDOM + JSDOM: legacy/text-only triggers, Fit/Enlarge, original-source failure/retry, zoom-aware focus loop, Escape/Close/Back, owned history marker preserving Next state, and scroll/inert cleanup. DOM tests only, not browser visual QA.")
 } finally {
   await act(() => root.unmount())
   dom.window.close()

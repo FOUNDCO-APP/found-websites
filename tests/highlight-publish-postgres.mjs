@@ -35,6 +35,10 @@ async function publish({ photo = source, image = url, timestamp = expected } = {
   return (await db.query("select public.publish_homepage_highlight($1::uuid, $2::uuid, $3::text, $4::timestamptz) as result",
     [company, photo, image, timestamp])).rows[0].result
 }
+async function publishPhoto({ photo = source, image = url, timestamp = expected } = {}) {
+  return (await db.query("select public.publish_announcement_photo($1::uuid, $2::uuid, $3::text, $4::timestamptz) as result",
+    [company, photo, image, timestamp])).rows[0].result
+}
 async function test(name, fn) { await reset(); await fn(); groups++; console.log(`PASS ${name}`) }
 try {
   await db.exec(`
@@ -56,6 +60,7 @@ try {
   `)
   await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261025233743_homepage_highlight_publish.sql", import.meta.url), "utf8"))
   await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261025235018_homepage_highlight_publish_guards.sql", import.meta.url), "utf8"))
+  await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261026005748_announcement_photo_destination.sql", import.meta.url), "utf8"))
   await test("actual migration creates an invoker-only RPC executable only by service_role", async () => {
     const proc = (await db.query(`select prosecdef, proconfig from pg_proc
       where oid = 'public.publish_homepage_highlight(uuid,uuid,text,timestamptz)'::regprocedure`)).rows[0]
@@ -149,5 +154,92 @@ try {
     await assert.rejects(() => publish({ timestamp: null }), /Highlight changed/)
     assert.deepEqual(await state(), winner)
   })
+  await test("Photo wrapper retains invoker security and excludes anon/authenticated execution", async () => {
+    const proc = (await db.query("select prosecdef, proconfig from pg_proc where oid = 'public.publish_announcement_photo(uuid,uuid,text,timestamptz)'::regprocedure")).rows[0]
+    assert.equal(proc.prosecdef, false)
+    assert.ok(proc.proconfig.includes('search_path=""'))
+    for (const [role, allowed] of [["anon", false], ["authenticated", false], ["service_role", true]]) {
+      assert.equal((await db.query("select has_function_privilege($1, 'public.publish_announcement_photo(uuid,uuid,text,timestamptz)', 'execute') as allowed", [role])).rows[0].allowed, allowed)
+      if (!allowed) {
+        await db.exec(`set role ${role}`)
+        try { await assert.rejects(() => publishPhoto(), /permission denied/) } finally { await db.exec("reset role") }
+      }
+    }
+  })
+  await test("Photo wrapper atomically retains every text style, copy, Gallery, source and other company", async () => {
+    for (const style of [null, "default", "light", "dark", "accent", "image", "artwork"]) {
+      await reset()
+      await db.query("update public.website_config set announcement_style = $1 where company_id = $2", [style, company])
+      const before = await state()
+      await db.exec("set role service_role")
+      const result = await publishPhoto()
+      await db.exec("reset role")
+      const after = await state()
+      const config = after.website_config.find(row => row.company_id === company)
+      const original = before.website_config.find(row => row.company_id === company)
+      const chosenStyle = ["artwork", "image"].includes(style) ? "dark" : style
+      assert.equal(result.style, chosenStyle)
+      assert.deepEqual(config, { ...original, announcement_style: chosenStyle, announcement_cta_href: "#announcement-photo", updated_at: config.updated_at })
+      assert.deepEqual(after.companies, before.companies)
+      assert.deepEqual(after.company_photos.find(row => row.id === source), before.company_photos.find(row => row.id === source))
+      assert.deepEqual(after.company_photos.find(row => row.id === legacy), { ...before.company_photos.find(row => row.id === legacy), website_section: null })
+      assert.equal(result.photo.in_gallery, false)
+      assert.equal(result.photo.website_section, "announcement")
+      assert.deepEqual(after.company_photos.find(row => row.id === otherPhoto), before.company_photos.find(row => row.id === otherPhoto))
+      assert.deepEqual(after.website_config.find(row => row.company_id === other), before.website_config.find(row => row.company_id === other))
+    }
+  })
+  await test("Photo wrapper rejects stale timestamps, changed URLs and other-company sources without mutations", async () => {
+    const before = await state()
+    await assert.rejects(() => publishPhoto({ timestamp: null }), /Announcement changed/)
+    await assert.rejects(() => publishPhoto({ image: "https://assets.example.test/changed.jpg" }), /Selected photo changed/)
+    await assert.rejects(() => publishPhoto({ photo: otherPhoto }), /no rows/)
+    assert.deepEqual(await state(), before)
+    await publishPhoto()
+    const winner = await state()
+    await assert.rejects(() => publishPhoto(), /Announcement changed/)
+    assert.deepEqual(await state(), winner)
+  })
+  await test("suppressed final destination update rolls back the nested publication and clearing", async () => {
+    await db.exec(`create trigger fixture_suppress before update on public.website_config for each row
+      when (new.announcement_cta_href = '#announcement-photo') execute function public.fixture_suppress_highlight_write()`)
+    const before = await state()
+    try {
+      await assert.rejects(() => publishPhoto(), /Announcement destination was not updated/)
+      assert.deepEqual(await state(), before)
+    } finally { await db.exec("drop trigger fixture_suppress on public.website_config") }
+  })
+  await test("rejected final destination constraint rolls back all nested writes", async () => {
+    await db.exec("alter table public.website_config add constraint fixture_reject_destination check (announcement_cta_href <> '#announcement-photo')")
+    const before = await state()
+    try {
+      await assert.rejects(() => publishPhoto(), /fixture_reject_destination/)
+      assert.deepEqual(await state(), before)
+    } finally { await db.exec("alter table public.website_config drop constraint fixture_reject_destination") }
+  })
+  await test("normal updated_at trigger remains compatible with Photo publication", async () => {
+    await db.exec(`create function public.fixture_updated_at() returns trigger language plpgsql as $$ begin new.updated_at := now(); return new; end $$;
+      create trigger fixture_timestamp before update on public.website_config for each row execute function public.fixture_updated_at()`)
+    try {
+      const result = await publishPhoto()
+      assert.equal(result.style, "dark")
+      const config = (await state()).website_config.find(row => row.company_id === company)
+      assert.equal(config.announcement_cta_href, "#announcement-photo")
+      assert.notEqual(config.updated_at, expected)
+    } finally { await db.exec("drop trigger fixture_timestamp on public.website_config") }
+  })
+  for (const [field, replacement] of [["announcement_cta_href", "'/contact'"], ["announcement_style", "'light'"], ["announcement_enabled", "false"]]) {
+    await test(`silently rewritten ${field} rejects and rolls back nested writes`, async () => {
+      await db.exec(`create or replace function public.fixture_rewrite_destination() returns trigger language plpgsql as $$
+        begin new.${field} := ${replacement}; return new; end $$;
+        create trigger fixture_rewrite before update on public.website_config for each row
+        when (new.announcement_cta_href = '#announcement-photo') execute function public.fixture_rewrite_destination()`)
+      const before = await state()
+      try {
+        await assert.rejects(() => publishPhoto(), /Announcement destination state was not preserved/)
+        assert.deepEqual(await state(), before)
+      } finally { await db.exec("drop trigger fixture_rewrite on public.website_config") }
+    })
+  }
   console.log(`${groups} actual PostgreSQL highlight publication groups passed; ephemeral local database only. Multi-session lock scheduling is not simulated.`)
 } finally { await db.close() }

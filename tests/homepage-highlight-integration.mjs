@@ -150,39 +150,84 @@ await test("failed and zero-row config updates report failure without optimistic
 })
 
 const editorAst = ts.createSourceFile(editorFile, fs.readFileSync(editorFile, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
-let switchButton
+const textControls = new Map()
+let destinationButton, photoEditor
 function visit(node) {
-  if (ts.isJsxElement(node) && node.openingElement.tagName.getText(editorAst) === "button"
-    && node.children.some(child => ts.isJsxText(child) && child.text.includes("Switch to text highlight"))) switchButton = node
+  if (ts.isJsxElement(node) && node.openingElement.tagName.getText(editorAst) === "button") {
+    const handler = node.openingElement.attributes.properties.find(attribute => attribute.name?.text === "onClick")?.initializer?.expression
+    const field = handler?.getText(editorAst).match(/startEdit\("(announcement_title|announcement_body|announcement_cta_label)"/)
+    if (field) textControls.set(field[1], { node, handler })
+    if (node.openingElement.attributes.properties.some(attribute => attribute.name?.text === "aria-pressed"
+      && attribute.initializer?.expression?.getText(editorAst) === "announcementDestination === mode")) destinationButton = node
+  }
+  if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(editorAst) === "HomepageHighlightEditor") photoEditor = node
   ts.forEachChild(node, visit)
 }
 visit(editorAst)
-await test("artwork mode exposes a real text-mode switch wired to its owner-authorized action", async () => {
-  assert.ok(switchButton)
-  for (let node = switchButton.parent; node; node = node.parent) {
-    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
-      assert.doesNotMatch(node.left.getText(editorAst), /announcementStyle\s*!==?\s*["']artwork/)
+await test("actual SiteEditor keeps headline, body and button editable for Page/Photo and every saved style", async () => {
+  assert.equal(textControls.size, 3)
+  for (const destination of ["page", "photo"]) for (const style of ["default", "light", "dark", "accent", "image", "artwork"]) {
+    const edits = []
+    for (const [field, { node, handler }] of textControls) {
+      for (let ancestor = node.parent; ancestor; ancestor = ancestor.parent) {
+        if (ts.isConditionalExpression(ancestor)) assert.doesNotMatch(ancestor.condition.getText(editorAst), /announcementDestination|announcementStyle|artworkSetup/)
+        if (ts.isBinaryExpression(ancestor) && ancestor.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
+          assert.doesNotMatch(ancestor.left.getText(editorAst), /announcementDestination|announcementStyle|artworkSetup/)
+        }
+      }
+      const click = compile(`module.exports.run = ${handler.getText(editorAst)}`, editorFile, {
+        announcementDestination: destination, announcementStyle: style,
+        announcementTitle: "Saved title", announcementBody: "Saved body", announcementLabel: "Saved button",
+        startEdit: (name, value) => edits.push([name, value]),
+      }).run
+      click()
+      assert.equal(edits.at(-1)[0], field)
     }
+    assert.deepEqual(edits.map(edit => edit[1]), ["Saved title", "Saved body", "Saved button"])
   }
-  assert.ok(editorAst.statements.some(node => ts.isImportDeclaration(node)
-    && node.moduleSpecifier.text === "./actions"
-    && node.importClause?.namedBindings?.elements?.some(element => element.name.text === "switchHomepageHighlightToText")))
-  const handler = switchButton.openingElement.attributes.properties.find(attribute => attribute.name?.text === "onClick").initializer.expression
-  for (const failed of [false, true]) {
-    const transitions = [], errors = []
-    let config = { announcement_enabled: true, announcement_style: "artwork", announcement_title: "Keep title" }, artworkSetup = true
-    const before = { ...config }
-    const onClick = compile(`module.exports.run = ${handler.getText(editorAst)}`, editorFile, {
-      announcementStyle: "artwork", switchHomepageHighlightToText: action,
-      startTransition: fn => transitions.push(fn()),
-      runSiteEditorAction: async (name, fn) => { assert.equal(name, "switch_highlight_to_text"); return failed ? { error: "Fixture failure" } : fn() },
-      setConfig: update => { config = update(config) }, setArtworkSetup: value => { artworkSetup = value },
-      flashSaveError: message => errors.push(message),
+  assert.equal(writes.length, 0)
+})
+await test("actual Page/Photo mode handler changes only local selection and never publishes", async () => {
+  assert.ok(destinationButton)
+  const handler = destinationButton.openingElement.attributes.properties.find(attribute => attribute.name?.text === "onClick").initializer.expression
+  const before = structuredClone(tables)
+  let selected = "page"
+  for (const mode of ["photo", "page"]) {
+    const click = compile(`module.exports.run = ${handler.getText(editorAst)}`, editorFile, {
+      mode, setAnnouncementDestination: value => { selected = value },
     }).run
-    onClick()
-    await Promise.all(transitions)
-    if (failed) { assert.deepEqual(config, before); assert.equal(artworkSetup, true); assert.deepEqual(errors, ["Fixture failure"]) }
-    else { assert.equal(config.announcement_enabled, false); assert.equal(config.announcement_style, "dark"); assert.equal(config.announcement_title, "Keep title"); assert.equal(artworkSetup, false) }
+    click()
+    assert.equal(selected, mode)
   }
+  const disabled = destinationButton.openingElement.attributes.properties.find(attribute => attribute.name?.text === "disabled").initializer.expression
+  for (const [highlightBusy, isPending] of [[true, false], [false, true], [false, false]]) {
+    const result = compile(`module.exports.run = (${disabled.getText(editorAst)})`, editorFile, { highlightBusy, isPending }).run
+    assert.equal(result, highlightBusy || isPending)
+  }
+  assert.deepEqual(tables, before)
+  assert.equal(writes.length, 0)
+})
+await test("actual uploaded-photo integration appends a private draft without changing announcement or Gallery", async () => {
+  assert.ok(photoEditor)
+  const handler = photoEditor.attributes.properties.find(attribute => attribute.name?.text === "onUploaded").initializer.expression
+  const before = structuredClone(tables)
+  let localPhotos = [...tables.company_photos.filter(photo => photo.company_id === company.id)]
+  const uploaded = { id: "new-private", url: "https://fixture.test/new.jpg", website_section: null, in_gallery: false }
+  const callback = compile(`module.exports.run = ${handler.getText(editorAst)}`, editorFile, {
+    setLocalPhotos: update => { localPhotos = update(localPhotos) },
+  }).run
+  callback(uploaded); callback(uploaded)
+  assert.equal(localPhotos.filter(photo => photo.id === uploaded.id).length, 1)
+  assert.equal(localPhotos.find(photo => photo.id === uploaded.id).in_gallery, false)
+  assert.deepEqual(tables, before)
+  assert.equal(writes.length, 0)
+  const publisher = photoEditor.attributes.properties.find(attribute => attribute.name?.text === "publishPhoto").initializer.expression
+  const calls = []
+  const publish = compile(`module.exports.run = ${publisher.getText(editorAst)}`, editorFile, {
+    config: { announcement_cta_href: "/about" }, publishAnnouncementPhoto: async input => { calls.push(input); return { error: "Fixture" } },
+  }).run
+  assert.equal(calls.length, 0, "Rendering a publisher does not call it")
+  await publish({ photoId: uploaded.id })
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [{ photoId: uploaded.id, expectedHref: "/about" }])
 })
 console.log(`${groups} homepage-highlight integration groups passed; real page/action/handler code, in-memory fixtures only, no network or remote writes.`)

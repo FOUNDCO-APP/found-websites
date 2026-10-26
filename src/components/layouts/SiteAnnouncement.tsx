@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { Company } from "@/types/company"
 import { getFeaturedUpdatePublicCopy } from "@/lib/featuredUpdate"
 import HomepageHighlightImage from "@/components/HomepageHighlightImage"
-import { resolveHighlightHref } from "@/lib/highlightLinks"
+import { getHighlightPhotoHref, isHighlightPhotoHref, resolveHighlightHref } from "@/lib/highlightLinks"
 
 type Props = {
   company: Company
@@ -13,9 +13,6 @@ type Props = {
 export default function SiteAnnouncement({ company, image, activeAddons = [] }: Props) {
   const config = company.website_config
   if (!config?.announcement_enabled) return null
-  if (config.announcement_style === "artwork") {
-    return image ? <HomepageHighlightImage src={image} companyName={company.name} /> : null
-  }
 
   const nearbyCopy = [
     config.hero_title,
@@ -34,12 +31,23 @@ export default function SiteAnnouncement({ company, image, activeAddons = [] }: 
   const body = copy?.body
   const label = copy?.label
   const href = resolveHighlightHref(copy?.href, company, activeAddons, "/contact")
+  const photoHref = getHighlightPhotoHref(config.announcement_cta_href, image)
+  const isPhoto = isHighlightPhotoHref(config.announcement_cta_href)
   if (!title || !body || !label) return null
   const style = config.announcement_style || "default"
-  const imageUrl = style === "image" && image ? image : null
+  const imageUrl = style === "image" && !isPhoto && image ? image : null
   const isLight = style === "light"
   const isAccent = style === "accent"
   const primary = company.primary_color
+  const buttonClassName = "btn inline-flex min-w-0 w-full justify-center md:w-auto md:max-w-xs"
+  const buttonStyle = {
+    backgroundColor: isLight ? primary : "#ffffff",
+    borderColor: isLight ? primary : "#ffffff",
+    color: isLight ? "#ffffff" : "#111111",
+    boxShadow: isLight ? "0 18px 44px rgba(0,0,0,0.12)" : "0 18px 44px rgba(0,0,0,0.32)",
+    whiteSpace: "normal" as const,
+    overflowWrap: "anywhere" as const,
+  }
 
   return (
     <section className="relative overflow-hidden py-12 md:py-20" style={{ backgroundColor: isLight ? "#f7f7f4" : "#0b0d0c" }}>
@@ -57,7 +65,7 @@ export default function SiteAnnouncement({ company, image, activeAddons = [] }: 
       )}
       <div className="relative z-10 mx-auto max-w-6xl px-8">
         <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-          <div className="max-w-3xl">
+          <div className="min-w-0 max-w-3xl break-words">
             <p
               className="mb-4 text-xs font-black uppercase tracking-[0.24em]"
               style={{ color: isLight ? primary : isAccent ? "rgba(255,255,255,0.78)" : primary }}
@@ -74,18 +82,12 @@ export default function SiteAnnouncement({ company, image, activeAddons = [] }: 
               {body}
             </p>
           </div>
-          <Link
-            href={href}
-            className="btn inline-flex w-full justify-center md:w-auto"
-            style={{
-              backgroundColor: isLight ? primary : "#ffffff",
-              borderColor: isLight ? primary : "#ffffff",
-              color: isLight ? "#ffffff" : "#111111",
-              boxShadow: isLight ? "0 18px 44px rgba(0,0,0,0.12)" : "0 18px 44px rgba(0,0,0,0.32)",
-            }}
-          >
+          {isPhoto ? photoHref ? <HomepageHighlightImage
+            src={photoHref} companyName={company.name} triggerLabel={label}
+            triggerClassName={buttonClassName} triggerStyle={buttonStyle}
+          /> : null : <Link href={href} className={buttonClassName} style={buttonStyle}>
             {label}
-          </Link>
+          </Link>}
         </div>
       </div>
     </section>

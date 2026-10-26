@@ -8,7 +8,24 @@ export type HighlightLinkCompany = {
 
 const PUBLIC_PAGES = new Set(["/", "/about", "/services", "/contact", "/gallery"])
 
+export const ANNOUNCEMENT_PHOTO_HREF = "#announcement-photo"
+
+export function isHighlightPhotoHref(value: unknown): boolean {
+  return value === ANNOUNCEMENT_PHOTO_HREF
+}
+
+export function getHighlightPhotoHref(value: unknown, image?: string | null): string | null {
+  if (!isHighlightPhotoHref(value) || !image) return null
+  const safe = validateHighlightHref(image, { industry_category: null })
+  if (!safe) return null
+  try {
+    const url = new URL(safe)
+    return ["http:", "https:"].includes(url.protocol) && /\.(jpe?g|png|webp|avif)$/i.test(url.pathname) ? safe : null
+  } catch { return null }
+}
+
 export function validateHighlightHref(value: unknown, company: HighlightLinkCompany, activeAddons: string[] = []): string | null {
+  if (isHighlightPhotoHref(value)) return ANNOUNCEMENT_PHOTO_HREF
   if (typeof value !== "string") return null
   if (/[\u0000-\u001f\u007f-\u009f\\]/.test(value)) return null
   const href = value.trim()
