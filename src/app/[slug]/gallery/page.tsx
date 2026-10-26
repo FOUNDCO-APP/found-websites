@@ -16,6 +16,8 @@ import PublicPageHeroMedia from "@/components/PublicPageHeroMedia"
 import type { Metadata } from "next"
 
 const illustrativeCollection = "Illustrative Security Photography"
+// Approved client-only presentation until shared collection controls are reviewed.
+const continuousGalleryCompanyId = "626dc220-4152-4711-8862-a885534e1e0a"
 
 function galleryIntroduction(name: string, hasStock: boolean, hasOtherPhotos: boolean) {
   if (!hasStock) return `A closer look at ${name}.`
@@ -28,9 +30,15 @@ function isIllustrative(photo: GalleryMedia) {
   return Boolean(photo.isStock || resolveStockPhoto(photo.url))
 }
 
-function GalleryPhotoGroups({ photos, companyName, primary, security }: { photos: GalleryMedia[]; companyName: string; primary: string; security: boolean }) {
+function GalleryPhotoGroups({ photos, companyName, primary, security, continuous = false }: { photos: GalleryMedia[]; companyName: string; primary: string; security: boolean; continuous?: boolean }) {
   const stock = photos.filter(isIllustrative)
   const other = photos.filter(photo => !isIllustrative(photo))
+  if (continuous) return <>
+    <GalleryLightbox photos={photos} companyName={companyName} primary={primary} />
+    {stock.length > 0 && <p className="mx-auto max-w-6xl px-8 pt-6 text-xs leading-relaxed text-gray-500">
+      Some images are illustrative stock photography, not our personnel, client properties or completed work.
+    </p>}
+  </>
   if (!stock.length) return <GalleryLightbox photos={photos} companyName={companyName} primary={primary} />
   return <>
     {other.length > 0 && <>
@@ -94,6 +102,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const galleryLabel = vocab.galleryLabel
   const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
+  const continuousGallery = company.id === continuousGalleryCompanyId
   const collectionLabel = isGuard ? illustrativeCollection : "Illustrative Photography"
   const albumLabel = albumLabelFor(company.industry_category)
   const { primary: cta } = getSiteCTAs(company, [])
@@ -169,7 +178,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
     const hasStock = albums.some(album => album.stockCount > 0) || flatPhotos.some(photo => resolveStockPhoto(photo.url)) || Boolean(galleryHero && resolveStockPhoto(galleryHero))
     const hasOtherPhotos = albums.some(album => album.stockCount < album.photoCount) || flatPhotos.some(photo => !resolveStockPhoto(photo.url))
-    const galleryIntro = galleryIntroduction(company.name, hasStock, hasOtherPhotos)
+    const galleryIntro = continuousGallery ? `A closer look at ${company.name}.` : galleryIntroduction(company.name, hasStock, hasOtherPhotos)
     const ctaImg = ctaSectionPhoto
 
     return (
@@ -217,7 +226,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                     <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#bbb" }}>More Photos</p>
                   </div>
                 )}
-                <GalleryPhotoGroups photos={flatPhotos} companyName={company.name} primary={primary} security={isGuard} />
+                <GalleryPhotoGroups photos={flatPhotos} companyName={company.name} primary={primary} security={isGuard} continuous={continuousGallery} />
               </section>
             )}
 
@@ -286,7 +295,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     : stockPhotos.filter(Boolean).map(url => ({ url, isStock: true }))
   const hasPhotos = mediaPhotos.length > 0
   const hasStock = mediaPhotos.some(isIllustrative) || Boolean(galleryHero && resolveStockPhoto(galleryHero))
-  const galleryIntro = galleryIntroduction(company.name, hasStock, mediaPhotos.some(photo => !isIllustrative(photo)))
+  const galleryIntro = continuousGallery ? `A closer look at ${company.name}.` : galleryIntroduction(company.name, hasStock, mediaPhotos.some(photo => !isIllustrative(photo)))
   const ctaImg = ctaSectionPhoto
 
   return (
@@ -297,7 +306,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
       {hasPhotos ? (
         <>
           <section className="bg-white pt-1 pb-10">
-            <GalleryPhotoGroups photos={mediaPhotos} companyName={company.name} primary={primary} security={isGuard} />
+            <GalleryPhotoGroups photos={mediaPhotos} companyName={company.name} primary={primary} security={isGuard} continuous={continuousGallery} />
           </section>
           <section className="relative py-24 text-center overflow-hidden">
             {ctaImg ? (
