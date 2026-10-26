@@ -1,5 +1,9 @@
 ## Session: October 25, 2026 - Verified Account/Security Fix And Documentation Closeout
 
+- Audit follow-up: Shawn deferred the information-consistency review (website,
+  pricing wording, Terms and internal documents). Recorded as a later to-do;
+  no application, pricing, subscription or production changes performed.
+
 - Release d4f97106e3e2f6306a998c157779d51abead787c READY on production. Closed
   direct-browser company_members access while retaining server-authorized team
   flows; five memberships unchanged. Anonymous REST read now denied 401/42501.

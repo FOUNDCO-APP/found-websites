@@ -14,6 +14,14 @@ historical divider below; old unchecked items are not automatic authorization.
   target eight total. Review provenance and full framing before implementation.
 - [ ] Keep gold/Modern theme preview and services/categories discussion on hold.
 
+## Deferred - Information Consistency Review
+
+- [ ] Shawn deferred item 3 from the plain-English audit discussion: reconcile
+  website, pricing-page, Terms and internal-document wording, including old
+  pricing headings and conflicting promises. Keep as a to-do, not current work.
+  This is information cleanup, not approval to change prices, subscriptions or
+  customer terms. Other proposed audit work has not been newly approved.
+
 ## 2026-10-25 - Approved Hiram Duplicate And Security Fix
 
 - [x] Close company_members direct browser access; retain legitimate server-only

@@ -8,6 +8,11 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 25, 2026
 
+Latest priority instruction: Shawn deferred item 3 of the plain-English audit
+discussion (making website, pricing, Terms and internal information agree).
+Recorded in TASKS.md as a later to-do; no consistency work, pricing/billing
+changes or approval of the other audit recommendations is implied.
+
 ### Latest Confirmed Outcome
 
 Shawn confirmed the duplicate-client issue now appears fixed. Hiram's paid site
