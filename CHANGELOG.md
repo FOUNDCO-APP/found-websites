@@ -1,3 +1,181 @@
+## Session: October 25, 2026 - Verified Account/Security Fix And Documentation Closeout
+
+- Release d4f97106e3e2f6306a998c157779d51abead787c READY on production. Closed
+  direct-browser company_members access while retaining server-authorized team
+  flows; five memberships unchanged. Anonymous REST read now denied 401/42501.
+- Reversible company retirement added. Hiram's unused first signup retired once,
+  not deleted. Shared Auth and paid intellsecurity site preserved. Paid Stripe
+  customer email corrected, no other customer fields changed. One active USD 39
+  subscription/one successful USD 39 charge; unused customer has none.
+- Independent 108-record protected-state comparison passed; full build, 15
+  retirement groups, 12 membership groups, 60 billing regressions and 36 existing
+  Gallery assertions passed. Four local operator groups include trigger rollback.
+- Five paid public pages and existing forwarding verified live. Authenticated HQ
+  automated check hit sign-in; no password change/bypass. Shawn later confirmed
+  the duplicate-client outcome seems fixed. No real Hiram login test claimed.
+- Earlier completed work retained: corrected text-led announcement/onsite flyer,
+  continuous Gallery, responsive email, shared explicit background ownership,
+  protective deletion block, twelve-photo owner library and marketing help routes.
+- Current Hiram Gallery has five items after approved filler removal. Three AI
+  replacements and gold/Modern theme remain previews. Visible stock-paragraph
+  removal recommendation awaits its specific approval. Shared Collections research
+  deferred; onboarding safeguards/Found-wide AI verification remain open.
+- Documentation closeout follows BRIEF.md and the existing handoff/task/decision
+  files; updates product mechanics, pricing references, task/decision boundaries,
+  release/worktree safety and non-replay warnings. Historical entries below are
+  retained as evidence, not a competing current task list.
+- Shawn corrected the attempted extra status document: its summary is folded
+  into SESSION_HANDOFF.md and the extra file/references removed. Existing read
+  order and documentation process restored; no new source of truth introduced.
+
+## Session: October 23, 2026 - Shared Security Copy and Contact Repairs
+
+- Final outcome: releases7a8eabb andd8fd119 deployed successfully and verified publicly. Live5Hiramroutes, mobileContact320/360/375/390/1280px, MBJnon-guard390/1280px passed. Finalguardpunctuation follow-up independently reviewed;86renderassertions and7copyscenarios passed. Pending statements below are chronological, now superseded.
+
+- Preserved reviewed security-company About copy, owner service-area labels, distinct CTA text and neutral empty galleries. Shared Contact page wraps long emails; only guards receive the neutral response-time wording. Other industries retain their copy.
+- Independent review, focused regression tests and production build passed; release7a8eabb pushed, deployment/publicverification pending at this entry.
+- Published independently reviewed original-pixel cleaned Hiram logo to second signup only. Read-back and public asset load verified; first signup/billing/access unchanged.
+- Actual reviewer discussion saved in docs/team-meeting-security-2026-10-23.md. No unrelated billing work released.
+
+## Session: October 21, 2026 - Approved Local Promo and Guard Repairs
+
+- Follow-up: independent review approved exact22-file promo diff with no actionable findings. Commit `e10b464` pushed to main from isolated worktree; production deployment verification pending. No billing/security backlog included. Stripe tool availability remains blocked.
+
+- Implemented first-invoice price labeling, cached SetupIntent exact Price-ID checks, and existing stored founding-eligibility forwarding. Restored newly expanded picker transition wording to preexisting price comparisons; no subscription/offer term changes.
+- Isolated 22-file release checkout: 426 focused checks, final production build, desktop pricing browser inspection pass. Guard subtype libraries: 33 focused mocked checks, 54 copy fixture groups and TypeScript pass. No guard photo approved or customer record changed.
+- Three security runtime bypasses returned for explicit integration-scope approval. Stripe reconnected per Shawn, but chat tool reports Unknown tool twice despite installed/enabled. Live audit/release not completed. Detailed handoff saved; no commits/push, charges, messages, subscription schedules or holds.
+
+## Session: October 20, 2026 - November Promo Local Preparation
+
+- Shawn approved extending promo through November 15 Arizona and preparing security-guard copy/photos. Local deadline/shared price-display changes prepared; 354 focused checks and TypeScript passed. No release or live Stripe changes.
+- Independent review found missing scheduled 12-month transition, temporary-discount headline and cached Price-ID consistency gaps; explicit owner decisions pending. Stripe connector authentication and Vercel 403 block external verification/release.
+- Saved isolated promo-only worktree and copy/photo draft. No suitable hero approved, customer edits or pool changes. Scope and remaining gates recorded in `docs/november-promo-team-status-2026-10-20.md`; prior billing and Ryan protection unchanged.
+
+## Session: October 20, 2026 - Hiram Security Signup Team Review
+
+- Read-only pricing follow-up: confirmed Oct 15 intro cutoff, Pro $39/$69 pricing and stale intro-price/copy displays. Both Hiram records Pro; complete production live audit shows no charges, invoices or subscriptions on either linked customer. Team recommends consistent eligibility-aware price/copy; no promo extension or customer-price change authorized/applied.
+
+- Follow-up team consultation proposes reversible automated logo inspection/crop/background cleanup, optional segmentation, light/dark owner preview and internal review for uncertain results. No image processing/implementation approved or performed. Saved Shawn's explicit "you means the team" instruction in AGENTS.md.
+
+- Read-only investigation found two matching signups, different classifications/artwork; original image inspection confirms full phone screenshot vs opaque gray logo canvas. Newer first hero is a promotional flyer. User's current site screenshot remains pending.
+- Independent team reviews identify upload crop/preview gaps and missing explicit security-guard classification/image matching. Saved customer repair/system prevention proposal; no implementation without site/artwork selection and Shawn approval.
+- Documentation only. No customer/source/asset/billing/access/message changes; prior billing work and blockers preserved. Packet: `docs/hiram-security-site-team-review-2026-10-20.md`.
+
+## Session: October 15, 2026 - Approved Stage-One Local Implementation
+
+- Recorded Shawn's staged-plan approval. Fresh read-only production verification confirms all clients owe $0 and MBJ Oct 14 $69 renewal succeeded (captured total now $138).
+- Independent team implementation: shared versioned durable financial facts/payment-default evidence for list/detail, complete same-ledger event/reconciliation facts, expanded lifecycle coverage, and authorized single-client historical-suppressed refresh. No page-time Stripe calls; unknown evidence fails closed. Existing Connect/signing and Ryan protection preserved.
+- Passed 88 backend, 10 refresh-route, 17 stored-projection and existing fact/ledger/email/shortlink checks; 20 fixture layout screenshots, TypeScript and production build. Build retains existing middleware/Sentry Edge-runtime warnings. No DB concurrency/live signed-delivery claim.
+- Release held for Vercel reauthentication and team-discovered preexisting transactional customer-mapping guard. Both decisions presented to Shawn for approval; no silent database change. No commits/push/deployment, live baseline/configuration/listener/financial/message/access mutations. Execution packet: `docs/billing-stage-one-2026-10-15.md`.
+
+## Session: October 13, 2026 - Billing Operations Team Plan
+
+- Independent engineering/data and product/operations reviews completed; production read-only verification confirms complete all-client ledgers and $0 open balances. RC catch-up/replacement verified; MBJ expected renewal Oct 14.
+- Diagnosed inactive platform subscription event path, stale stored projections, disabled workers/notifications and non-scalable three-client daily reconciliation. Saved proposed staged plan in `docs/billing-operations-team-plan-2026-10-13.md`; updated current handoff/tasks without erasing historical or unrelated work.
+- Await Shawn approval. Documentation only; no code, configuration, financial, mail or service-access changes. Ryan protection preserved.
+
+## Session: October 11, 2026 — Live RC Recovery Preparation
+
+- October 13 screenshot follow-up: invoice/PaymentIntent/captured charge independently confirm $78; actual default Visa 1444 and October 31 schedule verified. No $39 paid receipt should exist yet. Prepared combined receipt/setup-confirmation mail; sending blocked before provider call by empty production env/local missing Resend key and unavailable browser. Nothing sent. Team billing repair queued; no financial/access/configuration mutations.
+
+- October 13 completion: after reported blank screen, read-only Stripe verifies completed Checkout and exactly one active $39/month automatic replacement, chosen payment-method ID set, October 31 original anchor, $0 setup charge. Catch-up $78 paid. Advised no retry; Found backend reconciliation remains pending, access/configuration unchanged.
+
+- October 13 follow-up: live $78 catch-up paid verified; no new subscription, old Checkout expired. Created/retrieved fresh hosted restart session under unchanged approved terms ($0 now/$39 monthly Oct 31/no proration); full URL delivered. No stored-card charge/message/access or global config change.
+
+- Corrected incomplete restart URL supplied in text: required Stripe URL fragment had been omitted. Original session remains open; retrieved full unmodified URL for Shawn. No financial/access changes.
+
+- Final approved execution: superseded/voided original unpaid $39 invoice, finalized replacement UG1AOYKM-0003 at $78/manual collection/auto_advance=false; fresh complete invoice list confirms July paid unchanged and only $78 open. Retrieved catch-up payment URL and reverified restart Checkout open/$0. Both links delivered to Shawn. No card charge, retry, client message or access/configuration mutation. Await Ryan's payment and subscription authorization.
+
+- Follow-up: Shawn requests general catch-up invoice plus restart link. Prepared verified live $78 replacement draft (two $39 periods), auto_advance=false/manual collection; no finalization/payment link yet. Await approval to supersede original $39 invoice so there is no duplicate collection. Restart session reverified open/$0; no charge/message/access change.
+
+- Verified Found Co live Stripe connector and complete RC invoice/subscription/price reads.
+- Created/retrieved customer-authorized restart Checkout: $0 today, $39/month from October 31 original time, no proration. Session remains open; replacement subscription not yet created.
+- Catch-up paused for explicit invoice-arrangement decision: finalized subscription invoice revisions unsupported in standard flow; recommend existing $39 plus separate $39 unbilled service invoice.
+- No charge, retry, debt mutation, client message, site/access or configuration change. Private exact session proof saved in `.billing-audits/`; recovery/handoff/tasks updated.
+
+## Session: October 10, 2026 - Safe Backend Repair and Access Protection
+**AI:** Codex with independent backend/release review
+
+- Shawn approved team direction and required Ryan's site/access stay unchanged.
+- Supabase connector access restored. Real PostgreSQL rollback tests passed; three matched billing migrations applied with restricted service-role access.
+- Financial baselines persisted without notices; RC access override added without altering legacy access, plan or Stripe state.
+- Clients/list/detail now separate verified billing and protected service from relationship/usage. Atomic projection guard preserves legitimate paid activation and prevents stale cancellation downgrades.
+- 60 behavioral tests, TypeScript/build and mobile/desktop checks passed. `190fae3` pushed; deployment/configuration verification pending. Automatic mail/holds remain off.
+- Update: backend/Clients release deployed and verified; RC public site still 200, plan/status unchanged. Read-only diagnostics `57e1693` confirm the current Stripe listener is snapshot/connected-only (`@accounts`) and listens only for payment_intent.succeeded; no self/platform subscription listener exists.
+- Reviewer-approved separate-secret/self-scope support `790fb50` prepared/pushed, with 60 tests and TypeScript passing. Existing listeners/secrets unchanged. Separate-platform setup requires owner approval and Vercel access; automatic actions remain off. Exact packet: `docs/billing-platform-listener-setup.md`.
+
+---
+
+## Session: October 9, 2026 - Billing Repair Implementation
+**AI:** Codex with separate implementation/review agents
+
+- Prepared accurate owner billing/receipt displays and full live-only admin Payments ledger/export with pagination, exact balances, payment dates, allocations, credits/refunds, and subscription details.
+- Corrected email provider error handling and misleading stored Paying / recurring-revenue labels.
+- Independent backend review and local disabled-by-default durable event/incident/outbox/reconciliation draft prepared. Migration is unapplied; operational rollout checks remain required.
+- Production build, TypeScript, accounting/display/email/auth/pagination regressions and local mobile/desktop checks passed. Deployment and full live audit still pending. No billing collection, messages, or holds performed.
+- Update: `1fca743` deployed; full live audit completed for all three client ledgers (9 invoices, 5 charges). $246 captured; RC alone owes $39 and its subscription canceled September 14 for payment failure. Private report in `.billing-audits/`.
+- MBJ/Divine stored status corrected to active with verified operator notes. Discovered DB constraint rejecting billing audit type; separate migration draft prepared but not applied due invalid Supabase project token. RC access-driving field preserved pending courtesy policy. Backend flags remain off; 23 persisted behavioral tests passed, real DB validation remains required.
+- All unrelated existing work preserved. Current status: `SESSION_HANDOFF.md`.
+
+---
+
+## Session: October 3, 2026 - Grok Third-AI Handoff
+**AI:** Codex
+
+### Context
+Shawn wants to bring Grok into Found as a third AI collaborator alongside Codex and Claude Code. He asked whether Codex has enough context to brief Grok on Found's business, product, features, benefits, timeline, current state, and the Apple-style team process.
+
+### Changed
+- Added `GROK_HANDOFF.md`, a standalone briefing packet for Grok or any future AI.
+- The handoff covers Shawn's working style, Found's mission, product overview, feature set, tech stack, major timeline, current open items, dirty-worktree warning, launch-readiness read, and how the Steve/Jony/Angela/Craig/Priya/Marcus/Chris/Phil team process works.
+
+### Verification
+- Live check confirmed `foundco.app/plans` is now serving release `070f944` and the October 15 promo deadline.
+
+### Open
+- `GROK_HANDOFF.md` is not committed yet.
+- If Shawn brings Grok in, first ask Grok to read the handoff plus core repo docs before giving launch/readiness recommendations.
+
+---
+
+## Session: September 29, 2026 - Intro Rate Extended to October 15
+**AI:** Codex
+
+### Context
+Shawn returned to Found work and asked to update the outdated promotion that had been set to September 15, put the next work on the list, review Stripe promo-code needs, and explain the Apple Developer Program path in plain terms.
+
+### Changed
+- `src/lib/introRate.ts`: moved the shared intro-rate cutoff to October 15, 2026 and updated the shared display label to `October 15`.
+- `TASKS.md` and `SESSION_HANDOFF.md`: added the current promo/App Store workstream and recorded that Stripe promo-code changes need an explicit approved billing decision before touching live codes.
+
+### Verification
+- `npm run build` passed. Existing Sentry/Edge runtime warning remains during compile; it did not fail the build.
+- Commit `070f944` was pushed to `origin/main`. A live check still served release `141c30e` with September 15 copy, so production had not promoted the pushed commit yet.
+
+### Open
+- Deploy/promote the website deadline update in Vercel.
+- Decide exact Stripe promo-code behavior before changing live Stripe objects.
+- Apple Developer Program enrollment and App Store submission prep remain owner-side next steps.
+
+---
+
+## Session: September 12, 2026 - Magic Link Send Failure Handling
+**AI:** Codex
+
+### Context
+Shawn reported that the magic link for `shawnlopez@me.com` does not work.
+
+### Changed
+- `src/app/dashboard/api/send-login/route.ts`: now checks whether `sendTrackedEmail()` actually sent the login email. If Resend/email delivery fails, the API returns a `503` instead of telling the login UI the link was sent.
+
+### Verification
+- `npm run build` passed.
+
+### Open
+- Still need one live test after deploy to determine the remaining failure point: no email delivered, link redirect/session failure, expired link, or no company attached to the user.
+
+---
+
 ## Session: September 8, 2026 - Social Week 1 Tactical Direction Approved
 **AI:** Codex
 
@@ -4766,3 +4944,12 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 ### Verification
 - `cmd /c npm run build` passed.
 - `git diff --check` passed with only the repo's normal CRLF warning.
+## Session: October 11, 2026 - Approved Client Admin Repair
+**AI:** Codex with independent layout, data and release reviewers
+
+- Shawn approved team recommendations from eight mobile admin screenshots.
+- Prepared client-scoped wrapping list, live-ledger detail facts with unknown guards, actionable billing link, compact empty states and collapsed management.
+- Categorized readable email history distinguishes provider acceptance from delivery; manual payments and local billing expectations no longer imply Stripe collections.
+- 12 fact tests, display/safety tests, ledger and 60 backend regressions plus 20 fixture screenshots passed. Authenticated local list/three details at phone/tablet/desktop and production build passed.
+- `a20f7ca` deployed; live phone Clients and all three details showed complete live ledgers. MBJ/Divine have zero outstanding, RC $39/invalid-account failure/no scheduled charge. RC protected access and public 200 confirmed.
+- No collection, mail, hold, access-override, webhook, configuration or schema changes. Unrelated work preserved.

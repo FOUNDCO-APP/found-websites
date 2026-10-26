@@ -2,6 +2,11 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+**October 25 clarification:** Keep the existing documentation process. This file
+is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
+and the existing decision/change logs retain approvals and history. Do not add
+another status/handoff source of truth without Shawn's approval.
+
 ---
 
 ## STEP 1 - READ THESE FILES FIRST
@@ -121,7 +126,9 @@ Every design decision goes through Jony. Every product decision goes through Ste
 
 ## STEP 7 - DOCUMENTATION RULES
 
-`SESSION_HANDOFF.md` is the current source of truth. Keep it short.
+`SESSION_HANDOFF.md` is the current source of truth. Keep its current overview
+short and clearly separate supporting history. Do not introduce a second status
+document. Never promote a pending approval to completed work.
 
 `TASKS.md` is the active work board. Keep it focused on what is now, next, and backlog.
 
@@ -180,5 +187,5 @@ Answer questions. See your site. Get found.
 | Supabase project | `mmctzloztgkbqvofmkou.supabase.co` |
 | Domain | `foundco.app` |
 | Guinea pig site | `barriobuilders.com` |
-| GitHub repo | `github.com/found-co/found-websites` |
+| GitHub repo | `github.com/FOUNDCO-APP/found-websites` |
 | Hosting | Vercel |

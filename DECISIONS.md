@@ -1,3 +1,60 @@
+## October 25, 2026 - Current Supersession And Approval Boundaries
+
+Shawn explicitly reaffirmed the existing documentation process: BRIEF.md is the
+entry point; SESSION_HANDOFF.md is current truth; TASKS.md and the existing
+decision/change logs retain their roles. Fold summaries into those files rather
+than introducing a competing status/handoff file. Documentation correction is
+local only; shared-branch publication still needs explicit authorization.
+
+Approved by Shawn after visible independent AI-role review: close direct-browser
+membership access; reversibly retire Hiram's unused first signup; correct only the
+paid Stripe customer's billing email. Preserve shared Auth, paid site, contents,
+subscription and price. Implemented and verified in release d4f97106. Shawn then
+confirmed the duplicate-client issue seems fixed. This supersedes earlier
+instructions to leave the first signup active, not the requirement to preserve
+its history. No hard deletion, test misclassification or billing reassignment.
+
+Earlier October 25 approvals implemented: retain the existing announcement's
+headline/subtext/button with Page or Photo destination; Photo opens onsite, not
+as a giant inline flyer. Hiram's Gallery is a continuous grid. Shared collection
+controls and Jobs/Estimates-album research are deferred, not an all-site grouping
+change. A photo still used on a page cannot be silently deleted elsewhere.
+
+Owner-controlled backgrounds are live: explicit assignments only; unassigned
+sections stay plain. Availability in the twelve-photo free security library is
+not permission to auto-publish on every security client's site.
+
+**Still pending, not approved by the account/security approval:** removal of the
+visible stock paragraph (Shawn objected; team recommended removal and asked),
+publication of the exact three AI candidate images, and changing the live theme
+to the gold/Modern preview. Services/category restructuring remains paused.
+Documentation saving is not new implementation or publication authorization.
+
+Read SESSION_HANDOFF.md for the consolidated plan; older entries below retain
+their original context and are superseded where a newer explicit decision exists.
+
+**[2026-10-24] - Approve basic image safeguards; add Found-wide AI verification to the to-do list.**
+Approved by Shawn: preserve unchanged originals, check image size and selected-placement suitability, and show accurate owner-controlled image/crop previews as part of the approved onboarding work. No silent artwork alteration, rejection of meaningful images, deletion or background assignment. AI image assessment remains separately reviewed. Shawn also explicitly requested a to-do item to ensure full AI is working for Found. Record an end-to-end AI inventory/verification audit and visible team findings before new repair scope; do not claim AI is currently verified or infer permission for a new provider, costs or automatic publication. Work tracked in TASKS.md; approval is not completion.
+
+**[2026-10-24] - Approve clearer industry-aware onboarding and final review.**
+Approved by Shawn: clearer homepage photo versus photo-free choice, gallery uploads separate from background selection, meaningful logo preview with keep/replace/business-name options, relevant industry questions, appropriate use of owner answers, and compact final review showing actual logo/photo choices/services/contact information. Improve existing questions rather than a long questionnaire. Implementation not yet performed. New automatic image-suitability assistance is a team discussion, not approval to silently alter originals, assign backdrops or introduce an unreviewed AI service. System-wide owner-controlled background proposal supersedes the guard-only discussion and requires its full implementation/release scope review; do not conflate permissions.
+
+**[2026-10-23] - Approved final security system repairs and original-pixel logo cleanup.**
+Approved by Shawn in this chat: preserve reviewed guard About narratives, neutral guard location/CTA/Gallery wording, remove unconfirmed guard response-time promise, fix shared Contact mobile overflow, and non-generative original-pixel background mask/crop. Security changes apply through shared Found rules, never hardcoded to Hiram. His logo remains account-specific. Preserve first signup, billing/access/contact/location. Test other industries before release. Normal pathway requires actual independent team discussion visible to Shawn, then his approval, then implementation. This one-time existing scope approval does not delegate new decisions; obstacles expanding scope return for approval.
+
+**[2026-10-22] - Select Hiram's second signup for cleanup and the reusable security template.**
+Approved by: Shawn. Use `intelligence-protection-security-llc-arizona` / company `626dc220-4152-4711-8862-a885534e1e0a`; clean its existing logo and saved content with team review, preserve the first signup and all billing/access fields, and finish security template integration rather than merely changing one customer's text. Design review recommends clearing rejected flyer/screenshot/stock assignments and using the existing text-led fallback while preserving original assets. AI logo candidates were rejected for artwork changes; explicit non-generative mask/crop permission requested separately, not assumed. New customer claims or unrelated architecture choices still require review.
+
+**[2026-10-21] - Approve team follow-up repairs and guard subtype implementation.**
+Approved by: Shawn ('Approved. Make it happen'). Implement first-invoice price wording, exact cached Stripe Price-ID reuse checks and Security Guard Services under Professional Services. Prepare the concrete new-subscriber 12-month transition plan without changing existing clients. Independent review and verification remain release requirements. No customer-site selection, record merge, logo processing, messages, charges or Ryan access changes implied. Stripe sign-in remains blocked; Shawn requested connection guidance.
+
+**[2026-10-20] - Extend existing promo to November 15 and prepare Hiram security copy/photos.**
+Approved by: Shawn. November 15, 2026 is inclusive in Arizona; do not alter price amounts or existing subscriber terms. Local implementation and independent review do not authorize unresolved new billing behavior, customer-record selection, category design, or publishing unsupported claims. Stripe verification/deployment remain incomplete. See `docs/november-promo-team-status-2026-10-20.md` for review findings and explicit pending approvals.
+
+**[2026-10-15] - Approve staged billing operations repair; begin financial truth and safe observation.**
+Approved by: Shawn following independent Found team reviews.
+Scope: shared durable billing facts across Clients/detail, complete signed platform event coverage while preserving commerce, safe all-client baselines, scalable recovery/monitoring, billing action queues and reliable customer communications behind separate release gates. Follow `docs/billing-operations-team-plan-2026-10-13.md`. Messages and automatic holds stay disabled. Ryan's site access remains protected until explicit release. Unresolved policy, cost, credential or scope choices return to the team and Shawn. Existing day 0/3/6/7 direction is not permission to activate unverified automation.
+
 **[2026-09-08] - Found Week 1 social production can include guided video, paid ads, 3-7 posts/day, and the Metricool workflow.**
 Approved by: Shawn + Found Co. team direction
 Why: Shawn answered the September 7 tactical questions: he can create video with guidance, wants to spend money on ads, accepts 3-7 posts/day, and confirmed the production workflow. Team default is still quality-first: 3 strong feed posts/day as the floor, extra Stories/Reels only when strong, small paid tests on top performers after 7 days of real data, and batch production through Codex -> Shawn redline -> Metricool scheduling -> post log. One item remains intentionally open: Shawn has not explicitly approved appearing on camera, so talking-head Reels should not be scheduled until he says yes. Use screen recordings, montage clips, carousels, and founder-note motion graphics as the default video path. See `docs/social-week-01-plan.md`.

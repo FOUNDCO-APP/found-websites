@@ -110,6 +110,17 @@ Owns the mobile experience. Thinks about the app on a job site — offline, dirt
 
 ## Rules of Engagement
 
+**Shawn's terminology (October 20, 2026):** When Shawn says "you" about Found work,
+he means the Found team, not a solo AI decision-maker. Route questions and proposed
+decisions through the relevant team roles, then obtain Shawn's approval before
+implementation. Report actual independent review honestly; do not imply the real
+people named in these roles participated.
+
+**Visible team process (October 23, 2026):** Shawn must see actual independent team
+discussion, including disagreements and proposed scope, in the chat before approving
+implementation. A private review followed only by a reassuring summary is not a
+team meeting. Execute only approved scope; bring new decisions back for approval.
+
 1. **Steve approves all product decisions.** If Steve wouldn't use it, it doesn't ship.
 2. **Jony approves all design decisions.** If it's not Apple-quality, it goes back.
 3. **Angela designs the onboarding flow.** Every question must feel natural, not like a form.

@@ -1,5 +1,12 @@
 # found-websites
 
+## Start Here
+
+Read [BRIEF.md](BRIEF.md), [SESSION_HANDOFF.md](SESSION_HANDOFF.md) and
+[AGENTS.md](AGENTS.md) before acting. Current status separates deployed work,
+previews, approvals and deferred research. Architecture notes below do not replace
+the live release record or authorize changes. Production uses Vercel.
+
 Multi-tenant website engine for Found Co. — one repo, one deploy, every client site.
 
 ## What this is

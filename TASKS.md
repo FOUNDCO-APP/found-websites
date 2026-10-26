@@ -1,3 +1,233 @@
+# Found Task Board
+
+Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
+historical divider below; old unchecked items are not automatic authorization.
+
+## Now - Hiram Gallery Follow-Up
+
+- [x] Shawn reports the duplicate-client issue seems fixed. Preserve the shared
+  login, paid website and reversible retired record.
+- [ ] Resolve the unanswered approval question on removing the visible Gallery
+  stock paragraph. Team recommends removal; no source change is deployed.
+- [ ] Shawn reviews the exact three generated image candidates. Current Gallery
+  is FIVE items (flyer + four people photos), not thirteen. Candidates unpublished;
+  target eight total. Review provenance and full framing before implementation.
+- [ ] Keep gold/Modern theme preview and services/categories discussion on hold.
+
+## 2026-10-25 - Approved Hiram Duplicate And Security Fix
+
+- [x] Close company_members direct browser access; retain legitimate server-only
+  owner/worker flows. Live anonymous denial and unchanged existing rows verified.
+- [x] Correct paid Stripe customer's email only; verify one active 39-dollar
+  subscription/one successful charge, no subscription or charges on old signup.
+- [x] Finish release d4f97106 and retire only unused old Hiram signup; verify one
+  current-client record, recoverable retired history, preserved shared login,
+  paid site, content and forwarding. READY; data/Auth/content verification passes.
+  Live public checks pass; HQ page fixture passes. Live signed-in HQ check blocked
+  by unavailable production operator credential; no password change/bypass.
+  Shawn subsequently confirmed the visible admin outcome seems fixed.
+- [ ] Separate security follow-up: review historical access evidence for the
+  former membership exposure. Containment does not establish past exploitation.
+
+## 2026-10-25 - Shared Announcements And Industry Growth
+
+- [x] PRIORITY approved: Hiram-only continuous public Gallery, retaining all public
+  photos and removing automatic stock/upload section headings. Homepage announcement
+  stays unchanged. No photo/album/database mutations or unrelated client changes.
+  Release 7fbf0a99 initially retained thirteen photos; later approved data-only
+  cleanup removed eight Gallery fillers. Current count is five; originals and
+  independent header placements preserved. See SESSION_HANDOFF.md.
+- [ ] BACK BURNER: research existing Jobs/Estimates photo-album creation, naming,
+  publication and customer-sharing automation before proposing shared Collections
+  controls. Compare owner-managed collections with job/estimate-managed collections;
+  preserve their distinct purposes and privacy rules. Shawn deferred implementation
+  and any all-site grouping rollout; industry names should guide, not force grouping.
+
+- [x] Shawn approved keeping announcement headline, supporting text and button,
+  with Page or Photo destinations shared across industries. Photo opens onsite;
+  it must not automatically become an inline poster or background.
+- [x] Verify production release and the exact approved Hiram-only correction;
+  keep original flyer in Gallery, remove Home-strip repetition, preserve accounts,
+  billing, other photos and live theme. See SESSION_HANDOFF.md for current status.
+- [ ] Actual phone/browser visual review of the corrected announcement and photo
+  viewer. Source/HTTP/DOM checks passed; CUA browser access was unavailable.
+  Shawn subsequently confirmed the homepage announcement looks good; do not infer
+  that the separate viewer interaction or Gallery visual review is complete.
+- [ ] Shawn reviews the black/white/restrained-gold Modern design preview before
+  any live theme change. Reuse existing cross-industry controls, not a hard-coded
+  Hiram-only template or automatic redesign of other security clients.
+- [x] Ongoing team direction: grow Found's reusable industry awareness, appropriate
+  imagery, styles and data model as real needs are reviewed. Existing clients keep
+  explicit control of photo placements and backgrounds; changes still require the
+  visible team discussion and Shawn's approval.
+- [ ] Continue the free security-library expansion from the twelve approved photos
+  toward eighteen; source/placement review remains required. The twelve already
+  available to security owners are not evidence that the expansion is finished.
+
+## 2026-10-24 - Onboarding, Image Safety and Found AI
+
+- [x] Shawn approved clearer industry-aware onboarding, actual logo/photo previews, explicit homepage-photo/photo-free choice, separate gallery selection, appropriate use of collected answers, and a compact final review. Approval recorded; implementation is not complete.
+- [x] Shawn approved adding unchanged-original preservation, image-size/suitability warnings and accurate placement/crop previews. Owner keeps control; no silent redraw, deletion or background assignment. AI image assessment remains a separate review.
+- [ ] Implement and independently review the approved onboarding and upload safeguards; verify with Barrio Builders first and across other industries, including security. Preserve existing customer data and owner selections.
+- [x] Approved shared explicit-background ownership rule deployed and verified:
+  no automatic Gallery/other-section borrowing; unassigned sections remain plain.
+  This does not complete the pending onboarding previews/selection safeguards.
+- [ ] **Found-wide AI audit: verify that Found's AI is genuinely working end to end.** Inventory intended AI features; identify real AI calls, intentional basic fallbacks, missing integrations and errors. Check that onboarding answers reach content generation, industry-specific output is relevant, and failures are visible rather than mistaken for successful AI output. Verify the app and admin paths as applicable, using safe tests without changing existing clients. Bring findings and proposed repairs into a visible team discussion for Shawn's approval. This task records the requested audit, not verified AI health or authorization for a new provider, paid service, autonomous publishing or silent artwork changes.
+- [ ] Evaluate AI-assisted flyer/screenshot/text-heavy/blur detection separately after the basic safeguards. Show uncertainty and allow owner override; passing a quality check must not select a background.
+
+## Historical Checklists - Superseded; Revalidate Before Acting
+
+Entries below preserve prior task history. SESSION_HANDOFF.md and the active
+sections above take precedence. In particular, do not repeat completed Hiram
+logo/email/slug/retirement operations, create replacement Ryan invoices or treat
+older deployment/authentication blockers as current without checking live state.
+
+## 2026-10-22 - Hiram Security Cleanup
+
+- [x] October23: approved final shared securitycopy/Contactrepairs and original-pixel logo cleanup completed. Releases7a8eabb/d8fd119 verified Vercel+public pages; mobile320/360/375/390/1280px and MBJnon-guardchecks passed. First signup, billing/access unchanged. Actualdiscussion saved docs/team-meeting-security-2026-10-23.md. Older unchecked approval items below are superseded.
+
+- [x] Security runtime release9ff67a8 deployed via existing Git/Vercel integration; isolated tests/build and independent reviews passed.
+- [x] Second signup: eight service groups, reviewed copy/classification and rejected image assignments cleared; live read-back verified. First signup, billing, access, contacts and geography unchanged.
+- [x] Live mobile audit of Home/About/Services/Gallery/Contact; saved screenshot evidence.
+- [ ] Shawn approval for team follow-up: preserve guard About narratives, neutral location/CTA/Gallery copy, remove unsupported Contact response-time promise, fix long-email wrapping. No further source changes yet.
+- [ ] Shawn approval for non-generative original-pixel logo mask/crop. Both AI candidates rejected; original remains.
+- Details: docs/hiram-security-template-cleanup-2026-10-22.md. Earlier status entries below are historical.
+
+## 2026-10-09 - CURRENT NOW
+
+### October 20 November Promo - Approved Scope, Not Live
+
+- [x] Independent final source review approved22-file ReleaseA; commit `e10b464` pushed to remote main, excluded billing/security backlog.
+- [ ] Production NOT confirmed: public plans still old pricing; newcommit statuses empty across three reads. Restore/diagnose existing Vercel integration and verify public pages before calling live.
+
+- [x] October 21: approved consistency fixes and authoritative eligibility wiring; isolated 426-check suite and production build passed, desktop browser inspected.
+- [x] Guard subtype local implementation and 33 mocked checks; 54 existing copy fixture groups pass.
+- [ ] Approve/fix three security integration bypasses (onboarding/admin subtype, copySimilarity, stock-photo API); no reply yet to new approval question.
+- [ ] Refresh Stripe tool session: Shawn connected Found Co., installed/enabled but account-list now returns Unknown tool. Verify actual live inventory before changes.
+
+- [x] Local November 15 Arizona deadline/price-display patch; independent review; 354 focused checks and TypeScript pass.
+- [x] Draft Hiram security copy and document actual photo inspection; no approved hero or publication.
+- [ ] Shawn answers targeted consistency repairs, new-subscriber 12-month transition plan and security-guard subtype questions.
+- [ ] Restore Stripe authentication and verify actual live promo/Price configuration without calling mutating setup-products audit.
+- [ ] Resolve independent findings, perform final isolated build/review, restore deployment access, release scoped changes and verify live marketing/checkout.
+- [ ] Confirm Hiram's intended signup and service claims before applying content/photos. See `docs/november-promo-team-status-2026-10-20.md`.
+
+### October 20 Hiram Security Signup - Review Only
+
+- [x] Independent team upload/display and security-industry/imagery reviews; original saved logos inspected without editing.
+- [ ] Obtain Shawn's rendered-site screenshot and confirm intended signup/artwork (two matching records).
+- [ ] Approve exact customer repair and separate reusable logo/guard-category safeguards before implementation; see `docs/hiram-security-site-team-review-2026-10-20.md`.
+- [ ] Confirm actual services/images/contact/location with Hiram; no assumed credentials, armed/24-hour claims, comp or billing changes.
+
+### October 13 Billing Operations Plan - Current Priority
+
+- [x] October 15: Stage-one local financial snapshot/event/refresh implementation; independent reviews, 88 backend/10 route/17 projection checks, existing regressions, 20 fixture screenshots, TypeScript and production build passed.
+- [ ] Shawn approves restoring Vercel login/project access (saved token returns 403); do not create listener without signing-secret installation access.
+- [ ] Shawn approves team-recommended transactional company/customer ownership guard; implement/review DB rollback/race tests before release. No migration applied yet.
+- [ ] Deploy reviewed scoped stage-one changes, then refresh all three via live verified-default path and prove signed delivery/replay; no runtime flags enabled yet.
+
+- [x] Independent engineering/data and product/operations team reviews; fresh complete live all-client verification, all owe $0.
+- [x] October 15: Shawn approved staged `docs/billing-operations-team-plan-2026-10-13.md`; begin financial truth/observation, messages and holds stay disabled.
+- [x] October 15: complete live ledger verifies MBJ Oct 14 $69 renewal paid at 6:06:53 PM Phoenix; all clients owe $0.
+- [ ] Unify current financial projection; separate platform listener/signed delivery; historical-suppressed baselines; preserve Connect and Ryan access.
+- [ ] Replace three-customer daily backup with scalable fair scheduling and independent watchdog; validate coverage/load.
+- [ ] Billing action queues/ledger, durable receipt/delivery audit, authenticated recovery/return states; gated automation approval.
+
+Historical RC preparation/checklist items below are superseded by verified October 13 paid catch-up and active replacement; do not create another invoice/subscription or reuse expired links.
+
+### October 11 RC Recovery
+
+- [x] Triple-check $78 via invoice/PaymentIntent/captured charge; verify actual default Visa 1444 and October 31 $39/month schedule.
+- [ ] Send prepared combined payment receipt and future-autopay confirmation once mail access/live admin browser available; verify logged provider acceptance/delivery, avoid duplicate sends.
+- [ ] Team review of stale admin billing and platform event/financial sync, operator alerts and receipt/setup confirmation history; preserve Ryan access override.
+
+- [x] October 13: verify completed replacement Checkout, exactly one active $39/month automatic subscription with payment method and October 31 original anchor; $78 catch-up paid.
+- [ ] Reconcile Found billing records against replacement subscription while preserving RC access protection; verify platform listener/signed events separately.
+
+- [x] October 13: verify $78 catch-up paid/zero balance; replace expired uncompleted restart Checkout with same approved October 31 terms.
+- [ ] Verify completion of October 13 replacement Checkout, resulting card/$39 subscription/Oct 31 anchor, and Found billing reconciliation without releasing access protection.
+
+- [x] Shawn approved superseding original $39; voided original and finalized verified $78 manual invoice with payment URL, no duplicate collection.
+- [x] Delivered catch-up and separately verified restart links to Shawn; no charge/message/access change.
+- [ ] Await Ryan's catch-up payment and restart authorization; verify resulting subscription $39/month/Oct 31 anchor and safely reconcile Found. Checkout expires Oct 12 5:45:32 PM Arizona.
+
+- [x] Prepare requested $78 replacement draft with two $39 service-period lines, manual collection, no automatic sending/charge.
+- [ ] Approve superseding original $39 invoice, then finalize/retrieve $78 payment link; original must not remain collectable alongside replacement. This replaces earlier recommendation for two separate catch-up invoices.
+
+- [x] Verify Found Co live Stripe account, RC customer/full invoice ledger, canceled subscription and $39 monthly price.
+- [x] Prepare/retrieve $0-today restart Checkout with October 31 anchor and no proration; Ryan must authorize himself.
+- [ ] Shawn approves catch-up invoice arrangement: existing $39 plus separate Sep 30–Oct 31 $39 recommended; no duplicate debt.
+- [ ] Prepare approved catch-up invoice/payment links; no automatic charge or message. Recheck restart session expiry before providing.
+- [ ] After Ryan's authorization/payment, verify both catch-up periods paid and resulting subscription anchor/next $39 renewal; preserve protected access.
+
+### October 11 Client Admin Repair
+
+- [x] Obtain Shawn's explicit approval of screenshot-driven team direction.
+- [x] Implement wrapping Clients facts, read-only live detail facts, compact empty states, management dropdown and categorized delivery-aware history.
+- [x] Verify 12 fact regressions, display/unknown/history regressions, ledger/60 backend checks and 20 fixture screenshots with collision checks.
+- [x] Independent release review; preserve Ryan's access and all billing/notice/hold configuration.
+- [x] Authenticated local list/all three client detail integration and production build.
+- [x] Deployment `a20f7ca` and live authenticated three-client phone smoke verification; complete live ledgers and RC public site/protection confirmed.
+
+### October 10 Safe Backend Rollout
+
+- [x] Verify deployed Clients warnings, Ryan's unchanged legacy access/public site, and exact Stripe destination scope.
+- [ ] Owner approval/access: create separate platform/self snapshot billing listener and securely configure production signing secret. Existing connected-account listener stays unchanged.
+- [ ] Validate real signed delivery and recovery before observation activation; full notification/hold rollout remains pending.
+
+- [x] Record Shawn's team-plan approval and explicit Ryan site-preservation instruction.
+- [x] Apply real-PostgreSQL-tested logging/storage/projection migrations with service-only access.
+- [x] Store fresh historical financial baselines with zero queued notices; add RC access protection.
+- [x] Fix Clients/list/detail billing warnings without changing RC service fields.
+- [x] Verify 60 backend behaviors, build/TypeScript and local mobile/desktop UI.
+- [x] Commit/push `190fae3` safety release.
+- [ ] Verify deployment, signing/event destinations and recovery-worker configuration before activating observation.
+- [ ] Validate actual signed callback delivery, queue recovery, independent monitoring and scalable cadence.
+- [ ] Implement/validate approved notice/reminder/hold/restoration lifecycle before enabling automatic actions; Ryan excluded until explicit release.
+
+
+### Billing Reliability and Late Payments
+
+- [x] Repair exact paid/remaining amounts and live owner billing status.
+- [x] Add paginated admin Payments ledger and authorized private JSON export.
+- [x] Fix Resend provider-error handling; test displays, accounting, access control, pagination, and incomplete/test-mode behavior.
+- [x] Validate local mobile/desktop reporting and production build.
+- [x] Commit/push reporting repair (`1fca743`); independent release review found no blockers.
+- [x] Confirm production reporting and full live audit: 3 clients, 9 invoices, 5 charges; $246 captured and $39 open.
+- [x] Verify RC: canceled September 14 for payment failure; $39 exact arrears, invalid-account card decline, no second invoice or scheduled retry.
+- [x] Correct MBJ/Divine stale trial statuses and verify persisted operator audit notes.
+- [ ] Apply verified billing activity-type constraint repair after Supabase access is restored; current DB rejects billing audit records.
+- [ ] Approve RC recovery ($39 arrears, valid card, new monthly subscription timing); protect courtesy access before changing its legacy access-driving field.
+- [ ] Restore required production/database access; validate draft migration and worker concurrency/recovery before enabling automation.
+- [ ] Validate immediate alerts, provider delivery, independent missed-run monitoring, and historical-backfill suppression.
+- [ ] Confirm SMS/push setup and site hold/recovery policy/route coverage with Shawn and the team before activation.
+- [ ] Approve exact client communication and collection action after balances are verified.
+
+## 2026-09-29 - CURRENT NOW
+
+### Promo Extension + Apple App Store Prep
+
+- [x] Extend shared Found intro-rate cutoff through **October 15, 2026**.
+- [x] Update shared display label from `September 15` to `October 15`.
+- [x] `npm run build` verification for the October 15 cutoff change.
+- [ ] Deploy the promo deadline update to production.
+- [ ] Shawn QA: Home, Plans, Compare, industry pages, and activation show/use the October 15 intro-rate deadline.
+- [ ] Stripe promo-code decision needed before live billing changes: exact code text, discount behavior, plan scope, max redemptions, and whether old promo codes stay active or are disabled.
+- [ ] Apple Developer Program prep: choose Individual vs Organization enrollment, confirm Apple ID with two-factor authentication, check whether Found has a D-U-N-S Number if enrolling as an organization, then pay the Apple Developer Program fee.
+- [ ] App Store submission prep: privacy policy URL, support URL, app name, icon, screenshots, demo/test login, age rating, privacy answers, and review notes.
+
+## 2026-09-12 - CURRENT NOW
+
+### Dashboard Magic Link Login
+
+- [x] Reproduced a likely product-side bug from code review: magic-link send could report success even if `sendTrackedEmail()` failed.
+- [x] Updated `src/app/dashboard/api/send-login/route.ts` to return `503` when the email send fails.
+- [x] `npm run build` passed.
+- [ ] Deploy the fix.
+- [ ] Shawn QA: request a new magic link for `shawnlopez@me.com`.
+- [ ] If email does not arrive: check `/admin/emails` / `email_log` for the latest `magic_link_login` row and Resend delivery status.
+- [ ] If email arrives but click fails: capture the final error (`link_expired`, `auth_failed`, `no_company`) and inspect `/auth/callback`.
+
 ## 2026-09-07 - CURRENT NOW
 
 ### Found Social — Week 1 production (handing to Codex for design)

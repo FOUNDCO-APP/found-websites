@@ -1,6 +1,11 @@
 # PROJECT.md — Found Co. / found-websites
 ### Read this every session. Every AI. Every time.
-*Last updated: June 18, 2026*
+*Operational status pointers updated: October 25, 2026. Older architecture context retained.*
+
+Follow `BRIEF.md`, then the newest `SESSION_HANDOFF.md` entries before using
+historical build/launch claims below. The web product is live. App-store work is
+a later phase, not the current release goal. Main checkout is dirty/stale relative
+to the verified release worktree; do not bulk deploy it.
 
 ---
 
@@ -23,14 +28,17 @@ Web design, branding, SEO, hosting, social media, print brokerage.
 
 ## WHAT THIS PROJECT IS
 
-**Found Co.** is a new entity Shawn is creating. Goal: App Store (Apple) + Google Play.
+**Found Co.** is a live web/PWA product. Apple App Store and Google Play remain
+later distribution goals; current work is product/customer quality and reliability.
 
 It is a mobile-first SaaS platform that gives any small business owner three things from one app:
 1. **Auto-generated website** — answer onboarding questions, site is built automatically
 2. **In-app photo/video capture** — organized by job, off the personal camera roll
 3. **Social media prep** — flagged photos sized and ready to post
 
-**The core promise:** Owner answers questions → professional website is generated → it looks like Apple built it. No tech skills. No designers. No drag-and-drop. Done in under 10 minutes.
+**The core promise:** Owner answers questions, reviews a professional generated
+website, and manages it from their phone without a drag-and-drop editor. The
+in-app camera is central. Do not infer a verified launch-time guarantee.
 
 ---
 
@@ -189,7 +197,7 @@ Layout files: `src/components/layouts/`
 | Gallery | `/[slug]/gallery` | ✅ Built — masonry + lightbox + swipe |
 | Contact | `/[slug]/contact` | ✅ Built |
 | Estimate | `/[slug]/estimate` | ✅ Built |
-| Found Co. root | `/` | ⏳ Coming soon placeholder |
+| Found Co. root | `/` | Live marketing site; evidence/showcase work remains open |
 | Admin photo curator | `/admin/photos` | ✅ Built |
 
 ---

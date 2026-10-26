@@ -1,5 +1,10 @@
 # Image-First Homepage Highlight
 
+**SUPERSEDED presentation.** This records an intermediate release that Shawn
+subsequently rejected. Current approved/live behavior is text/subtext/button with
+Page or Photo destination, documented in announcement-page-photo-2026-10-25.md.
+Do not restore the inline poster or replay its completed data operator.
+
 ## Approved Scope
 
 Shawn approved the independently reviewed image-first direction: complete artwork

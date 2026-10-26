@@ -1,4 +1,9 @@
 # ONBOARDING.md — Found Co. Question Flow
+
+**Current-state note, October 25:** Read SESSION_HANDOFF.md before implementation.
+Approved logo previews, homepage/Gallery separation, suitability/crop feedback
+and compact final review are not all completed. This flow is context, not proof
+of deployed UI or permission for automatic backgrounds or AI publication.
 ### Angela Ahrendts owns this file.
 ### Every question, exact wording, order, tone guidelines, and branching logic lives here.
 ### Update this file every time a question is refined. Never let this fall behind the live product.

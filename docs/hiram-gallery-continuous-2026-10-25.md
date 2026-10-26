@@ -1,5 +1,10 @@
 # Hiram Continuous Gallery
 
+**Later October 25 update:** One grid remains live, but Hiram now has five Gallery
+items after approved filler removal, not thirteen. Shawn objected to the visible
+stock paragraph; team recommends removal, specific approval remains unresolved.
+Three replacement AI candidates are unpublished. See SESSION_HANDOFF.md.
+
 Shawn approved a priority Hiram-only correction after visible independent AI
 team-role discussion. Keep the Gallery page, but show its photos in one grid
 without automatic Shared Photos / Illustrative Security Photography headings.

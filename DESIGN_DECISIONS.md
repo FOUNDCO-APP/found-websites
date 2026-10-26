@@ -1,3 +1,23 @@
+## October 25, 2026 - Approved Presentation And Remaining Reviews
+
+- Approved/live: keep announcement headline, supporting text and button. A Page
+  destination navigates; a Photo destination opens the image onsite. Do not use
+  the rejected giant inline-flyer presentation or redesign the live site silently.
+- Hiram's exact Home button is "Take a closer look". Shawn confirmed the Home
+  announcement looks good. Gallery is one continuous grid; owner-controlled
+  Collections require separate research/review, not forced industry grouping.
+- Current Gallery: original flyer plus four people-focused stock photos. Removed
+  fillers remain stored; do not reinstate them just to fill the grid.
+- Pending: Shawn objected to the visible stock paragraph beneath Gallery. Team
+  recommends removing only that paragraph and retaining honest information in
+  opened photos. Specific approval unanswered; no removal is claimed deployed.
+- Pending: three generated candidates, full-composition treatment and provenance
+  presentation. No candidate upload/publication approved. Black/white/gold Modern
+  theme is a study only, not Hiram's current live design.
+
+These are records of actual approvals and unresolved questions, not permission
+for a new design pass. Follow SESSION_HANDOFF.md and visible team review.
+
 **[2026-08-23] - Found HQ admin screens must guide attention before showing detail.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts
 Why: Shawn's direct read of the admin side was that his eyes did not know where to go. The approved direction is not to add more equal-weight data. Found HQ should surface the next operating decision first, then let Shawn drill into detail. Mobile admin screens should use clear hierarchy, compact rows, real spacing, restrained controls, and plain labels. Client rows should scan in one glance and open from the full row; repeated Site/View As buttons should not dominate a long client list.

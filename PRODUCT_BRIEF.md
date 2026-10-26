@@ -1,12 +1,18 @@
 # PRODUCT_BRIEF.md — Found Co.
 ### The full vision. Read this every session.
-*Last updated: May 29, 2026*
+*Operational corrections: October 25, 2026. Original vision retained below.*
+
+Read `SESSION_HANDOFF.md` for shipped features, pending approvals and next actions.
+This vision is not proof that every listed upgrade is implemented. Feature/plan
+entitlements must be checked against released source and live checkout.
 
 ---
 
 ## THE ONE-LINE PITCH
 
-Answer a few questions. See your website. Get found online — from your phone, in under 10 minutes, for less than $40/month.
+Answer a few questions. See your website. Get found online from your phone,
+without becoming a website designer. Do not present an unverified launch-time
+guarantee or one price as applying to every plan.
 
 ---
 
@@ -95,7 +101,7 @@ The owner never sees the technical side. They have a business to run.
 
 ### 3. Two-Flag Curation
 Every photo gets zero, one, or both flags:
-- ❤️ **Website Heart** — photo appears in the website gallery + online content
+- Heart / Favorites saves a photo privately; it does not publish it.
 - ⭐ **Social Star** — photo queued in the social media prep area
 
 These are independent. A photo can be both, one, or neither.
@@ -106,9 +112,11 @@ These are independent. A photo can be both, one, or neither.
 - Owner saves to camera roll or exports when ready
 - No auto-posting — simple, no API approval hell
 
-### 5. Website Gallery Auto-Sync
-- Every ❤️-hearted photo automatically appears in the website gallery
-- No separate upload. No second step. It just shows up.
+### 5. Owner-Controlled Website Publication
+- Gallery controls public Gallery inclusion; page assignments control page images.
+- Favorites is separate. Unassigned backgrounds do not borrow Gallery photos.
+- Owners choose publication; job/project albums remain private unless explicitly
+  marked for website display. See current source before describing exact controls.
 
 ---
 
@@ -134,16 +142,20 @@ Upgrades are add-ons the owner can purchase at any time.
 
 ## PRICING MODEL
 
-| Plan | Price | Includes |
+| Plan | Published Intro Monthly Price | Published Standard Monthly Price |
 |---|---|---|
-| **Solo** | $19/mo | 1 admin, website, camera, two-flag system |
-| **Owner** | $39/mo | 1 admin + up to 3 workers |
-| **Team** | $59/mo | 1 admin + up to 10 workers |
-| **Extra worker seat** | $9/mo | Per additional worker beyond plan limit |
+| Starter | $29 | $39 |
+| Pro | $39 | $69 |
+| Business | $69 | $99 |
 
-Upgrades (cart, quotes, etc.) are priced separately — TBD.
-
-*Note: Pricing open for team discussion — especially whether upgrades are one-time or monthly.*
+Source: released `src/lib/foundPlans.ts`; eligibility deadline is November 15,
+2026 inclusive Arizona in `src/lib/introRate.ts`. These are published definitions,
+not authority to change an existing customer's subscription. Verify current
+checkout, eligibility, entitlements and actual Stripe terms before making a
+customer-specific promise. The old Solo/Owner/Team model is superseded. A scheduled
+12-month price transition must not be claimed merely because marketing mentions
+an introductory period. Pro included-feature selection improvements remain an
+open workflow item, not verified completed onboarding.
 
 ---
 

@@ -1,5 +1,12 @@
 # Company retirement and membership containment
 
+**Final outcome:** Release d4f97106e3e2f6306a998c157779d51abead787c READY. Old draft
+retired once at 2026-10-26T03:23:38.937495Z, not deleted. Independent protected-state,
+Auth and membership verification passed; paid pages and forwarding live. Shawn
+confirmed the admin outcome seems fixed. Automated authenticated HQ check was
+blocked by unavailable operator credential; no password bypass or real login test.
+Do not replay the completed operator. SESSION_HANDOFF.md has the current handoff.
+
 Shawn approved the visible independent team recommendation on October 25, 2026:
 close the membership permission gap, reversibly retire Hiram's unused first
 signup, and correct the paid customer's Stripe billing email. No Auth deletion,

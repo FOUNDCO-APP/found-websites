@@ -22,6 +22,17 @@ Do not make social media decisions alone. Every post direction, design direction
 
 Found is not being positioned as a website builder like Wix or Squarespace.
 
+### Shawn's clarification: camera-led positioning
+
+When describing Found in ads, creator tools such as HeyGen, or product summaries,
+lead with the built-in camera and the owner's ongoing work: take photos inside
+Found, choose what appears on the website and gallery, and keep the business
+current from the phone. Connect that to customer trust, inquiries and next steps.
+Do not reduce Found to getting a website built, or bury the camera in a generic
+feature list. Do not imply every captured photo is automatically public; owners
+choose which photos appear. Shawn explicitly reaffirmed that Found is not Wix or
+Squarespace. Supporting tools must not obscure this central workflow.
+
 Use this framing:
 
 - Found was built for business owners who are already doing the real work.
