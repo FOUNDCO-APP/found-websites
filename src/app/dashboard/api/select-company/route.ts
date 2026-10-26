@@ -40,13 +40,13 @@ export async function GET(req: NextRequest) {
   const admin = createAdminClient()
   const { data: company } = await admin
     .from("companies")
-    .select("id")
+    .select("id, user_id, email")
     .eq("id", id)
-    .or(`user_id.eq.${userId},email.eq.${userEmail ?? ""}`)
+    .is("retired_at", null)
     .maybeSingle()
 
-  let hasAccess = Boolean(company)
-  if (!hasAccess) {
+  let hasAccess = Boolean(company && (company.user_id === userId || (company.email && company.email === userEmail)))
+  if (company && !hasAccess) {
     const { data: member } = await admin
       .from("company_members")
       .select("id")
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!hasAccess) {
-    return NextResponse.redirect(new URL("/", req.url))
+    return NextResponse.redirect(new URL("/select", req.url))
   }
 
   const redirectUrl = new URL("/", req.url)

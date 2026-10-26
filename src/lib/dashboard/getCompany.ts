@@ -38,10 +38,11 @@ export type CompanyRow = {
   admin_notes: string | null
   logo_url: string | null
   logo_white_url: string | null
+  retired_at?: string | null
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, contact_name, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, address, zip, address_visible, industry_category, sub_industry, form_intent, primary_intent, primary_action_override, booking_cta_label, vibe, layout_override, navbar_dark, included_addon_slug, disabled_addons, default_tax_rate, is_comp, admin_notes, logo_url, logo_white_url"
+  "id, name, slug, contact_name, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, address, zip, address_visible, industry_category, sub_industry, form_intent, primary_intent, primary_action_override, booking_cta_label, vibe, layout_override, navbar_dark, included_addon_slug, disabled_addons, default_tax_rate, is_comp, admin_notes, logo_url, logo_white_url, retired_at"
 
 // True only when both the selected-company cookie AND a server-verified
 // admin key are present - never trust the cookie alone. This is what lets
@@ -104,11 +105,14 @@ export async function getCompany(
       .from("companies")
       .select(SELECT_FIELDS)
       .eq("id", adminCompanyId)
+      .is("retired_at", null)
       .maybeSingle()
     if (data) {
       Sentry.setTag("company_slug", (data as CompanyRow).slug)
       return data as CompanyRow
     }
+    // Historical records remain in HQ, never in the operational View As session.
+    return null
   }
 
   if (selectedId) {
@@ -116,6 +120,7 @@ export async function getCompany(
       .from("companies")
       .select(SELECT_FIELDS)
       .eq("id", selectedId)
+      .is("retired_at", null)
       .maybeSingle()
     if (data) {
       const selectedCompany = data as CompanyRow
@@ -126,11 +131,14 @@ export async function getCompany(
         return selectedCompany
       }
     }
+    // Never retarget a stale form/API request to a different business.
+    return null
   }
 
   const { data } = await admin
     .from("companies")
     .select(SELECT_FIELDS)
+    .is("retired_at", null)
     .or(`user_id.eq.${userId},email.eq.${userEmail}`)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -145,12 +153,14 @@ export async function getCompany(
   const memberCompanyIds = await getMemberCompanyIds(userId, userEmail)
   if (memberCompanyIds.length === 0) return null
 
-  const targetId = selectedId && memberCompanyIds.includes(selectedId) ? selectedId : memberCompanyIds[0]
-  const { data: memberCompany } = await admin
+  const { data: memberCompanies } = await admin
     .from("companies")
     .select(SELECT_FIELDS)
-    .eq("id", targetId)
-    .maybeSingle()
+    .in("id", memberCompanyIds)
+    .is("retired_at", null)
+  const available = (memberCompanies ?? []) as CompanyRow[]
+  const memberCompany = available.find(company => company.id === selectedId)
+    ?? memberCompanyIds.map(id => available.find(company => company.id === id)).find(Boolean)
 
   if (memberCompany) Sentry.setTag("company_slug", (memberCompany as CompanyRow).slug)
   return (memberCompany as CompanyRow) ?? null
@@ -165,6 +175,7 @@ export async function getAllCompanies(
     admin
       .from("companies")
       .select(SELECT_FIELDS)
+      .is("retired_at", null)
       .or(`user_id.eq.${userId},email.eq.${userEmail}`)
       .order("created_at", { ascending: false }),
     getMemberCompanyIds(userId, userEmail),
@@ -181,6 +192,7 @@ export async function getAllCompanies(
     .from("companies")
     .select(SELECT_FIELDS)
     .in("id", newMemberIds)
+    .is("retired_at", null)
   return [...ownedRows, ...((memberRows ?? []) as CompanyRow[])]
 }
 
@@ -206,6 +218,10 @@ export async function getCompanyRole(
   userEmail: string,
   company: Pick<CompanyRow, "id" | "user_id" | "email">
 ): Promise<MemberRole | null> {
+  const admin = createAdminClient()
+  const { data: current, error } = await admin.from("companies").select("id")
+    .eq("id", company.id).is("retired_at", null).maybeSingle()
+  if (error || !current) return null
   const isOwner = company.user_id === userId || (!!company.email && company.email === userEmail)
   if (isOwner) return "owner"
 
@@ -215,7 +231,6 @@ export async function getCompanyRole(
   // wrongly treat a support/demo session as a restricted worker.
   if (await isAdminOverrideActive()) return "owner"
 
-  const admin = createAdminClient()
   const { data } = await admin
     .from("company_members")
     .select("role")

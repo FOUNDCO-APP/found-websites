@@ -1,8 +1,9 @@
-import { getAdminClient } from "../lib"
+import { getAdminClient, requireAdmin } from "../lib"
 import { buildClientActivitySignal } from "../customerActivitySignals"
 import { adminTestIdentityReason, isAdminTestIdentity } from "../testIdentity"
 import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
 import { getStoredBillingSummaries } from "@/lib/stripe/billingSummary"
+import Link from "next/link"
 
 export const metadata = { title: "Clients - Found HQ" }
 
@@ -17,18 +18,33 @@ type CustomerActivityRow = {
 }
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin()
   const params = await searchParams
   const initialSearch = typeof params.q === "string" ? params.q : ""
   const initialFilter = typeof params.state === "string" ? params.state : undefined
   const admin = getAdminClient()
+  if (params.retired === "1") {
+    const { data: retired, error } = await admin.from("companies").select("id, name, slug, retired_at")
+      .not("retired_at", "is", null).order("retired_at", { ascending: false })
+    if (error) throw new Error("Could not load retired clients")
+    return <div className="hq-page">
+      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Retired Clients</h1></div>
+        <Link href="/admin/clients" className="hq-button hq-button-secondary">Current clients</Link></header>
+      <div className="hq-list">{(retired ?? []).map(company => <Link key={company.id} href={`/admin/clients/${company.id}`} className="hq-row hq-link-row">
+        <div><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{company.slug}</p></div>
+        <span className="hq-badge">Retired</span>
+      </Link>)}</div>
+    </div>
+  }
   const activitySince = new Date(Date.now() - ACTIVITY_LOOKBACK_DAYS * 86400000).toISOString()
-  const [{ data: companies }, { data: configs }, { data: activities }, { data: emails }, customerActivityResult] = await Promise.all([
-    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").order("created_at", { ascending: false }),
+  const [{ data: companies, error: companiesError }, { data: configs }, { data: activities }, { data: emails }, customerActivityResult] = await Promise.all([
+    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").is("retired_at", null).order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
     admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
     admin.from("email_log").select("company_id, subject, email_type, recipient_email, success, created_at").not("company_id", "is", null).order("created_at", { ascending: false }),
     admin.from("customer_activity_events").select("company_id, surface, feature, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])
+  if (companiesError) throw new Error("Could not load current clients")
   const customerActivities = (customerActivityResult.data ?? []) as CustomerActivityRow[]
   const billingByCompany = await getStoredBillingSummaries((companies ?? []).map(company => company.id))
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
@@ -101,7 +117,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const realClients = rows.filter((row) => row.account_kind === "client" && !row.test_identity).length
   return (
     <div className="hq-page">
-      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Scan accounts. Fix risk. Open any client.</p></div><span className="hq-count">{realClients}</span></header>
+      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Scan accounts. Fix risk. Open any client.</p></div><span className="hq-count">{realClients}</span><Link href="/admin/clients?retired=1" className="hq-button hq-button-secondary">Retired</Link></header>
       <ClientsWorkspace rows={rows} initialSearch={initialSearch} initialFilter={initialFilter} />
     </div>
   )

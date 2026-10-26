@@ -51,7 +51,7 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
   if (!identity) redirect("/login")
 
   const company = await getCompany(identity.userId, identity.userEmail)
-  if (!company) redirect(identity.isAdminView ? "/admin" : "/login")
+  if (!company) redirect(identity.isAdminView ? "/admin" : "/select")
 
   if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     redirect("/photos")
@@ -72,7 +72,7 @@ export async function requireDashboardFeaturePage(feature: Feature) {
   if (!identity) redirect("/login")
 
   const company = await getCompany(identity.userId, identity.userEmail)
-  if (!company) redirect(identity.isAdminView ? "/admin" : "/login")
+  if (!company) redirect(identity.isAdminView ? "/admin" : "/select")
 
   if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     redirect("/photos")

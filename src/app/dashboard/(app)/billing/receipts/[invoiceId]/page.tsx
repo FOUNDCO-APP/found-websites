@@ -35,7 +35,7 @@ function cleanStatus(status: string | null | undefined) {
 export default async function FoundReceiptPage({ params }: { params: Promise<{ invoiceId: string }> }) {
   const user = await requireDashboardAccess()
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
-  if (!company) redirect(user ? "/login" : "/admin")
+  if (!company) redirect(user ? "/select" : "/admin")
   if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
   if (!company.stripe_customer_id || !process.env.STRIPE_SECRET_KEY) notFound()
 

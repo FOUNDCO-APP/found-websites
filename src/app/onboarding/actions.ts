@@ -232,6 +232,7 @@ export async function findBuiltSiteForResume(slugInput: string, emailInput: stri
     .from("companies")
     .select("id, name, slug, email, plan, is_comp, account_kind, subscription_status, preview_completed_at")
     .eq("slug", slug)
+    .is("retired_at", null)
     .maybeSingle()
 
   if (error) {

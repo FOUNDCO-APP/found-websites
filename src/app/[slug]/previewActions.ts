@@ -24,6 +24,7 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
     .from("companies")
     .select("id, name, email, stripe_customer_id")
     .eq("slug", slug)
+    .is("retired_at", null)
     .single()
 
   if (!company) return null

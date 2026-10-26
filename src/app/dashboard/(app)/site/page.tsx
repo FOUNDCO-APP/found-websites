@@ -8,7 +8,7 @@ import { getImportedStockPhotos } from "@/lib/ownerStockLibrary"
 export default async function SitePage() {
   const user = await requireDashboardAccess()
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
-  if (!company) redirect(user ? "/login" : "/admin")
+  if (!company) redirect(user ? "/select" : "/admin")
   if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
 
   const admin = createAdminClient()

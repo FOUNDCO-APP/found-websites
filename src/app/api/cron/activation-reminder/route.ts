@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
   const { data: companies, error } = await supabase
     .from("companies")
     .select("id, name, slug, email, subscription_status, preview_completed_at, activation_reminder_sent_at, site_live_email_sent_at")
+    .is("retired_at", null)
     .not("email", "is", null)
     .not("preview_completed_at", "is", null)
     .lte("preview_completed_at", cutoff)

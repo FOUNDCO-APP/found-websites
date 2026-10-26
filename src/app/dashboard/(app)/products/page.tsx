@@ -7,7 +7,7 @@ import CatalogManager from "@/components/dashboard/CatalogManager"
 export default async function ProductsPage() {
   const user = await requireDashboardAccess()
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
-  if (!company) redirect(user ? "/login" : "/admin")
+  if (!company) redirect(user ? "/select" : "/admin")
   if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
 
   const { data: config } = await createAdminClient()

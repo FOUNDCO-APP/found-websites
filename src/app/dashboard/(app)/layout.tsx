@@ -72,7 +72,7 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
     isAdminOverrideActive(),
   ])
 
-  if (!user && !company) redirect("/admin")
+  if (!company) redirect(adminKeyValid || !user ? "/admin" : "/select")
 
   const [memberRole, paidAddonSlugs] = company
     ? await Promise.all([

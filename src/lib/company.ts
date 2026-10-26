@@ -28,6 +28,7 @@ export const getCompanyBySlug = cache(async function getCompanyBySlug(slug: stri
     .select('*, website_config(*)')
     .eq('slug', slug)
     .eq('active', true)
+    .is('retired_at', null)
     .single()
   if (error) console.error('[getCompanyBySlug] error:', JSON.stringify(error))
   if (!data) console.error('[getCompanyBySlug] no data for slug:', slug)
@@ -52,6 +53,7 @@ export const getCompanyByDomain = cache(async function getCompanyByDomain(domain
     .from('companies')
     .select('*, website_config!inner(*)')
     .eq('active', true)
+    .is('retired_at', null)
     .eq('website_config.custom_domain', domain)
     .maybeSingle()
   if (error) {

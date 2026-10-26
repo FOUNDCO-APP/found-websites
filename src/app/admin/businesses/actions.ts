@@ -30,6 +30,9 @@ async function requireAdmin() {
 // which is exactly what Shawn asked not to happen.
 export async function setViewAsCookie(companyId: string): Promise<{ success: boolean }> {
   await requireAdmin()
+  const { data: eligible, error } = await getAdminClient().from("companies").select("id")
+    .eq("id", companyId).is("retired_at", null).maybeSingle()
+  if (error || !eligible) return { success: false }
   const cookieStore = await cookies()
   const domain = process.env.NODE_ENV === "production" ? `.${ROOT_DOMAIN}` : undefined
   const currentCompanyId = cookieStore.get("found_company_id")?.value

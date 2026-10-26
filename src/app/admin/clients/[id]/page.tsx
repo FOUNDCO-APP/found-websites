@@ -117,7 +117,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         id, name, slug, contact_name, email, phone, address, city, state, zip, address_visible,
         plan, subscription_status, client_state, account_kind, comp_reason, is_comp,
         trial_ends_at, billing_cycle_day, deferred_payment_amount, deferred_payment_method, deferred_payment_note,
-        industry_category, is_test, included_addon_slug, disabled_addons, stripe_customer_id, stripe_connect_account_id, created_at
+        industry_category, is_test, included_addon_slug, disabled_addons, stripe_customer_id, stripe_connect_account_id, created_at, retired_at
       `)
       .eq("id", id)
       .maybeSingle(),
@@ -127,6 +127,24 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   ])
 
   if (!company) notFound()
+  if (company.retired_at) {
+    return <div className="hq-page hq-page-narrow">
+      <Link href="/admin/clients?retired=1" className="hq-back-link"><span className="hq-back-chevron" />Retired clients</Link>
+      <header className="hq-header"><div><p className="hq-eyebrow">Historical Record</p><h1 className="hq-title">{company.name}</h1>
+        <p className="hq-subtitle">{company.slug}</p></div><span className="hq-badge">Retired</span></header>
+      <p className="hq-row-meta">Retired {new Date(company.retired_at).toLocaleDateString("en-US", { timeZone: "UTC" })}</p>
+      <section><h2 className="hq-section-title">Activity History</h2><div className="hq-list">
+        {(activities ?? []).map((activity, index) => <div className="hq-row" key={`${activity.created_at}-${index}`}>
+          <div><p className="hq-row-title">{activity.summary}</p><p className="hq-row-meta">{activity.created_at}</p></div>
+        </div>)}
+      </div></section>
+      <section><h2 className="hq-section-title">Email History</h2><div className="hq-list">
+        {(emails ?? []).map(email => <div className="hq-row" key={email.id}>
+          <div><p className="hq-row-title">{email.subject}</p><p className="hq-row-meta">{email.created_at}</p></div>
+        </div>)}
+      </div></section>
+    </div>
+  }
   const [billingPaymentSignal, summaries, billingFacts] = await Promise.all([
     getBillingPaymentSignal(company.stripe_customer_id),
     getStoredBillingSummaries([id]),

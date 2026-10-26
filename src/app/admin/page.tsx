@@ -55,7 +55,7 @@ export default async function AdminTodayPage() {
   const activitySince = new Date(Date.now() - 90 * 86400000).toISOString()
   const [{ data: prospects }, { data: companies }, { data: configs }, customerActivityResult] = await Promise.all([
     admin.from("sales_prospects").select("id, person_name, business_name, email, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
-    admin.from("companies").select("id, name, slug, email, client_state, subscription_status, account_kind, is_test, plan, created_at, logo_url, logo_white_url").order("created_at", { ascending: false }),
+    admin.from("companies").select("id, name, slug, email, client_state, subscription_status, account_kind, is_test, plan, created_at, logo_url, logo_white_url").is("retired_at", null).order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
     admin.from("customer_activity_events").select("company_id, event_type, surface, feature, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])

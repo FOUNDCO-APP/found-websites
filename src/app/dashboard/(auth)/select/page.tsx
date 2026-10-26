@@ -19,6 +19,10 @@ export default async function SelectPage() {
     redirect("/login?error=no_company")
   }
 
+  if (companies.length === 1) {
+    redirect(`/api/select-company?id=${encodeURIComponent(companies[0].id)}`)
+  }
+
   // Same email can own one business and be a worker on another (a real
   // scenario found live-testing worker roles) - the picker must make that
   // distinction obvious, not render every row identically.

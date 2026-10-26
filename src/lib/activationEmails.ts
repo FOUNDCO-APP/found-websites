@@ -126,6 +126,7 @@ async function reserveEmailSend(admin: AdminClient, companyId: string, column: "
     .from("companies")
     .update({ [column]: sentAt })
     .eq("id", companyId)
+    .is("retired_at", null)
     .is(column, null)
     .select("id")
     .maybeSingle()
@@ -138,6 +139,7 @@ export async function sendSiteLiveEmailOnce(admin: AdminClient, companyId: strin
     .from("companies")
     .select("id, name, slug, email, site_live_email_sent_at")
     .eq("id", companyId)
+    .is("retired_at", null)
     .maybeSingle()
 
   if (error || !company?.email) return { sent: false, reason: error?.message ?? "missing_company_email" }

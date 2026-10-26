@@ -220,6 +220,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     .from("companies")
     .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status, is_founding_member, trial_ends_at")
     .eq("slug", slug)
+    .is("retired_at", null)
     .single()
 
   if (!company) return null
@@ -334,6 +335,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       .from("companies")
       .update(companyUpdate)
       .eq("slug", slug)
+      .is("retired_at", null)
 
     return {
       clientSecret: setupIntent.client_secret,
@@ -354,6 +356,7 @@ async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminCli
     .from("companies")
     .update(companyUpdate)
     .eq("slug", slug)
+    .is("retired_at", null)
 
   if (!error) return
 
@@ -367,6 +370,7 @@ async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminCli
     .from("companies")
     .update(fallbackUpdate)
     .eq("slug", slug)
+    .is("retired_at", null)
 
   if (fallbackError) throw fallbackError
   console.warn("[Activate] Promo audit columns missing; activation saved without local promo audit fields.", error.message)
@@ -376,9 +380,12 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
   if (!process.env.STRIPE_SECRET_KEY) return { ok: false }
 
   try {
+    const admin = getAdminClient()
+    const { data: eligible, error: eligibilityError } = await admin.from("companies").select("id")
+      .eq("slug", slug).is("retired_at", null).maybeSingle()
+    if (eligibilityError || !eligible) return { ok: false }
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId)
-    const admin = getAdminClient()
     const companyId = setupIntent.metadata?.company_id
     const intentSlug = setupIntent.metadata?.slug
 
@@ -392,6 +399,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       .select("id, slug, user_id, subscription_status, trial_ends_at")
       .eq("id", companyId)
       .eq("slug", slug)
+      .is("retired_at", null)
       .maybeSingle()
 
     if (!company) {
