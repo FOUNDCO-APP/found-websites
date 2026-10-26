@@ -1,5 +1,20 @@
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
+- Latest Shawn-approved priority: read-only customer-journey investigation before
+  backup implementation. Four AI source reviews and parent live aggregate checks
+  found one active intro subscription per client (69/69/39/39), Hiram Pro choice
+  unset, incomplete adoption evidence and missing-table requests. Email delivery
+  records show working automation alongside bounces/delays/unknown delivery.
+- Reproduced repeat-confirmation double subscription creation and email-send false
+  success with fully mocked dependencies; four interrupted-login mock cases and
+  one entitlement exclusion check reproduced. No live charge/reset/send performed.
+  Gallery fixture suite passed 77 assertions; promo test failed stale mock .is().
+- Recorded source-only camera/Favorites/inquiry feedback, password gating and
+  activity-route risks with explicit browser/device/access limitations. Corrected
+  Hiram inference: retired-row browser visibility is unverified, so multi-record
+  password risk is not a claim his account is blocked. No application repairs,
+  new data collection, customer outreach, backup or paid upgrade performed.
+
 - Follow-up connected-notes audit requested by Shawn: all 19 entry documents
   exist in both checkouts; five hash differences are only line endings. Initial
   scan of 57 tracked Markdown files/582 mentions found nine source/target pairs

@@ -1,5 +1,14 @@
 ## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
 
+Latest explicit priority supersedes backup-first ordering: Shawn approved checking
+the four existing clients' full journey, promos, adoption, errors and self-service
+password recovery. Execute read-only audit and isolated mocks; repairs require
+visible team review and his approval. Backups remain pending/separate, no Pro
+upgrade required to begin the audit. No customer emails, resets, new subscriptions,
+charges, lead submissions, photo publication or new tracking deployment authorized.
+First findings and verification limits are in SESSION_HANDOFF and TASKS. Audit
+approval does not reopen deferred pricing/copy consistency or approve new promises.
+
 Shawn is the only human on Found's team. Other members are AI assistants/agents;
 Apple-inspired roles describe review responsibilities, not actual participants.
 Independent reviewers inform Shawn; only he authorizes new execution scope.

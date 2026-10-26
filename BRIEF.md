@@ -9,9 +9,11 @@ another status/handoff source of truth without Shawn's approval.
 
 **October 26 handoff:** Shawn is the only human; the team consists of the AI
 assistants/agents he uses. Read the October 26 overview in SESSION_HANDOFF.md for
-the staged backup approval and all-eight-role pre-store discussion. The first
-milestone is proposed, not started. Saving these records authorizes no deployment,
-paid upgrade or store submission. Keep independent review visible to Shawn.
+the latest approved customer-journey audit and its findings. Shawn explicitly
+prioritized checking existing clients before backup implementation; backups remain
+a separate pending staged task, not an audit blocker. Audit approval is not repair,
+deployment, paid-upgrade or store-submission approval. Keep independent review
+visible to Shawn.
 
 ---
 

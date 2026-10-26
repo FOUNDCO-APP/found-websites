@@ -5,6 +5,30 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Now - October 26 Documentation And Staged Protection
 
+### Latest Priority - Existing Customer Journey Audit
+
+- [x] Shawn approved read-only end-to-end investigation FIRST; staged backups
+  are separate pending work, not a prerequisite or justification to buy Pro.
+- [x] Four source reviews plus read-only live pricing, usage, delivery and error
+  aggregates; safe mock reproductions documented in SESSION_HANDOFF. One active
+  intro subscription per target client; no duplicate active billing observed.
+- [ ] Obtain bounded repair approval: repeated activation can create duplicate
+  subscriptions in local mocks; email-send false success; interrupted login stuck;
+  visible-multi-company password gate; expired-link recovery guidance.
+- [ ] Pro choice: Hiram has none selected; fix requires approved discovery/flow
+  scope. Disabled-choice entitlement conflict reproduced locally, not changed live.
+- [ ] Observability: verify/fix dashboard tracker routing, distinguish unknown
+  activity from nonuse, missing-table fallbacks and surfaced operational errors.
+- [ ] Photo/inquiry reliability: video extension/MIME, upload retry/error copy,
+  Favorites false success and email confirmation truthfulness; repairs unapproved.
+- [ ] Complete controlled signed-in/browser/device journeys with dedicated test
+  account/inbox and Stripe test environment; no real client resets, charges,
+  messages or publications under the audit. Obtain missing access/scope safely.
+- [ ] Repair stale promo-test mocks before using suite as checkout evidence;
+  real activation, invoice lifecycle and 12-month transition remain unproven.
+- [ ] Propose adoption assistance only after reliable tracking and actual friction
+  are known. Do not auto-contact clients or infer disinterest from absent events.
+
 - [x] Audit cross-AI documentation availability: 19 entry docs exist in both
   checkouts; five byte differences are line endings only. Initial scan covered
   57 tracked Markdown files/582 references; clarify historical/private artifacts

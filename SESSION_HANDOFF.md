@@ -8,6 +8,113 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 26, 2026
 
+### Latest Instruction - Customer Journey Audit First
+
+After documentation push, Shawn explicitly corrected the ordering: audit what
+the four existing clients use FIRST. Basic backups remain a separate pending
+task; do not block this audit on Pro/paid protection or claim backups exist.
+He approved read-only end-to-end investigation of signup, promo pricing, package/
+activation/Pro choice, login/forgotten password, feature adoption, errors, photo
+publication and inquiry delivery. Goal: clients succeed without contacting Shawn.
+Repairs, new tracking/reminders/messages and production changes still need visible
+team discussion and his approval. No customer passwords, subscriptions, data or
+photos were changed; no emails, charges, test leads or new accounts were created.
+
+### Journey Audit - First Verified Pass, October 26
+
+Scope: released source at docs HEAD 81de0ea (last recorded application release
+d4f97106), four read-only role-pair reviews, live aggregate database/Stripe reads,
+and isolated local mocks. No live signed-in customer or cross-device browser
+journey was completed. Those remain necessary; this is not full automation signoff.
+
+Live checks:
+- Stripe Found Co returned a complete subscription list, has_more=false. Exactly
+  one active quantity-one monthly intro subscription for each target customer:
+  MBJ 69 USD, Divine 69 USD, RC 39 USD and Hiram 39 USD. RC also has a canceled
+  older subscription; that is NOT duplicate active billing. Total current listed
+  recurring item rates are 216 USD, not proof of collected/net revenue or arrears.
+  All four active subscriptions have schedule=null. No duplicate charge observed;
+  full invoice/charge reconciliation and hidden downstream billing changes not tested.
+- Hiram's found_pro included_addon_slug remains null; RC's is email_marketing.
+  Business-plan clients do not need the one-tool Pro selection. Source puts the
+  Pro choice later in Billing/Features, not a required activation step.
+- Last 30 days: customer_activity_events has 19 non-admin events for Divine
+  (estimates, albums and a lead-status change), none for the other three. This
+  proves recorded events, not who was holding a session or inactivity elsewhere.
+  Owner Auth last_sign_in timestamps are stale/null; activation is not sign-in.
+- Last 30 days, stored inquiries: Divine 10 (6 marked spam), MBJ 19 (11 spam),
+  RC 64 (33 spam), Hiram 0. These are stored form records, not verified customers,
+  contracts, conversions or a reason to auto-message clients.
+- Notification/auto-reply/follow-up delivery records exist. Some email statuses
+  are bounced, delayed, sent or unknown even when success=true (provider accepted).
+  One magic-link-login record in the period is delivered; no new login email sent.
+- Managed uploads use company_photos, not legacy media. Thirty-day new row counts:
+  Hiram 21, others 0. Hiram includes known operator/library work; do not attribute
+  those uploads to customer adoption. Legacy media counts alone are misleading.
+- Logs window October 25 17:43 UTC to October 26 17:43 UTC: company_addons REST
+  404 x52; site_visits 404 x3; publish_homepage_highlight 400 x1. No attribution to
+  clients from aggregate logs; known membership 401 probes are not new incidents.
+  No company_addons/site_visits/photos relation appears in the inspected public
+  schema inventory. Customer sites can still render through fallback behavior.
+
+Reproduced locally using actual transpiled source and fully mocked dependencies:
+1. confirmActivation called twice with the same succeeded SetupIntent creates
+   two mocked subscriptions, even for an already-active company; no idempotency
+   option supplied. src/app/activate/activateActions.ts:460; analytics suppression
+   later is not duplicate-billing protection. No live confirmation was invoked.
+2. sendTrackedEmail=false still makes /api/send-login return 200/ok:true.
+   src/app/dashboard/api/send-login/route.ts:37. Owner is told to check email
+   after a rejected send. This is a reproduced failure condition, not proof the
+   existing delivered login email failed.
+3. Both login handlers remain loading after network rejection or non-JSON
+   response: four local mock cases. src/app/dashboard/(auth)/login/page.tsx:37.
+4. A Pro included choice still excluded by disabled_addons remains inaccessible
+   in getEffectiveAddons. Source selection changes only included_addon_slug.
+   src/lib/featureAccess.ts:60 and dashboard/(app)/more/actions.ts:197. No live
+   included-choice mutation or new feature entitlement was performed.
+
+Other source findings, not live browser reproductions:
+- set-password infers hasPassword from count of visible companies >1, then hides
+  the password form. It is not a real password-state check. Hiram has one current
+  and one inactive retired record, but browser RLS may hide the latter: do NOT
+  claim Hiram is blocked without signed-in confirmation. Existing login works
+  have not been tested. Expired-link instructions can leave password mode active.
+- CustomerActivityTracker only accepts /dashboard-prefixed paths and posts to
+  /dashboard/api/customer-activity; my-host middleware prepends /dashboard to
+  browser paths. Unprefixed visits can be skipped; prefixed beacons risk double
+  rewrite. HQ ignores activity-query failures then shows "No client use yet."
+  Empty tracking is not evidence clients never use Found.
+- Services reads nonexistent company_addons and silently treats errors as no
+  paid extras. Included/Business entitlement paths survive; do not call this a
+  proven all-paid-tools outage. Home photo recency reads nonexistent photos,
+  while camera API writes company_photos. site_visits insert errors are ignored.
+- Camera video can be uploaded under an annotated .jpg name; GET infers type
+  from URL without stored MIME. Camera upload failures use permission-error copy
+  and lack clear retry. Favorite PATCH ignores HTTP failure yet announces success.
+- Contact success text promises confirmation even if email helper returns false;
+  saved inquiry and successful email are different outcomes. No live form submitted.
+- New activation creates recurring intro price with no source-scheduled 12-month
+  transition. Current Stripe schedules are null; do not invent expiry behavior or
+  change existing customer pricing under this audit. Deferred consistency work
+  remains separate. Resolve actual approved price promise before any billing repair.
+
+Tests: Gallery publication fixture suite passed 77 assertions (also independently
+run by the photo reviewer). Six parent local reproduction cases plus entitlement
+check confirmed the failure conditions above. Existing promo-pricing suite failed
+in its test mock because .is() is missing; not a passing end-to-end promo test and
+not by itself proof real checkout fails. No test file or application edit made.
+
+Visible reviewer directions: Angela/Chris prioritize independent return/login and
+recoverable mobile errors; Phil/Priya flag activation repeat safety and accessible
+Pro choice; Craig says tracking must distinguish no evidence from nonuse; Marcus/
+Jony require truthful save/upload/email feedback and deliberate Gallery publication.
+Bring a bounded repair proposal back to Shawn. Highest proposed group: activation
+repeat protection and self-service login/recovery. Pro choice/tracking next; then
+photo/upload/inquiry feedback. Do not enable automatic re-engagement from missing
+activity, assume all failures observed by customers or declare every path tested.
+
+### Earlier October 26 Planning Context
+
 Shawn requested saving the entire backup/readiness discussion BEFORE beginning
 the first milestone. This is documentation-only work, not approval to execute
 all new readiness recommendations. Shawn is the only human; the team comprises
