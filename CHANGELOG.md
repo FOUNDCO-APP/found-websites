@@ -1,5 +1,11 @@
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
+- Shawn explicitly approved production publication. Pushed source 49873fc and
+  saved notes through 4bd2cc9 to main; actual GitHub remote SHA verified. Vercel
+  deployment 2RAsJRLKM9Finy5rrmkrnVkFahVc reports success. Post-release public
+  login/Hiram Home return 200; rejected callback reaches /login?error=link_expired.
+  Device/inbox recovery remains unverified; no customer sends/resets/charges tested.
+
 - Shawn approved reliability first release: durable activation/company lock and
   safe retries together with login recovery. Implemented guard, frozen parameters,
   mapping/mode checks, legacy subscription reuse, webhook receipts, atomic completion

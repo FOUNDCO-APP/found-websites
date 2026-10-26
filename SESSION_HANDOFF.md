@@ -65,14 +65,16 @@ independent data reviewer authored SQL tests, not SQL implementation. Real
 multi-session PostgreSQL lock scheduling is not simulated by PGlite fixtures.
 No test used live clients, provider sends, password changes or live payment creation.
 
-Release status at this checkpoint: database installed; final production build,
-TypeScript and all 86 static pages passed. Code saved in local commit
-49873fc5b0a5bf2e34d642237aa7365d75b88a87. Production push was rejected by the
-safety review because implementation approval did not explicitly authorize this
-new shared-branch publication. A production-release approval question was sent
-to Shawn. Do not retry, deploy by another route, or claim this code live without
-his explicit answer. Additive DB objects are installed but no activation rows
-were created by our tests. Release/deployment verification remains pending.
+Release status: Shawn explicitly answered "Approve production release" on
+October 26. The earlier publication block is resolved by that approval. Pushed
+source release 49873fc5b0a5bf2e34d642237aa7365d75b88a87 plus saved audit/verification
+notes to GitHub main at 4bd2cc9695c6369a54516a1ba06728bf47b55853; actual remote
+SHA verified. Final production build, TypeScript and all 86 static pages passed.
+Vercel deployment 2RAsJRLKM9Finy5rrmkrnVkFahVc reports success for that exact SHA.
+Post-deployment public login and Hiram Home return HTTP 200; rejected auth callback
+redirects to /login?error=link_expired and returns 200. Code is deployed. These
+anonymous HTTP checks do not verify signed-in device/inbox/cookie behavior.
+Additive DB objects are installed but no activation rows were created by our tests.
 Browser inventory had no connected browser; actual mobile cookie persistence and
 delivery/reset roundtrip remain unverified. Do not claim all-client end-to-end QA.
 Local production server started successfully at 127.0.0.1:3117, but browser and

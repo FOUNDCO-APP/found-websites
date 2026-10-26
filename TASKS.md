@@ -18,9 +18,11 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Regression groups: confirmation 28, SQL 26, auth 49, recovery navigation 9,
   retirement 15, membership 12, billing 60, promo 426. Independent review complete.
 - [x] Final production build, TypeScript and 86 static pages pass.
-- [x] Save tested release locally: 49873fc. Existing application code not yet live.
-- [ ] Obtain explicit production-publication approval, then push and verify
-  Vercel/public paths. Initial push blocked by safety review; no workaround.
+- [x] Save tested source release: 49873fc.
+- [x] Obtain explicit production-publication approval and push main through
+  4bd2cc9; actual GitHub remote SHA verified. Earlier safety block resolved by Shawn.
+- [x] Vercel deployment 2RAsJRLKM9Finy5rrmkrnVkFahVc reports success for 4bd2cc9.
+  Post-release login/Hiram Home HTTP 200; rejected callback reaches expired-link login.
 - [ ] Actual signed-in phone/inbox/sandbox journey remains unperformed; connected
   browser unavailable. Synthetic Barrio fixture is not a live customer payment test.
 

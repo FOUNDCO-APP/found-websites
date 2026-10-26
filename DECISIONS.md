@@ -1,5 +1,10 @@
 ## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
 
+Publication approval: Shawn explicitly answered "Approve production release"
+for the tested activation/account-access repair. Normal push to GitHub main
+succeeded through 4bd2cc9 (source release 49873fc); Vercel deployment verification
+is separate from push success. This adds no approval for deferred repair groups.
+
 After the visible independent review and plain-English scope explanation, Shawn
 approved first release: activation repeat safety and dependable login/password
 recovery, coordinated and separately tested. Implement durable service-only

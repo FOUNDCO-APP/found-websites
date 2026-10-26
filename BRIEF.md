@@ -16,6 +16,11 @@ he approved activation safety plus login/recovery as the first release; later Pr
 choice, reminders, tracking and media work remain separate. No paid upgrade or
 store submission authorized. Keep independent review visible to Shawn.
 
+**First reliability release published:** Shawn explicitly approved production
+publication; GitHub main through 4bd2cc9 includes source repair 49873fc. Vercel
+reports success and anonymous post-release login/site/rejected-link checks pass.
+Read SESSION_HANDOFF.md for exact evidence and remaining device/inbox checks.
+
 ---
 
 ## STEP 1 - READ THESE FILES FIRST
