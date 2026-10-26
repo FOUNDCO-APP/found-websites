@@ -8,6 +8,18 @@ import FoundWordmark from "@/components/FoundWordmark"
 const GREEN = "#32D074"
 const BLACK = "#080A09"
 
+async function withTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Connection timed out")), 15000) }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export default function SetPasswordPage() {
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
@@ -15,44 +27,47 @@ export default function SetPasswordPage() {
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState("")
   const [email, setEmail] = useState("")
-  const [companyCount, setCompanyCount] = useState(0)
-  const [hasPassword, setHasPassword] = useState(false)
+  const [verified, setVerified] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     async function check() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.replace("/login"); return }
+      try {
+        const supabase = createClient()
+        const { data: { user }, error: checkError } = await withTimeout(supabase.auth.getUser())
+        if (checkError) throw checkError
+        if (!user) { router.replace("/login"); return }
 
-      setEmail(user.email ?? "")
-
-      const { data: companies } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("user_id", user.id)
-      setCompanyCount(companies?.length ?? 0)
-
-      // If they have more than 1 company they've been through this before
-      const alreadyMember = (companies?.length ?? 0) > 1
-      setHasPassword(alreadyMember)
-      setChecking(false)
+        setEmail(user.email ?? "")
+        setVerified(true)
+      } catch {
+        setError("Couldn't check your sign-in. Return to login and try again.")
+      } finally {
+        setChecking(false)
+      }
     }
     check()
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!verified) return
     if (password.length < 8) { setError("Password must be at least 8 characters"); return }
     if (password !== confirm) { setError("Passwords don't match"); return }
     setLoading(true)
     setError("")
-    const supabase = createClient()
-    const { error: updateError } = await supabase.auth.updateUser({ password })
-    if (updateError) { setError(updateError.message); setLoading(false); return }
-    await new Promise(r => setTimeout(r, 500))
-    router.replace("/select")
+    try {
+      const supabase = createClient()
+      const { error: updateError } = await withTimeout(supabase.auth.updateUser({ password }))
+      if (updateError) { setError(updateError.message); return }
+      await new Promise(r => setTimeout(r, 500))
+      router.replace("/select")
+    } catch {
+      setError("Couldn't save your password. Please try again, or return to login.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (checking) {
@@ -63,29 +78,23 @@ export default function SetPasswordPage() {
     )
   }
 
-  if (hasPassword) {
+  if (!verified) {
     return (
       <div style={{ minHeight: "100dvh", backgroundColor: BLACK, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px" }}>
         <FoundWordmark height={20} color="white" style={{ marginBottom: 48 }} />
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 900, color: GREEN, letterSpacing: "0.22em", textTransform: "uppercase" }}>
-          Welcome back
-        </p>
         <h1 style={{ margin: "0 0 16px", fontSize: 34, fontWeight: 300, color: "white", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
-          You&apos;re already<br/>a Found member.
+          Sign in to continue.
         </h1>
         <p style={{ margin: "0 0 36px", fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-          {companyCount > 1
-            ? <>{companyCount} businesses on Found. Use the same password.</>
-            : <>You already do business with Found. Your password is set.</>
-          }
+          {error || "Return to login to set your password."}
         </p>
-        <button onClick={() => router.replace("/select")} style={{
+        <button onClick={() => router.replace("/login")} style={{
           width: "100%", padding: "17px 0", borderRadius: 100, border: "none",
           backgroundColor: GREEN, color: BLACK,
           fontSize: 11, fontWeight: 900, letterSpacing: "0.18em", textTransform: "uppercase",
           cursor: "pointer", boxShadow: `0 0 28px rgba(50,208,116,0.22)`,
         }}>
-          Go to My Dashboard
+          Back to login
         </button>
       </div>
     )
@@ -148,6 +157,7 @@ export default function SetPasswordPage() {
       <button onClick={() => router.replace("/select")} style={{ marginTop: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.2)", width: "100%", textAlign: "center" }}>
         Skip for now
       </button>
+      {error && <button onClick={() => router.replace("/login")} style={{ marginTop: 20, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.2)", width: "100%", textAlign: "center" }}>Back to login</button>}
     </div>
   )
 }

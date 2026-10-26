@@ -3,35 +3,77 @@
 import { useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 
+function safeNextPath(value: string | null): string | null {
+  if (!value) return null
+  let decoded = value
+  // Check each encoding layer; never let browser URL normalization turn a
+  // protocol-relative path, backslash or control character into navigation.
+  for (let layer = 0; layer < 5; layer++) {
+    if (!decoded.startsWith("/") || decoded.startsWith("//") || /[\\\u0000-\u0020\u007f]/.test(decoded)) return null
+    try {
+      const next = decodeURIComponent(decoded)
+      if (next === decoded) return value
+      decoded = next
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+async function withTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Connection timed out")), 15000) }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export default function AuthTokenPage() {
   useEffect(() => {
-    const supabase = createClient()
-
     async function handle() {
-      const hash = window.location.hash.substring(1)
-      const params = new URLSearchParams(hash)
-      const accessToken = params.get("access_token")
-      const refreshToken = params.get("refresh_token")
+      try {
+        const supabase = createClient()
+        const hash = window.location.hash.substring(1)
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get("access_token")
+        const refreshToken = params.get("refresh_token")
 
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        })
-        if (!error) {
-          // Hard redirect so middleware sees fresh cookie
-          await new Promise(r => setTimeout(r, 200))
-          window.location.href = "/auth/set-password"
+        if (params.has("error") || params.has("error_code")) {
+          window.location.href = "/login?error=link_expired"
           return
         }
-        // Token failed — sign out any stale session so we never land on the wrong account
-        await supabase.auth.signOut()
-        window.location.href = "/login?error=link_expired"
-        return
-      }
 
-      // No tokens in hash — this page was reached incorrectly
-      window.location.href = "/login?error=auth_failed"
+        if (accessToken && refreshToken) {
+          const { error } = await withTimeout(supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          }))
+          if (!error) {
+            // Hard redirect so middleware sees fresh cookie
+            await new Promise(r => setTimeout(r, 200))
+            const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
+            window.location.href = next ?? "/auth/set-password"
+            return
+          }
+          // Token failed — sign out any stale session so we never land on the wrong account
+          try {
+            await withTimeout(supabase.auth.signOut())
+          } finally {
+            window.location.href = "/login?error=link_expired"
+          }
+          return
+        }
+
+        // No tokens in hash — this page was reached incorrectly
+        window.location.href = "/login?error=auth_failed"
+      } catch {
+        window.location.href = "/login?error=link_expired"
+      }
     }
 
     handle()

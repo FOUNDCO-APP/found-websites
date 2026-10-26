@@ -253,6 +253,9 @@ const webhook = load("src/app/api/stripe/webhook/route.ts", {
   } },
   "@supabase/supabase-js": { createClient: () => webhookAdmin },
   "@/lib/stripe/billingReliability": billing,
+  "@/lib/stripe/activationGuard": { noteActivationSubscription: async (_admin, sub) => {
+    assert.equal(sub.metadata?.activation_attempt_id, undefined, "Legacy billing fixtures must not contain new activation receipts")
+  } },
   "@/lib/bookings/ensureDefaultAvailability": { ensureDefaultAvailability: async companyId => {
     assert.ok([...webhookAdmin.runs.values()].some(run => run.source === "legacy_projection" && run.state === "complete" && run.checkpoint.applied))
     availabilityCalls.push(companyId)

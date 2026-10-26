@@ -29,8 +29,10 @@ function LoginForm() {
 
   useEffect(() => {
     const e = searchParams.get("error")
-    if (e === "link_expired") setError("That login link has expired. Enter your email to get a new one.")
-    else if (e === "no_company") setError("No business found for this account.")
+    if (e === "link_expired") {
+      setMode("magic")
+      setError("That login link has expired. Enter your email to get a new one.")
+    } else if (e === "no_company") setError("No business found for this account.")
     else if (e === "auth_failed") setError("Sign-in failed. Please try again.")
   }, [searchParams])
 
@@ -40,18 +42,24 @@ function LoginForm() {
     setLoading(true)
     setError("")
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password }),
-    })
-    const data = await res.json()
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+        signal: AbortSignal.timeout(15000),
+      })
+      const data = await res.json()
 
-    if (data.error) {
-      setError(data.error)
+      if (!res.ok || data?.ok !== true) {
+        setError(typeof data?.error === "string" ? data.error : "Sign-in failed. Please try again.")
+      } else {
+        window.location.href = "/select"
+      }
+    } catch {
+      setError("Couldn't connect. Please try again.")
+    } finally {
       setLoading(false)
-    } else {
-      window.location.href = "/select"
     }
   }
 
@@ -61,18 +69,23 @@ function LoginForm() {
     setLoading(true)
     setError("")
 
-    const res = await fetch("/api/send-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim() }),
-    })
-    const data = await res.json()
+    try {
+      const res = await fetch("/api/send-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+        signal: AbortSignal.timeout(15000),
+      })
+      const data = await res.json()
 
-    if (data.error) {
-      setError(data.error)
-      setLoading(false)
-    } else {
-      setSent(true)
+      if (!res.ok || data?.ok !== true) {
+        setError(typeof data?.error === "string" ? data.error : "Couldn't send your login link. Please try again.")
+      } else {
+        setSent(true)
+      }
+    } catch {
+      setError("Couldn't connect. Please try again.")
+    } finally {
       setLoading(false)
     }
   }

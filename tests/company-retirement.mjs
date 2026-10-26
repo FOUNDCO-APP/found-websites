@@ -118,6 +118,7 @@ function load(file) {
       if (fs.existsSync(`${alias}.tsx`)) return load(`${alias}.tsx`)
       return {}
     }
+    if (id === "server-only") return {}
     return require(id)
   } }, { filename: absolute })
   return module.exports

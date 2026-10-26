@@ -1,5 +1,20 @@
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
+- Shawn approved reliability first release: durable activation/company lock and
+  safe retries together with login recovery. Implemented guard, frozen parameters,
+  mapping/mode checks, legacy subscription reuse, webhook receipts, atomic completion
+  and setup CAS; preserve paid terms and don't undo later upgrades. Recovery screen
+  reuses the attempt, not new card entry. Pro/reminders/tracking/media work held.
+- Fixed auth stuck buttons/false email success, expired-link mode, count-based
+  password hiding and callback/session failures; preserve internal activation paths
+  and reject unsafe next URLs. Independent payment/auth/data reviews completed.
+- Local groups passed: 28 payment, 26 PostgreSQL, 49 auth, 9 retry navigation,
+  15 retirement, 12 membership, 60 billing and 426 promo. No remote email/reset/charge.
+  Final production build/TypeScript/86 static pages pass; release verification pending.
+- Additive migration installed transactionally; zero new attempt records initially;
+  service-only grants/RLS and unchanged protected data verified. Advisor baseline
+  unchanged. No schema rebuild/CLI push or claim of reconciled migration history.
+
 - Latest Shawn-approved priority: read-only customer-journey investigation before
   backup implementation. Four AI source reviews and parent live aggregate checks
   found one active intro subscription per client (69/69/39/39), Hiram Pro choice

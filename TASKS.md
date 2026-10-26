@@ -7,12 +7,27 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ### Latest Priority - Existing Customer Journey Audit
 
+- [x] Shawn explicitly approved first repair group: activation duplicate prevention
+  plus dependable login/recovery, together but separately tested. Other groups held.
+- [x] Implement durable activation guard and locked setup CAS, safe retry navigation,
+  succeeded/mode/mapping checks, frozen parameters and existing-subscription reuse.
+- [x] Repair login/network/send/expiry/password-count failures; preserve verified
+  sessions and internal navigation. No client credential or provider-setting changes.
+- [x] Install additive service-only migration; zero attempts initially, unchanged
+  protected company/membership fingerprints and security-advisor baseline.
+- [x] Regression groups: confirmation 28, SQL 26, auth 49, recovery navigation 9,
+  retirement 15, membership 12, billing 60, promo 426. Independent review complete.
+- [x] Final production build, TypeScript and 86 static pages pass.
+- [ ] Commit/push approved release and verify Vercel/public paths.
+- [ ] Actual signed-in phone/inbox/sandbox journey remains unperformed; connected
+  browser unavailable. Synthetic Barrio fixture is not a live customer payment test.
+
 - [x] Shawn approved read-only end-to-end investigation FIRST; staged backups
   are separate pending work, not a prerequisite or justification to buy Pro.
 - [x] Four source reviews plus read-only live pricing, usage, delivery and error
   aggregates; safe mock reproductions documented in SESSION_HANDOFF. One active
   intro subscription per target client; no duplicate active billing observed.
-- [ ] Obtain bounded repair approval: repeated activation can create duplicate
+- [x] Obtain bounded repair approval: repeated activation can create duplicate
   subscriptions in local mocks; email-send false success; interrupted login stuck;
   visible-multi-company password gate; expired-link recovery guidance.
 - [ ] Pro choice: Hiram has none selected; fix requires approved discovery/flow

@@ -28,13 +28,13 @@ export async function POST(req: NextRequest) {
     })
 
     if (error || !data?.properties?.action_link) {
-      console.error("[send-login] generateLink error:", error)
+      console.error("[send-login] link generation failed")
       return NextResponse.json({ error: "Failed to generate link" }, { status: 500 })
     }
 
     const link = data.properties.action_link
 
-    await sendTrackedEmail({
+    const sent = await sendTrackedEmail({
       to: normalizedEmail,
       subject: "Your Found link \u2192",
       html: buildMagicLinkEmail(link),
@@ -45,9 +45,12 @@ export async function POST(req: NextRequest) {
       admin,
     })
 
+    if (!sent) {
+      return NextResponse.json({ error: "Couldn't send your login link. Please try again." }, { status: 502 })
+    }
     return NextResponse.json({ ok: true })
-  } catch (err) {
-    console.error("[send-login] error:", err)
+  } catch {
+    console.error("[send-login] request failed")
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

@@ -8,6 +8,77 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 26, 2026
 
+### Approved First Reliability Release - Activation And Account Access
+
+Latest approval: Shawn accepted the visible team's recommendation to repair
+number 1 (repeat activation safety) and number 2 (login/password recovery) together,
+with separate tests and a joined activation-to-dashboard check. This supersedes
+the audit-only boundary for these two issues, not the rest of the audit list.
+Pro choice/onboarding prompts, reminder/drip email, tracking, photo fixes, pricing
+transition policy, backups/paid upgrades and store work remain outside this release.
+
+Implementation prepared in the attached release checkout, not dirty main:
+- New activation_attempts table and four invoker-only, service-role-only RPCs.
+  Company-row lock plus durable per-mode/intent records serialize different
+  payment attempts. Frozen create parameters and stable Stripe idempotency keys
+  protect retries; uncertain dispatch after 23 hours cannot freshly create.
+  Existing active subscription is reused without price/billing-date changes;
+  past-due/ambiguous ownership/multiple subscriptions stop for review, not replacement.
+- Validate succeeded SetupIntent, live/test mode, current company/customer,
+  payment-method owner and non-retired record. Setup-save compare-and-swap prevents
+  delayed browser responses replacing paid mappings. Recovered subscriptions must
+  still match original items/plan; completion guards against undoing a later upgrade.
+- Signed subscription webhooks note the same durable receipt without creating
+  subscriptions. Company activation and completion commit together. Optional promo
+  columns are updated when present; full result is retained in the protected ledger.
+- Add-on retries reuse a stable key and existing item; no second recurring item.
+  Existing coupon, price and arranged billing date inputs remain unchanged.
+- Interrupted confirmation goes to a text-led recovery view with Check again
+  (same intent) and dashboard login; it never mounts new payment setup while
+  unresolved and does not forward a Stripe client-secret URL parameter.
+- Login buttons recover from network/non-JSON/HTTP failures/timeouts; email-send
+  failure no longer reports success. Expired links open email-only recovery mode.
+  Verified signed-in owners can set/change passwords regardless of company count;
+  callback/session checks fail to a recoverable login rather than a stuck spinner.
+  Internal next-path validation rejects protocol-relative/backslash/encoded escapes.
+  Existing magic-link method retained; no credential/provider/settings redesign.
+
+Database migration 20261026180535_activation_confirmation_guard.sql was created
+through the CLI, tested locally and applied transactionally via management SQL.
+No CLI database push/baseline replay was run; do not infer migration-history-table
+reconciliation. Live table initially has ZERO records, RLS enabled; anon and
+authenticated cannot read/write or execute the new RPCs; service_role can.
+Protected companies fingerprint before/after: 6008ff42bd82d9acc73cb3e71212948e.
+Membership fingerprint: 467326b204c1b54739ae596d4d594702; five rows unchanged.
+All RPCs are security invoker with empty search_path. Security advisors unchanged:
+19 server-table no-policy INFO notices and the pre-existing leaked-password WARN.
+No new advisor vulnerability, customer reset/email/charge or subscription change
+was performed by the release preparation.
+
+Verification so far: 28 confirmation groups (including synthetic Barrio Builders),
+26 ephemeral PostgreSQL guard groups, 49 auth recovery groups, 9 recovery-route/
+hook-render groups, 15 retirement groups, 12 membership groups, 60 billing backend
+groups and 426 promo/render/boundary checks pass. Existing fixture mocks were
+updated for service-only imports, retired filters, setup CAS and webhook receipts.
+Independent engineering review found no remaining high/critical payment/auth issues;
+independent data reviewer authored SQL tests, not SQL implementation. Real
+multi-session PostgreSQL lock scheduling is not simulated by PGlite fixtures.
+No test used live clients, provider sends, password changes or live payment creation.
+
+Release status at this checkpoint: database installed; final production build,
+TypeScript and all 86 static pages passed. Release publication verification pending.
+Do not call this live until commit/deployment verification is recorded below.
+Browser inventory had no connected browser; actual mobile cookie persistence and
+delivery/reset roundtrip remain unverified. Do not claim all-client end-to-end QA.
+Rollback must retain durable payment evidence; never restore unguarded creation
+or drop attempts after use. Prefer reviewed roll-forward if activation is uncertain.
+
+Shawn's post-release check: open my.foundco.app/login, request a login link for
+his own account and check return to the correct dashboard; verify expired-link
+recovery and password setting on his own device. Do not replay real client payment
+links or place charges to test duplicate prevention. Remaining device/inbox and
+isolated Stripe sandbox checks require safe test access, not customer credentials.
+
 ### Latest Instruction - Customer Journey Audit First
 
 After documentation push, Shawn explicitly corrected the ordering: audit what

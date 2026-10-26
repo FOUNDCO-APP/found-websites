@@ -1,5 +1,16 @@
 ## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
 
+After the visible independent review and plain-English scope explanation, Shawn
+approved first release: activation repeat safety and dependable login/password
+recovery, coordinated and separately tested. Implement durable service-only
+activation records/company lock, unchanged-parameter Stripe retries/reconciliation,
+existing-subscription reuse and safe account entry; preserve existing subscriptions,
+prices, discounts, billing dates and access. Ambiguity must stop rather than bill
+again. Additive schema installation/testing is within this safeguard, not approval
+to run real payment tests or reset clients. No new paid services/auth provider.
+Pro selection/reminder/drip, tracking, media fixes and pricing-policy changes need
+their own visible review/approval. See handoff for installed/prepared vs live state.
+
 Latest explicit priority supersedes backup-first ordering: Shawn approved checking
 the four existing clients' full journey, promos, adoption, errors and self-service
 password recovery. Execute read-only audit and isolated mocks; repairs require

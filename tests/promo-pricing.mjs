@@ -188,11 +188,13 @@ async function cachedSetupCase({ time = "2026-10-20T12:00:00Z", founding = false
       async create(input) { calls.created++; calls.createdPrice = input.metadata.price_id; return { client_secret: "seti_new_secret_fixture" } },
     },
   }
-  const query = { select() { return this }, eq() { return this }, async single() { return { data: company } }, update() { calls.companyUpdates++; return this } }
+  const query = { select() { return this }, eq() { return this }, is() { return this }, async single() { return { data: company } }, update() { calls.companyUpdates++; return this } }
   const action = localScreen("src/app/activate/activateActions.ts", "createActivationSetup", ["setupIntentIdFromSecret", "priceIdForPlan"], {
     process: { env: { STRIPE_SECRET_KEY: "fixture_only", STRIPE_PRICE_ID_FOUND_PRO: "price_regular", STRIPE_PRICE_ID_FOUND_PRO_FOUNDING: "price_intro" } },
     INTRO_RATE_CUTOFF: intro.INTRO_RATE_CUTOFF,
-    getAdminClient: () => ({ from: () => query }),
+    getAdminClient: () => ({ from: () => query, rpc: async (name) => {
+      assert.equal(name, "save_activation_setup"); calls.companyUpdates++; return { data: true, error: null }
+    } }),
     Stripe: function FixtureStripe() { return stripe },
     deferredUntilLabelFor: () => null,
     normalizePromoCode: () => "",

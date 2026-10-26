@@ -5,6 +5,7 @@ import { sendTrackedEmail } from "@/lib/emailLog"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
 import { billingFlag, consumeBillingWorkImmediately, isPlatformBillingEvent, persistBillingEvent, preservesServiceAccess, stripeBillingMode } from "@/lib/stripe/billingReliability"
+import { noteActivationSubscription } from "@/lib/stripe/activationGuard"
 
 export const maxDuration = 300
 
@@ -284,6 +285,14 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = getAdminClient()
+
+  if (event.type.startsWith("customer.subscription.") && !event.account) {
+    try {
+      await noteActivationSubscription(supabase, event.data.object as Stripe.Subscription)
+    } catch {
+      return NextResponse.json({ error: "Activation receipt persistence failed; retry required" }, { status: 503 })
+    }
+  }
 
   // Connect commerce continues through its existing handlers. Billing intake
   // stores replay work before scheduling the immediate consumer.

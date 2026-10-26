@@ -9,8 +9,15 @@ export async function GET(request: NextRequest) {
   const returnTo = searchParams.get("returnTo") ?? ""
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
-  function activationFailed() {
-    return NextResponse.redirect(new URL(`/activate?slug=${encodeURIComponent(slug)}&error=payment_failed`, request.url))
+  function activationFailed(incomplete = false) {
+    const destination = new URL("/activate", request.url)
+    destination.searchParams.set("slug", slug)
+    destination.searchParams.set("error", incomplete ? "activation_incomplete" : "payment_failed")
+    if (incomplete) {
+      destination.searchParams.set("setup_intent", setupIntent)
+      if (returnTo === "dashboard") destination.searchParams.set("returnTo", "dashboard")
+    }
+    return NextResponse.redirect(destination)
   }
 
   if (!slug || !setupIntent || redirectStatus !== "succeeded") {
@@ -20,7 +27,7 @@ export async function GET(request: NextRequest) {
   const activation = await confirmActivation(slug, setupIntent)
 
   if (!activation.ok || !activation.companyId) {
-    return activationFailed()
+    return activationFailed(true)
   }
 
   // Sign the owner in on the way to the dashboard - without this they land on

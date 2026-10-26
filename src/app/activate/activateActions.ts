@@ -5,6 +5,8 @@ import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { sendSiteLiveEmailOnce } from "@/lib/activationEmails"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import { assertActivationLease, claimActivation, finishActivation, releaseActivation,
+  resolveActivationSubscription, type ActivationClaim } from "@/lib/stripe/activationGuard"
 
 function getAdminClient() {
   return createAdminClient(
@@ -331,11 +333,12 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       if (headstartTrialEnd) companyUpdate.trial_ends_at = headstartTrialEnd
     }
 
-    await admin
-      .from("companies")
-      .update(companyUpdate)
-      .eq("slug", slug)
-      .is("retired_at", null)
+    const { data: saved, error: saveError } = await admin.rpc("save_activation_setup", {
+      p_company: company.id, p_customer: company.stripe_customer_id ?? null,
+      p_pending: company.pending_setup_intent_secret ?? null,
+      p_status: company.subscription_status ?? null, p_update: companyUpdate,
+    })
+    if (saveError || saved !== true) throw new Error("Activation state changed; reload before continuing")
 
     return {
       clientSecret: setupIntent.client_secret,
@@ -351,41 +354,43 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   }
 }
 
-async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminClient>, slug: string, companyUpdate: Record<string, string | boolean | null>) {
-  const { error } = await admin
-    .from("companies")
-    .update(companyUpdate)
-    .eq("slug", slug)
-    .is("retired_at", null)
-
-  if (!error) return
-
-  const fallbackUpdate = { ...companyUpdate }
-  delete fallbackUpdate.applied_promotion_code_id
-  delete fallbackUpdate.applied_promotion_code
-  delete fallbackUpdate.applied_coupon_id
-  delete fallbackUpdate.applied_discount_label
-
-  const { error: fallbackError } = await admin
-    .from("companies")
-    .update(fallbackUpdate)
-    .eq("slug", slug)
-    .is("retired_at", null)
-
-  if (fallbackError) throw fallbackError
-  console.warn("[Activate] Promo audit columns missing; activation saved without local promo audit fields.", error.message)
+async function activationAccessLink(admin: ReturnType<typeof getAdminClient>, companyId: string, userId: string | null) {
+  if (!userId) return null
+  try {
+    const { data: userData } = await admin.auth.admin.getUserById(userId)
+    const ownerEmail = userData?.user?.email
+    if (!ownerEmail) return null
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+    const next = `/api/select-company?id=${encodeURIComponent(companyId)}&activated=true`
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: "magiclink", email: ownerEmail,
+      options: { redirectTo: `https://my.${rootDomain}/auth/callback?next=${encodeURIComponent(next)}` },
+    })
+    if (error) throw new Error("Could not prepare account access")
+    return data?.properties?.action_link ?? null
+  } catch {
+    console.error("[Activate] Could not prepare account access; existing login remains available")
+    return null
+  }
 }
 
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<{ ok: boolean; companyId?: string; authLink?: string | null }> {
   if (!process.env.STRIPE_SECRET_KEY) return { ok: false }
 
+  let claim: ActivationClaim | null = null
+  let admin: ReturnType<typeof getAdminClient> | null = null
   try {
-    const admin = getAdminClient()
+    admin = getAdminClient()
     const { data: eligible, error: eligibilityError } = await admin.from("companies").select("id")
       .eq("slug", slug).is("retired_at", null).maybeSingle()
     if (eligibilityError || !eligible) return { ok: false }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { timeout: 15000, maxNetworkRetries: 1 })
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId)
+    const expectedMode = /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY) ? true
+      : /^(sk|rk)_test_/.test(process.env.STRIPE_SECRET_KEY) ? false : null
+    if (setupIntent.status !== "succeeded" || expectedMode === null || setupIntent.livemode !== expectedMode) {
+      return { ok: false }
+    }
     const companyId = setupIntent.metadata?.company_id
     const intentSlug = setupIntent.metadata?.slug
 
@@ -396,7 +401,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const { data: company } = await admin
       .from("companies")
-      .select("id, slug, user_id, subscription_status, trial_ends_at")
+      .select("id, slug, user_id, stripe_customer_id, pending_setup_intent_secret, subscription_status, trial_ends_at")
       .eq("id", companyId)
       .eq("slug", slug)
       .is("retired_at", null)
@@ -415,11 +420,11 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       ? setupIntent.payment_method
       : (setupIntent.payment_method as Stripe.PaymentMethod | null)?.id
 
-    if (!customerId || !paymentMethodId) return { ok: false }
-
-    await stripe.customers.update(customerId, {
-      invoice_settings: { default_payment_method: paymentMethodId },
-    })
+    if (!customerId || !paymentMethodId || company.stripe_customer_id !== customerId) return { ok: false }
+    const method = await stripe.paymentMethods.retrieve(paymentMethodId)
+    const methodCustomer = typeof method.customer === "string" ? method.customer : method.customer?.id
+    if (methodCustomer !== customerId || method.livemode !== setupIntent.livemode) return { ok: false }
+    claim = await claimActivation(admin, companyId, customerId, setupIntent)
 
     const plan = setupIntent.metadata?.plan ?? "found"
     const priceId = setupIntent.metadata?.price_id ?? priceIdForPlan(plan, true)
@@ -457,30 +462,57 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       }
     }
 
-    const subscription = await stripe.subscriptions.create(subscriptionParams)
-
     const addonSlug = setupIntent.metadata?.addon_slug
-
-    if (addonSlug) {
-      const { data: priceRow } = await admin
+    if (addonSlug && !claim.attempt.request_params) {
+      const { data: priceRow, error: priceError } = await admin
         .from("addon_stripe_prices")
         .select("stripe_price_id")
         .eq("addon_slug", addonSlug)
         .single()
 
-      if (priceRow?.stripe_price_id) {
-        const item = await stripe.subscriptionItems.create({
+      if (priceError || !priceRow?.stripe_price_id) throw new Error("Could not verify selected add-on price")
+      subscriptionParams.metadata = { ...subscriptionParams.metadata,
+        activation_addon_price_id: priceRow.stripe_price_id }
+    }
+    const mayCreate = !["active", "trialing"].includes(String(company.subscription_status ?? "")) &&
+      setupIntentIdFromSecret(company.pending_setup_intent_secret ?? "") === setupIntentId
+    const { subscription, fromAttempt } = await resolveActivationSubscription(admin, stripe, claim, subscriptionParams, mayCreate)
+    if (!["active", "trialing"].includes(subscription.status)) throw new Error("Subscription payment needs attention")
+    if (!fromAttempt || claim.attempt.state === "completed") {
+      await finishActivation(admin, claim, subscription.id)
+      return { ok: true, companyId, authLink: await activationAccessLink(admin, companyId, company.user_id) }
+    }
+    await assertActivationLease(admin, claim)
+    if (addonSlug) {
+      const frozenMetadata = claim.attempt.request_params?.metadata
+      const addonPriceId = frozenMetadata && typeof frozenMetadata === "object"
+        ? frozenMetadata.activation_addon_price_id : null
+      if (typeof addonPriceId !== "string") throw new Error("Missing frozen add-on price")
+      const existingItems: Stripe.SubscriptionItem[] = []
+      for await (const item of stripe.subscriptionItems.list({ subscription: subscription.id, limit: 100 })) {
+        existingItems.push(item)
+      }
+      const matching = existingItems.filter(item => item.price.id === addonPriceId)
+      if (matching.length > 1) throw new Error("Multiple add-on items require review")
+      let item = matching[0]
+      if (!item) {
+        if (!claim.attempt.first_dispatched_at || Date.now() - Date.parse(claim.attempt.first_dispatched_at) >= 23 * 60 * 60 * 1000) {
+          throw new Error("Add-on reconciliation required before retry")
+        }
+        await assertActivationLease(admin, claim)
+        item = await stripe.subscriptionItems.create({
           subscription: subscription.id,
-          price: priceRow.stripe_price_id,
+          price: addonPriceId,
           quantity: 1,
-        })
-        await admin.from("addon_subscriptions").upsert({
+        }, { idempotencyKey: `found-activation-addon:${claim.attempt.id}` })
+      }
+      const { error: addonError } = await admin.from("addon_subscriptions").upsert({
           company_id: companyId,
           addon_slug: addonSlug,
           stripe_subscription_item_id: item.id,
           active: true,
         }, { onConflict: "company_id,addon_slug" })
-      }
+      if (addonError) throw new Error("Could not persist add-on access")
     }
 
     // subscription.status is Stripe's real state - "trialing" for a deferred
@@ -510,7 +542,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const wasAlreadyActive = ["active", "trialing"].includes(String(company.subscription_status ?? ""))
 
-    await updateCompanyAfterActivation(admin, slug, companyUpdate)
+    await finishActivation(admin, claim, subscription.id, companyUpdate)
 
     await sendSiteLiveEmailOnce(admin as any, companyId).catch((err) => {
       console.error("[Activate] site-live email failed:", err)
@@ -531,33 +563,15 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     // not a bare /login screen. Generate a one-time sign-in link the same way
     // the existing email-login flow does, and hand it back so the redirect
     // response can carry the owner's browser straight through it.
-    let authLink: string | null = null
-    if (company.user_id) {
-      try {
-        const { data: userData } = await admin.auth.admin.getUserById(company.user_id)
-        const ownerEmail = userData?.user?.email
-        if (ownerEmail) {
-          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-          const next = `/api/select-company?id=${encodeURIComponent(companyId)}&activated=true`
-          const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-            type: "magiclink",
-            email: ownerEmail,
-            options: { redirectTo: `https://my.${rootDomain}/auth/callback?next=${encodeURIComponent(next)}` },
-          })
-          if (linkError) {
-            console.error("[Activate] generateLink error:", linkError.message)
-          } else {
-            authLink = linkData?.properties?.action_link ?? null
-          }
-        }
-      } catch (err) {
-        console.error("[Activate] auth link generation failed:", err)
-      }
-    }
+    const authLink = await activationAccessLink(admin, companyId, company.user_id)
 
     return { ok: true, companyId, authLink }
-  } catch (err) {
-    console.error("[Activate] confirmActivation failed:", err)
+  } catch {
+    console.error("[Activate] Confirmation incomplete; reuse existing attempt on retry")
     return { ok: false }
+  } finally {
+    if (admin && claim) await releaseActivation(admin, claim).catch(() => {
+      console.error("[Activate] Activation lease release failed; it will expire safely")
+    })
   }
 }
