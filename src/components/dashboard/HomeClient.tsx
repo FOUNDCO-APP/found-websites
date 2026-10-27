@@ -49,6 +49,7 @@ type Props = {
   industry: string | null
   smartNextStep: SmartNextStep | null
   hasContacts: boolean
+  includedToolPrompt?: React.ReactNode
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -194,7 +195,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 export default function HomeClient({
   businessName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, customDomain, isActive, recentLeads, lastPhotoAt, industry, smartNextStep, hasContacts,
+  siteSlug, customDomain, isActive, recentLeads, lastPhotoAt, industry, smartNextStep, hasContacts, includedToolPrompt,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -266,6 +267,10 @@ export default function HomeClient({
           Good {greeting},<br />{businessName}.
         </h1>
       </div>
+
+      {includedToolPrompt && (
+        <div style={{ padding: "20px 24px 0" }}>{includedToolPrompt}</div>
+      )}
 
       {/* ── ALERT CARD — new leads ── */}
       {hasNewLead && (

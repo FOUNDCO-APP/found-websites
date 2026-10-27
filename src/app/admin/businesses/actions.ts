@@ -150,9 +150,8 @@ export async function setIncludedAddon(companyId: string, addonSlug: string | nu
 // included-addon picker above.
 export async function setDisabledAddon(companyId: string, addonSlug: string, hide: boolean) {
   await requireAdmin()
-  const admin = getAdminClient()
-  const { data: company } = await admin.from("companies").select("disabled_addons").eq("id", companyId).single()
-  const current = new Set((company?.disabled_addons ?? []) as string[])
-  if (hide) current.add(addonSlug); else current.delete(addonSlug)
-  await admin.from("companies").update({ disabled_addons: Array.from(current) }).eq("id", companyId)
+  const { data, error } = await getAdminClient().rpc("set_addon_visibility_atomic", {
+    p_company_id: companyId, p_addon_slug: addonSlug, p_hide: hide,
+  })
+  if (error || !data?.success) throw new Error("Could not save feature visibility.")
 }

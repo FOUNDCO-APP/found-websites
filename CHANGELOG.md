@@ -1,3 +1,18 @@
+## October 26, 2026 - Approved Pro Included Tool Preparation
+
+- Implemented quiet Pro Home chooser and separate Billing management, preserving
+  existing selections and paid extras. Later retains prompt; hidden choices need
+  explicit consent; successful choice links to setup rather than claiming ready.
+- Prepared service-only invoker selection/visibility RPC migrations; not installed.
+  Independent re-review resolved stale visibility-array and calendar-init races.
+  No selection-time availability mutation; Calendar opens Hours setup.
+- 92 synthetic SQL/action checks, seven dashboard groups, eight real Chromium
+  groups and previous activation/auth/retirement/membership/promo checks pass.
+  Final post-review build, TypeScript and 86 static pages pass. Company record
+  fingerprint unchanged. No live client mutation, emails, charges or deployment.
+- Shawn deferred phone login check. Existing MD process retained. Publication
+  approval remains separate; no new status file, no paid services/backups started.
+
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
 - Shawn explicitly approved production publication. Pushed source 49873fc and

@@ -1,5 +1,15 @@
 ## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
 
+Latest approved scope: Pro included-tool selection, following visible independent
+customer/engineering reviews and their exchange. Quiet active-Pro unset-choice
+Home prompt, optional chooser/Later, separate paid extras, explicit hidden-tool
+consent, saved-choice truthfulness and direct setup. No auto-pick or Hiram test
+mutation; preserve existing selections, billing and saved hours. Selection must
+validate owner, allowed tool and current plan/status/expected choice atomically.
+Shared visibility writers must preserve unrelated flags. Calendar selection does
+not initialize hours; setup opens Hours. Signed-in phone login check deferred.
+Implementation approval is not this new release's production-publication approval.
+
 Publication approval: Shawn explicitly answered "Approve production release"
 for the tested activation/account-access repair. Normal push to GitHub main
 succeeded through 4bd2cc9 (source release 49873fc); Vercel deployment verification

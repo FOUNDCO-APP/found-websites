@@ -5,6 +5,24 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Now - October 26 Documentation And Staged Protection
 
+### Latest Priority - Approved Pro Included Tool Selection
+
+- [x] Shawn deferred the phone/inbox login check and approved the visible team's
+  Pro-choice flow plus bounded selection fixes. Do not auto-select for Hiram.
+- [x] Prepare active Pro unset-choice Home prompt and included-only chooser,
+  persistent quiet reminder after Later, consent for hidden tools and setup links.
+- [x] Prepare atomic selection and shared owner/admin visibility helpers. Keep
+  existing picks, billing, all other visibility flags and availability unchanged.
+- [x] Independent review races corrected and re-reviewed. 92 SQL/action checks,
+  seven Home journey groups, eight Chromium groups and existing regressions pass.
+- [x] Final post-review production build, TypeScript and 86 static pages pass.
+- [ ] Save release/docs and obtain explicit production-publication approval.
+  Both migrations remain unapplied; code not live.
+- [ ] With publication approval, install helpers and verify privileges/protected
+  fingerprints before normal push, deployment verification and public smoke checks.
+- [ ] Later: audit existing schedule save delete/insert transaction separately.
+  This chooser does not initialize/overwrite hours; it opens Hours setup.
+
 ### Latest Priority - Existing Customer Journey Audit
 
 - [x] Shawn explicitly approved first repair group: activation duplicate prevention
@@ -34,8 +52,8 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Obtain bounded repair approval: repeated activation can create duplicate
   subscriptions in local mocks; email-send false success; interrupted login stuck;
   visible-multi-company password gate; expired-link recovery guidance.
-- [ ] Pro choice: Hiram has none selected; fix requires approved discovery/flow
-  scope. Disabled-choice entitlement conflict reproduced locally, not changed live.
+- [x] Pro-choice scope approved; implementation prepared above, not yet live.
+  Hiram's own choice remains untouched. Production publication remains separate.
 - [ ] Observability: verify/fix dashboard tracker routing, distinguish unknown
   activity from nonuse, missing-table fallbacks and surfaced operational errors.
 - [ ] Photo/inquiry reliability: video extension/MIME, upload retry/error copy,

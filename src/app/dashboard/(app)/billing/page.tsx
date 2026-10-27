@@ -395,6 +395,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           addons={rankedAddons}
           includedAddonSlug={company.included_addon_slug ?? null}
           activeAddonSlugs={activeAddonSlugs}
+          disabledAddonSlugs={company.disabled_addons ?? []}
         />
       )}
 

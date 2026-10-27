@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import HomeClient from "@/components/dashboard/HomeClient"
+import IncludedProTool from "@/components/dashboard/IncludedProTool"
 import { getCompanyActiveAddonSlugs } from "@/lib/dashboard/entitlements"
 import { getEffectiveAddons, getFeatureAccess } from "@/lib/featureAccess"
 import { smartNextStepFor } from "@/lib/dashboard/smartNextStep"
@@ -190,6 +191,15 @@ export default async function HomePage() {
       industry={company.industry_category ?? null}
       smartNextStep={smartNextStep}
       hasContacts={hasContacts}
+      includedToolPrompt={isActive && company.plan === "found_pro" && !company.included_addon_slug ? (
+        <IncludedProTool
+          companyId={company.id}
+          currentIncludedSlug={null}
+          disabledAddonSlugs={company.disabled_addons ?? []}
+          paidAddonSlugs={paidAddonSlugs}
+          variant="prompt"
+        />
+      ) : null}
     />
   )
 }

@@ -112,6 +112,7 @@ export default function SchedulePage() {
   const prefix = typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") ? "/dashboard" : ""
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "hours") setTab("hours")
     Promise.all([
       fetch(`${prefix}/api/schedule/availability`).then(r => r.json()).catch(() => ({})),
       fetch(`${prefix}/api/schedule/blocks`).then(r => r.json()).catch(() => ({})),

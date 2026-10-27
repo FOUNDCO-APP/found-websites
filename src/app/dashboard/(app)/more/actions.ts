@@ -188,21 +188,52 @@ export async function purchaseAddon(companyId: string, addonSlug: string): Promi
 // Stripe subscription item, so switching it is instant and never touches
 // billing. Picking a new one always replaces the old one; that's the
 // data shape's job, not extra logic here.
-export async function switchIncludedAddon(companyId: string, addonSlug: string | null): Promise<{ success: boolean; error?: string }> {
-  if (!companyId) return { success: false, error: "Missing company." }
-  if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
-  const admin = createAdminClient()
-  const { data: company } = await admin.from("companies").select("plan").eq("id", companyId).single()
-  if (!company || company.plan !== "found_pro") return { success: false, error: "Not available on this plan." }
-  const { error } = await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
-  if (error) return { success: false, error: error.message }
-  if (addonSlug === "reservation_calendar") await ensureDefaultAvailability(companyId)
-  await recordCustomerActivity({
-    eventType: "included_addon_switched",
-    pathname: "/dashboard/more",
-    metadata: { addon_slug: addonSlug },
-  })
-  return { success: true }
+export async function switchIncludedAddon(
+  companyId: string,
+  addonSlug: string | null,
+  options?: { expectedIncludedAddonSlug: string | null; confirmTurnOn?: boolean },
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!companyId) return { success: false, error: "Missing company." }
+    if (addonSlug !== null && !KNOWN_ADDON_SLUGS.has(addonSlug)) {
+      return { success: false, error: "Not a recognized feature." }
+    }
+    // Older callers fail closed until they supply the choice they displayed.
+    // Neither a missing option nor selecting a hidden feature implies consent.
+    if (!options || !(options.expectedIncludedAddonSlug === null || typeof options.expectedIncludedAddonSlug === "string")) {
+      return { success: false, error: "Refresh your features and try again." }
+    }
+    if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
+    const user = await getAuthUser()
+    if (!user) return { success: false, error: "Not authorized." }
+    const { data, error } = await createAdminClient().rpc("select_pro_included_addon", {
+      p_company_id: companyId,
+      p_actor_id: user.id,
+      p_actor_email: user.email ?? "",
+      p_addon_slug: addonSlug,
+      p_expected_pick: options.expectedIncludedAddonSlug,
+      p_confirm_turn_on: options.confirmTurnOn === true,
+    })
+    if (error || !data || typeof data.success !== "boolean") {
+      return { success: false, error: "Could not save your feature. Please try again." }
+    }
+    if (data.success) {
+      // Preserve existing activity recording without misreporting a committed
+      // selection as failed if tracking is temporarily unavailable.
+      try {
+        await recordCustomerActivity({
+          eventType: "included_addon_switched",
+          pathname: "/dashboard/more",
+          metadata: { addon_slug: addonSlug },
+        })
+      } catch { /* Selection already committed; tracking is best-effort. */ }
+    }
+    return data.success
+      ? { success: true }
+      : { success: false, error: data.error ?? "Refresh your features and try again." }
+  } catch {
+    return { success: false, error: "Could not save your feature. Please try again." }
+  }
 }
 
 // A pure site-visibility toggle, separate from billing - lives in Edit
@@ -219,25 +250,29 @@ export async function switchIncludedAddon(companyId: string, addonSlug: string |
 // separate action so "hide from my site" never silently changes what
 // someone is being billed for.
 export async function toggleAddonVisibility(companyId: string, addonSlug: string, hide: boolean): Promise<{ success: boolean; error?: string }> {
-  if (!companyId || !addonSlug) return { success: false, error: "Missing required fields." }
-  if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
-  if (!KNOWN_ADDON_SLUGS.has(addonSlug)) return { success: false, error: "Not a recognized feature." }
-
-  const admin = createAdminClient()
-  const { data: company } = await admin.from("companies").select("disabled_addons").eq("id", companyId).single()
-  if (!company) return { success: false, error: "Company not found." }
-
-  const current = new Set((company.disabled_addons ?? []) as string[])
-  if (hide) current.add(addonSlug); else current.delete(addonSlug)
-
-  const { error } = await admin.from("companies").update({ disabled_addons: Array.from(current) }).eq("id", companyId)
-  if (error) return { success: false, error: error.message }
-  await recordCustomerActivity({
-    eventType: hide ? "addon_hidden_from_site" : "addon_shown_on_site",
-    pathname: "/dashboard/more",
-    metadata: { addon_slug: addonSlug },
-  })
-  return { success: true }
+  try {
+    if (!companyId || !addonSlug || typeof hide !== "boolean") return { success: false, error: "Missing required fields." }
+    if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
+    if (!(await getAuthUser())) return { success: false, error: "Not authorized." }
+    if (!KNOWN_ADDON_SLUGS.has(addonSlug)) return { success: false, error: "Not a recognized feature." }
+    const { data, error } = await createAdminClient().rpc("set_addon_visibility_atomic", {
+      p_company_id: companyId, p_addon_slug: addonSlug, p_hide: hide,
+    })
+    if (error || !data || typeof data.success !== "boolean") {
+      return { success: false, error: "Could not save feature visibility. Please try again." }
+    }
+    if (!data.success) return { success: false, error: data.error ?? "Could not save feature visibility." }
+    try {
+      await recordCustomerActivity({
+        eventType: hide ? "addon_hidden_from_site" : "addon_shown_on_site",
+        pathname: "/dashboard/more",
+        metadata: { addon_slug: addonSlug },
+      })
+    } catch { /* Visibility already committed; tracking is best-effort. */ }
+    return { success: true }
+  } catch {
+    return { success: false, error: "Could not save feature visibility. Please try again." }
+  }
 }
 
 export async function startAddonCheckout(formData: FormData) {

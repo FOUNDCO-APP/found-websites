@@ -8,6 +8,53 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 26, 2026
 
+### Latest Approved Work - Pro Included Tool Selection
+
+Shawn deferred the signed-in phone/inbox login check, not the login repair.
+After two independent source-review agents and their visible exchange, he
+approved the quiet Pro chooser and underlying selection safeguards. Hiram is
+the motivating unset-choice case, not permission to choose for him or mutate
+his account as a test. No new emails, charges, plan changes or paid services.
+
+Prepared in managed checkout pro-included-choice at base cf01415:
+- Active/trialing Pro owners without a choice get a quiet Home prompt. Later
+  closes the chooser but keeps the prompt; no automatic popup or reminders.
+  Existing picks, Business/Starter and worker Home are preserved.
+- Included-only chooser has all five tools with plain descriptions. Paid extras
+  stay outside; separately paid tools cannot be silently converted or canceled.
+  Existing choices can be managed in Billing. Hidden tools require consent to
+  turn on. Success means saved choice, not completed setup. Calendar goes directly
+  to /schedule?tab=hours and never changes availability as a side effect of choice.
+- Selection is server-owner guarded plus a service-role-only invoker RPC with
+  row lock, current Pro/status/retirement/identity checks, allowlist, expected-pick
+  conflict protection and selected-only visibility update. Existing activity
+  event retained best-effort; no Stripe or email work in this path.
+- Independent final reviewer found two P2 races; fixed both before publication:
+  owner/admin visibility writes now use a shared atomic row-locked RPC, and new
+  selection performs no availability initialization. Existing nontransactional
+  schedule save remains a separate follow-up, not fixed by this release.
+- Migrations 20261027032930_pro_included_choice_guard.sql and
+  20261027034111_atomic_addon_visibility.sql are prepared, NOT installed.
+
+Verification: 92 synthetic SQL/action checks, seven actual server-page journey
+groups, eight real Chromium chooser groups (320/390/1440 widths, consent, Later,
+network failure, timeout/late success, swapping, paid-choice protection and keyboard
+escape/focus). Tests contain no production account writes/provider sends. Existing
+activation 28, recovery route 9, auth 49, retirement 15, membership 12 and promo
+426 checks pass. Final post-review production build, TypeScript and all 86 static
+pages pass. Existing middleware/Sentry/webpack and fixture React-key warnings
+remain; no new build failure. Both migrations are still unapplied.
+Real multi-session PostgreSQL locking and signed-in customer/device journey are
+not proven by these fixtures. Independent reviewer reports no remaining findings
+in bounded changes, with the above residuals. Live company records: 52 unchanged,
+fingerprint 31c12a1946083789ee9b869b20b70d84; membership rows remain five.
+
+Publication: no push or production schema install performed. Obtain explicit
+approval for this release, install helpers before code publication, verify denied
+anon/authenticated execution and unchanged protected records, then normal push
+and deployment/public checks. Do not replay a real client's selection to test.
+Retain functions on rollback; do not restore stale array writers after usage.
+
 ### Approved First Reliability Release - Activation And Account Access
 
 Latest approval: Shawn accepted the visible team's recommendation to repair
