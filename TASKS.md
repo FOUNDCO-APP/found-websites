@@ -7,9 +7,12 @@ historical divider below; old unchecked items are not automatic authorization.
 
 - [x] Prepare approved existing-token typography hierarchy and hidden accessible
   legend; normal preview and computed hierarchy checks pass.
-- [ ] Resolve independent enlarged-text visual blocker: current >40px body check
-  inadequate. Proposed constrained scrolling-title fallback awaits Shawn approval.
-- [ ] Recheck complete-choice reading space, preview review and release approval.
+- [x] Shawn approved constrained scrolling-title fallback. Prepared adaptive mode,
+  persistent X/footer, compact empty space, retained focus and unchanged choices.
+- [x] Complete-choice reading space, consent and resize checks pass; independent
+  visual rereview accepts normal/enlarged preview. Eleven Chromium groups/92 layouts.
+- [x] Final production build/TypeScript/86 pages and independent engineering review pass.
+- [ ] Separate publication approval and verified release; NOT live yet.
 
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.

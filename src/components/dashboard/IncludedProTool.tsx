@@ -33,6 +33,10 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
   const dialogId = useId()
   const dialog = useRef<HTMLDialogElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
+  const footer = useRef<HTMLElement>(null)
+  const body = useRef<HTMLDivElement>(null)
+  const [scrollTitle, setScrollTitle] = useState(false)
+  const restoreTitleFocus = useRef(false)
   const trigger = useRef<HTMLButtonElement>(null)
   const inFlight = useRef(false)
   const mounted = useRef(true)
@@ -89,6 +93,40 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
       trigger.current?.focus()
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const measure = () => {
+      const sheet = dialog.current
+      const title = heading.current
+      const actions = footer.current
+      const choice = body.current?.querySelector('fieldset > label')
+      if (!sheet || !title || !actions || !choice) return
+      const available = parseFloat(getComputedStyle(sheet).maxHeight)
+      const fixedHeader = Math.max(title.getBoundingClientRect().height, 44) + 24
+      // Compare against the normal row spacing in both modes to avoid oscillation.
+      const normalChoiceHeight = choice.getBoundingClientRect().height + (scrollTitle ? 16 : 0)
+      const next = available - fixedHeader - actions.getBoundingClientRect().height < normalChoiceHeight + 32
+      if (next !== scrollTitle) {
+        restoreTitleFocus.current = document.activeElement === title
+        setScrollTitle(next)
+      }
+    }
+    const observer = new ResizeObserver(measure)
+    for (const node of [dialog.current, heading.current, footer.current, body.current]) {
+      if (node) observer.observe(node)
+    }
+    window.addEventListener('resize', measure)
+    measure()
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
+  }, [open, savedSlug, scrollTitle])
+
+  useEffect(() => {
+    if (restoreTitleFocus.current) {
+      heading.current?.focus({ preventScroll: true })
+      restoreTitleFocus.current = false
+    }
+  }, [scrollTitle])
 
   function close() {
     setOpen(false)
@@ -171,12 +209,13 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
         </div>
         <button ref={trigger} type="button" style={buttonStyle} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={openChooser}>{currentIncludedSlug ? "Manage" : "Choose a tool"}</button>
       </div>}
-      {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} className="included-pro-dialog">
-        <header className="included-pro-header">
-          <h2 id={titleId} ref={heading} tabIndex={-1} style={{ ...TYPE.title, margin: 0, outline: "none", overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
+      {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} className={`included-pro-dialog${scrollTitle ? " included-pro-constrained" : ""}`}>
+        <header className="included-pro-header" style={scrollTitle ? { justifyContent: "flex-end", paddingTop: 0, paddingBottom: 0 } : undefined}>
+          {!scrollTitle && <h2 id={titleId} ref={heading} tabIndex={-1} style={{ ...TYPE.title, flex: 1, minWidth: 0, margin: 0, outline: "none", overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>}
           <button type="button" aria-label="Close chooser" onClick={close} style={{ ...buttonStyle, display: "grid", placeItems: "center", width: 44, minWidth: 44, height: 44, padding: 0, flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
         </header>
-        <div className="included-pro-body">
+        <div className="included-pro-body" ref={body}>
+        {scrollTitle && <h2 id={titleId} ref={heading} tabIndex={-1} style={{ ...TYPE.title, width: "calc(100% - 56px)", margin: "12px 0 0", outline: "none", overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>}
         <p id={descriptionId} style={{ ...TYPE.subhead, color: "#bbb" }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool included. No extra charge. Separately paid tools stay unchanged."}</p>
         {!saved && <>
           <fieldset disabled={saving || uncertain} style={{ border: 0, padding: 0, margin: 0 }}>
@@ -196,7 +235,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
         </>}
           <Link href={`${prefix}/billing`} onClick={close} style={{ ...TYPE.subhead, display: "inline-flex", alignItems: "center", minHeight: 44, color: "#bbb", padding: "8px 0" }}>Manage billing</Link>
         </div>
-        <footer className="included-pro-footer">
+        <footer className="included-pro-footer" ref={footer}>
           {saved ? <Link href={`${prefix}${saved.path}`} onClick={close} style={{ ...buttonStyle, display: "inline-flex", alignItems: "center", background: GREEN, color: BLACK, textDecoration: "none" }}>Continue setup</Link> : <>
           {uncertain ? <button type="button" style={buttonStyle} disabled={checking} onClick={checkSavedChoice}>{checking ? "Checking..." : "Check saved choice"}</button> : <button type="button" disabled={saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn)} onClick={save} style={{ ...buttonStyle, width: "100%", background: GREEN, color: BLACK, opacity: saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn) ? 0.5 : 1 }}>{saving ? "Saving choice..." : hidden ? "Include and turn on" : "Save included tool"}</button>}
           </>}
@@ -244,6 +283,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
           scrollbar-gutter: stable;
         }
         .included-pro-body fieldset { min-width: 0; }
+        .included-pro-constrained fieldset > label { padding-top: 8px !important; padding-bottom: 8px !important; }
         .included-pro-footer {
           display: grid;
           grid-template-columns: minmax(0, 1fr) auto;

@@ -5,7 +5,11 @@
   pass, including computed hierarchy and group naming.
 - Independent design/product review rejects constrained root32/320x480 reading
   space despite passing weak >40px check. Proposed scrolling-title fallback
-  awaits approval; no push/deployment or final visual acceptance claimed.
+  was explicitly approved by Shawn and implemented with adaptive measurement,
+  fixed X/footer and compact constrained spacing. Full-choice/consent/resize
+  checks pass; independent visual rereview accepts normal/enlarged screenshots.
+  Final build/TypeScript/86 pages pass; independent engineering review finds no
+  blockers. No publication approved or performed; prepared preview only.
 
 ## October 27, 2026 - Quiet Chooser Opening Prepared
 

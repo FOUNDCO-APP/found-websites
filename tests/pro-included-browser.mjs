@@ -138,9 +138,32 @@ try {
     const box = await control.boundingBox()
     assert.ok(box.y >= 0 && box.y + box.height <= 481, 'enlarged-text controls remain reachable')
   }
-  assert.ok(await large.locator('.included-pro-body').evaluate(el => el.clientHeight > 40 && el.scrollHeight > el.clientHeight), 'choices retain scrollable space')
+  await large.waitForFunction(() => {
+    const body = document.querySelector('.included-pro-body')
+    const choice = body.querySelector('fieldset > label')
+    return body.contains(document.querySelector('dialog h2')) && body.clientHeight >= choice.getBoundingClientRect().height
+  })
+  const largeTitle = large.getByRole('heading', { name: 'Choose your Pro tool', exact: true })
+  assert.equal(await largeTitle.evaluate(el => document.activeElement === el), true, 'responsive title retains initial context focus')
+  await large.getByRole('radio', { name: /Online Ordering/ }).check()
+  assert.ok(await large.getByRole('radio', { name: /Online Ordering/ }).evaluate(el => {
+    const row = el.closest('label').getBoundingClientRect()
+    const body = document.querySelector('.included-pro-body').getBoundingClientRect()
+    return row.top >= body.top - 1 && row.bottom <= body.bottom + 1
+  }), 'complete typical choice is readable at doubled text')
   await large.getByRole('radio', { name: /Email Marketing/ }).check()
   await large.screenshot({ path: path.join(out, 'chooser-enlarged-320.png'), fullPage: true })
+  await large.getByRole('radio', { name: /Shopping Cart/ }).check()
+  await large.getByRole('checkbox').check()
+  assert.equal(await large.getByRole('button', { name: 'Include and turn on', exact: true }).isEnabled(), true, 'consent remains reachable at enlarged text')
+  await large.setViewportSize({ width: 390, height: 1000 })
+  await large.evaluate(() => { document.documentElement.style.fontSize = '16px' })
+  await large.waitForFunction(() => document.querySelector('.included-pro-header h2'))
+  assert.equal(await large.getByRole('checkbox').isChecked(), true, 'resizing preserves consent')
+  await large.setViewportSize({ width: 320, height: 480 })
+  await large.evaluate(() => { document.documentElement.style.fontSize = '32px' })
+  await large.waitForFunction(() => document.querySelector('.included-pro-body h2'))
+  assert.equal(await large.getByRole('checkbox').isChecked(), true)
   await large.close(); groups++
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   await page.goto(`http://127.0.0.1:${server.address().port}`)

@@ -1,3 +1,14 @@
+## October 27, 2026 - Chooser Typography And Constrained Fallback
+
+Shawn approved visible product/design recommendation to reuse owner-dashboard
+TYPE.title/headline/subhead for title, names and supporting text, visually hiding
+the redundant legend while retaining its accessible group name. He then approved
+the constrained-layout fallback after reviewers found enlarged title crowded the
+reading area: let title scroll only when needed, retain fixed X and action footer,
+without shrinking text or changing choices, warnings or saving behavior. Apply
+across industries. Independent visual rereview accepts the prepared previews;
+publication remains separate.
+
 ## October 27, 2026 - Branding And Responsive Chooser Direction Approved
 
 After three independent AI reviewers' visible discussion (visual, product/CX,

@@ -8,7 +8,7 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
-### Typography Refinement - Prepared, Accessibility Follow-up Pending
+### Typography Refinement - Approved Fallback Prepared
 
 Shawn approved visible independent product/design recommendation to apply existing
 owner TYPE.title to chooser heading, TYPE.headline to names, TYPE.subhead to intro,
@@ -16,13 +16,20 @@ descriptions and Billing; visually hide redundant legend retaining group label.
 Prepared locally, no state/save/global CSS changes. Eleven Chromium groups/92
 Home cases and TypeScript pass; explicit computed title/name/description hierarchy
 and accessible group assertions added. These passes do NOT close visual review:
-independent design reviewer accepts normal mobile/desktop but rejects 320x480 at
-root32 because only about 50px of reading space remains. Existing >40px assertion
-is too weak. Product reviewer agrees. Proposed bounded fallback: in constrained
-enlarged-text layouts allow title to scroll, keep X and footer persistent; require
-enough reading space for a complete choice. This changes prior persistent-title
-direction, so bring proposal to Shawn before implementation. No release approval,
-push or deployment; live release remains quiet-opening source3366549 below.
+independent design reviewer initially rejected 320x480/root32 reading space;
+product reviewer agreed and Shawn explicitly approved the bounded fallback.
+Prepared: measure natural header/footer and first choice space; when constrained,
+move title into scroll body, retain X/footer and compact empty vertical spacing.
+Preserve title focus only if the moved title had focus; normal control focus stays.
+Normalize measured row spacing across modes to avoid oscillation. Replaced weak
+>40px test with complete first choice readable/selectable; five choices, consent,
+normal/enlarged resize and saved consent checks pass. Eleven Chromium groups/92
+Home cases pass. Independent visual rereview accepts both normal/enlarged previews.
+Final production build/TypeScript/86 pages pass. Independent engineering rereview
+finds no blockers; verified normalized spacing avoids that observer feedback and
+control nodes/state are retained during resizing. No actual Safari test claimed.
+No publication approval, push or deployment;
+live release remains quiet-opening source3366549 below.
 
 ### Follow-up - Quiet Chooser Opening (Live)
 
