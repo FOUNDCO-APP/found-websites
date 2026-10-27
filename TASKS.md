@@ -17,10 +17,10 @@ historical divider below; old unchecked items are not automatic authorization.
   seven Home journey groups, eight Chromium groups and existing regressions pass.
 - [x] Final post-review production build, TypeScript and 86 static pages pass.
 - [x] Save reviewed source release 8aa08d4 and existing handoff documents.
-- [ ] Obtain explicit production-publication approval; question sent.
-  Both migrations remain unapplied; code not live.
-- [ ] With publication approval, install helpers and verify privileges/protected
-  fingerprints before normal push, deployment verification and public smoke checks.
+- [x] Shawn explicitly approved production publication and both database helpers.
+- [x] Install helpers via management migration; verify restricted privileges,
+  unchanged company/membership fingerprints and security-advisor baseline.
+- [ ] Normal code push, deployment verification and public smoke checks pending.
 - [ ] Later: audit existing schedule save delete/insert transaction separately.
   This chooser does not initialize/overwrite hours; it opens Hours setup.
 

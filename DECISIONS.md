@@ -8,7 +8,9 @@ mutation; preserve existing selections, billing and saved hours. Selection must
 validate owner, allowed tool and current plan/status/expected choice atomically.
 Shared visibility writers must preserve unrelated flags. Calendar selection does
 not initialize hours; setup opens Hours. Signed-in phone login check deferred.
-Implementation approval is not this new release's production-publication approval.
+Shawn subsequently explicitly approved production publication of source 8aa08d4
+and installation of both server-only helpers. This adds no permission to choose
+for Hiram, mutate client data for testing, send messages or change billing.
 
 Publication approval: Shawn explicitly answered "Approve production release"
 for the tested activation/account-access repair. Normal push to GitHub main

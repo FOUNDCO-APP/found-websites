@@ -34,7 +34,11 @@ Prepared in managed checkout pro-included-choice at base cf01415:
   selection performs no availability initialization. Existing nontransactional
   schedule save remains a separate follow-up, not fixed by this release.
 - Migrations 20261027032930_pro_included_choice_guard.sql and
-  20261027034111_atomic_addon_visibility.sql are prepared, NOT installed.
+  20261027034111_atomic_addon_visibility.sql installed after explicit production
+  approval, via management migrations pro_included_choice_guard version
+  20261027050941 and atomic_addon_visibility version 20261027050942. Management
+  versions differ from local CLI-generated filenames; no CLI db push or broad
+  history reconciliation performed. Do not replay blindly against production.
 
 Verification: 92 synthetic SQL/action checks, seven actual server-page journey
 groups, eight real Chromium chooser groups (320/390/1440 widths, consent, Later,
@@ -43,17 +47,22 @@ escape/focus). Tests contain no production account writes/provider sends. Existi
 activation 28, recovery route 9, auth 49, retirement 15, membership 12 and promo
 426 checks pass. Final post-review production build, TypeScript and all 86 static
 pages pass. Existing middleware/Sentry/webpack and fixture React-key warnings
-remain; no new build failure. Both migrations are still unapplied.
+remain; no new build failure. Both helpers are live, invoker-only with empty
+search_path: anon/authenticated cannot execute; service_role can. Security
+advisors unchanged (19 server-only table INFO notices, existing password WARN).
+Null-company guard calls rejected safely in a rolled-back transaction; no real
+client selection invoked. Read-only transaction first rejected SELECT FOR UPDATE;
+the rolled-back guard check used a normal transaction instead.
 Real multi-session PostgreSQL locking and signed-in customer/device journey are
 not proven by these fixtures. Independent reviewer reports no remaining findings
 in bounded changes, with the above residuals. Live company records: 52 unchanged,
 fingerprint 31c12a1946083789ee9b869b20b70d84; membership rows remain five.
 
-Saved source release: local commit 8aa08d4. Publication approval question sent.
-Publication: no push or production schema install performed. Obtain explicit
-approval for this release, install helpers before code publication, verify denied
-anon/authenticated execution and unchanged protected records, then normal push
-and deployment/public checks. Do not replay a real client's selection to test.
+Saved source release: local commit 8aa08d4. Shawn explicitly answered "Approve
+production release" for code and both helpers. Database installation/permissions
+verified; company fingerprint and five memberships unchanged. Normal code push
+and deployment/public verification pending at this checkpoint. Do not replay a
+real client's selection to test.
 Retain functions on rollback; do not restore stale array writers after usage.
 
 ### Approved First Reliability Release - Activation And Account Access

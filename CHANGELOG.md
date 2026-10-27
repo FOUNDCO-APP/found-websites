@@ -3,16 +3,21 @@
 - Implemented quiet Pro Home chooser and separate Billing management, preserving
   existing selections and paid extras. Later retains prompt; hidden choices need
   explicit consent; successful choice links to setup rather than claiming ready.
-- Prepared service-only invoker selection/visibility RPC migrations; not installed.
+- Service-only invoker selection/visibility RPC migrations installed after explicit
+  publication approval. Management versions 20261027050941/20261027050942 map to
+  local 20261027032930/20261027034111; no broad migration replay/reconciliation.
   Independent re-review resolved stale visibility-array and calendar-init races.
   No selection-time availability mutation; Calendar opens Hours setup.
 - 92 synthetic SQL/action checks, seven dashboard groups, eight real Chromium
   groups and previous activation/auth/retirement/membership/promo checks pass.
   Final post-review build, TypeScript and 86 static pages pass. Company record
-  fingerprint unchanged. No live client mutation, emails, charges or deployment.
+  fingerprint unchanged. No live client mutation, emails or charges. Code push
+  and deployment verification pending at this checkpoint.
 - Shawn deferred phone login check. Existing MD process retained. Publication
   approval remains separate; no new status file, no paid services/backups started.
-- Tested source saved as local commit 8aa08d4; production approval question sent.
+- Tested source saved as local commit 8aa08d4; Shawn explicitly approved production
+  release. Installed helpers: browser execution denied, trusted server execution
+  allowed, invoker/empty search_path verified and security-advisor baseline unchanged.
 
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 
