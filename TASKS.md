@@ -8,7 +8,8 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.
 - [x] Shawn explicitly approved publishing focus correction 3366549.
-- [ ] Push and verify focus-correction deployment and live page checks.
+- [x] Focus correction published through 72f7912; Vercel
+  FLys3tGxMwpdvHftN8skU6HsjE3D success. Logo/login/four client Home checks pass.
 
 - [x] Visible independent discussion and Shawn approval for preview direction.
 - [x] Prepare mobile sheet/desktop dialog, fixed title/X and Save/Later,

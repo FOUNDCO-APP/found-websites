@@ -8,7 +8,7 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
-### Follow-up - Quiet Chooser Opening (Publication Approved)
+### Follow-up - Quiet Chooser Opening (Live)
 
 Shawn rejected the highlighted X and directed consistency with Found's branding.
 Independent visual and engineering reviews identified showModal initial focus on
@@ -20,8 +20,12 @@ interactive-control focus styles and existing layout. No global CSS rewrite,
 new corner treatment or theme change. Eleven Chromium groups/92 layouts pass,
 including initial heading focus, no initial Close ring, and visible keyboard Tab
 focus. TypeScript and independent engineering review pass. No real Safari session
-claimed. Shawn explicitly approved publication of source 3366549; push/deployment
-verification underway. No additional design, billing or account scope authorized.
+claimed. Shawn explicitly approved publication of source 3366549. Published through
+72f791213403a70e7d1ab9c4220e8b1a2e90a1f5; GitHub main SHA verified. Vercel
+FLys3tGxMwpdvHftN8skU6HsjE3D success for that SHA. Post-release read-only checks:
+logo HTTP 200/valid PNG, login and all four client Home pages HTTP 200/nonempty
+HTML. No signed-in phone behavior claimed or customer writes. No additional design,
+billing or account scope authorized. Later notes-only commits preserve this code.
 
 ### New Approved Preview - Branding And Responsive Chooser
 

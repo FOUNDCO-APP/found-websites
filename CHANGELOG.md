@@ -5,7 +5,9 @@
   keyboard outlines, Escape, return focus and all state/save behavior. No global
   CSS changes or public .btn reuse. Eleven browser groups/92 layouts pass.
 - Source 3366549 saved; Shawn explicitly approved publication. TypeScript and
-  independent engineering review pass. Push/deployment verification underway.
+  independent engineering review pass. Published through 72f7912, remote SHA
+  verified; Vercel FLys3tGxMwpdvHftN8skU6HsjE3D success. Read-only logo/login/
+  four client Home checks pass. No signed-in Safari roundtrip claimed.
 
 ## October 27, 2026 - Branding And Chooser Preview
 

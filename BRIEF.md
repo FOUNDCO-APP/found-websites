@@ -7,7 +7,11 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
-Latest October 27 follow-up: Shawn approved missing branding repair and responsive
+Latest October 27 correction: quiet chooser opening explicitly approved and live
+through 72f7912. Vercel success and read-only logo/login/four-client checks pass.
+Heading receives initial focus; keyboard control indicators remain intact.
+
+Earlier October 27 follow-up: Shawn approved missing branding repair and responsive
 Pro chooser direction for a tested preview, then explicitly approved publication
 of tested c3e9993. Published through b0945c2; Vercel success and live logo/login/
 four-client checks verified. Read latest SESSION_HANDOFF.md for exact evidence.
