@@ -5,6 +5,10 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Now - October 27 Branding And Chooser Follow-up
 
+- [x] Prepare narrow title-first initial focus correction after Shawn rejected
+  auto-highlighted Close; visible independent reviews, browser focus checks pass.
+- [ ] Publish focus correction after explicit approval; existing release stays live.
+
 - [x] Visible independent discussion and Shawn approval for preview direction.
 - [x] Prepare mobile sheet/desktop dialog, fixed title/X and Save/Later,
   scrollable choices and warnings; retain all existing save/consent behavior.

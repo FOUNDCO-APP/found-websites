@@ -1,3 +1,11 @@
+## October 27, 2026 - Quiet Chooser Opening Prepared
+
+- Shawn rejected initial highlighted X. Independent reviews identified native
+  dialog initial focus and chooser-local CSS. Focus title on opening; preserve
+  keyboard outlines, Escape, return focus and all state/save behavior. No global
+  CSS changes or public .btn reuse. Eleven browser groups/92 layouts pass.
+- Prepared only; separate publication approval pending.
+
 ## October 27, 2026 - Branding And Chooser Preview
 
 - Following visible independent reviews, Shawn approved responsive chooser and

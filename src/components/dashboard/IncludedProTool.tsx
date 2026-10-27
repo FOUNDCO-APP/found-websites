@@ -32,6 +32,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
   const descriptionId = useId()
   const dialogId = useId()
   const dialog = useRef<HTMLDialogElement>(null)
+  const heading = useRef<HTMLHeadingElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const inFlight = useRef(false)
   const mounted = useRef(true)
@@ -78,6 +79,8 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
   useEffect(() => {
     if (!open) return
     dialog.current?.showModal()
+    // Begin with the sheet's context, not a highlighted dismissal control.
+    heading.current?.focus({ preventScroll: true })
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => {
@@ -170,7 +173,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
       </div>}
       {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} className="included-pro-dialog">
         <header className="included-pro-header">
-          <h2 id={titleId} style={{ margin: 0, fontSize: "1rem", lineHeight: 1.25, overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
+          <h2 id={titleId} ref={heading} tabIndex={-1} style={{ margin: 0, outline: "none", fontSize: "1rem", lineHeight: 1.25, overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
           <button type="button" aria-label="Close chooser" onClick={close} style={{ ...buttonStyle, display: "grid", placeItems: "center", width: 44, minWidth: 44, height: 44, padding: 0, flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
         </header>
         <div className="included-pro-body">

@@ -8,6 +8,19 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
+### Follow-up - Quiet Chooser Opening (Prepared, Not Published)
+
+Shawn rejected the highlighted X and directed consistency with Found's branding.
+Independent visual and engineering reviews identified showModal initial focus on
+Close plus chooser-local focus-visible CSS, not a global branding rule. Shared
+globals have no dashboard focus token; public .btn is not appropriate to this
+owner sheet. Visible recommendations shown before narrow correction: focus the
+static title after showModal using preventScroll and tabIndex=-1; retain all
+interactive-control focus styles and existing layout. No global CSS rewrite,
+new corner treatment or theme change. Eleven Chromium groups/92 layouts pass,
+including initial heading focus, no initial Close ring, and visible keyboard Tab
+focus. No real Safari session claimed. Publication approval remains pending.
+
 ### New Approved Preview - Branding And Responsive Chooser
 
 Shawn supplied three phone screenshots and requested visible independent design/
