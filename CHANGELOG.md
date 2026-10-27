@@ -11,7 +11,9 @@
 - Independent visual/engineering rereviews found no blockers. Production build,
   TypeScript and 86 static pages pass; fixed-size close icon refinement checked.
   Preview saved c3e9993; Shawn explicitly approved shared publication. Release
-  verification in progress. Existing process retained.
+  verified through b0945c2, Vercel 5FC2LCVwwfzsBTQ7wd8oqwir5kkr success.
+  Live logo returns real PNG; login/four client Home pages HTTP 200. No client
+  mutations or signed-in phone claim. Existing process retained.
 
 ## October 27, 2026 - Shared Dashboard Visual Polish Prepared
 

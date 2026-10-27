@@ -30,12 +30,19 @@ No additional product, billing, database or client-data changes authorized.
 Production build passed, TypeScript and all 86 static pages generated. Independent
 visual and engineering rereviews found no blockers after enlarged-text correction;
 fixed-size SVG close symbol addresses visual review's minor refinement. Final
-typecheck also run after that icon-only edit. Publication approved; push and
-deployment verification in progress. Preview screenshots
+typecheck also run after that icon-only edit. Published through
+b0945c22d57b94fb1e94f7b6d63e9e6a7d7710b4; GitHub main SHA verified.
+Vercel deployment 5FC2LCVwwfzsBTQ7wd8oqwir5kkr reports success for that SHA.
+Read-only post-release checks: my.foundco.app/brand/found-wordmark-black.png
+returns HTTP 200 image/png with verified PNG signature (23,416 bytes), login and
+all four client Home pages HTTP 200/nonempty HTML. No signed-in Safari/device
+roundtrip claimed; user-deferred phone login remains deferred. No client changes.
+Preview screenshots
 chooser-initial-390.png, chooser-1440.png and chooser-enlarged-320.png are in the
 existing ignored .billing-audits/pro-included-choice folder; dashboard-preview.html
 opens a synthetic interactive Home/chooser with mocked saves. Files/commit are
-local until push is confirmed; do not claim deployment before verification.
+saved and pushed with release evidence. Subsequent documentation-only commits
+do not change verified application code; no further release scope implied.
 
 ### Latest Approved Work - Shared Dashboard Visual Polish
 

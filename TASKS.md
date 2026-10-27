@@ -15,7 +15,9 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Independent visual/engineering rereviews: no blockers; production build,
   TypeScript and 86 static pages pass. Fixed-size close icon refinement prepared.
 - [x] Shawn preview acceptance and explicit publication approval for c3e9993.
-- [ ] Push approved production release and verify deployment/live checks.
+- [x] Pushed through b0945c2, main SHA verified; Vercel
+  5FC2LCVwwfzsBTQ7wd8oqwir5kkr success. Live wordmark HTTP 200/real PNG;
+  login/four client Home pages HTTP 200. No client mutations or phone-login claim.
 
 ## Now - October 27 Shared Dashboard Visual Polish
 

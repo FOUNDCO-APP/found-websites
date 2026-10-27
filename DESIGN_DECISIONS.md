@@ -6,7 +6,8 @@ bottom sheet and centered desktop native dialog; persistent title/X and Save/
 Later, scrollable choices/consent, simpler radio rows and readable text. All five
 choices, warnings, explicit consent and save/recovery safeguards stay intact.
 This is shared across industries. Orange operator bar remains intentional.
-Publication requires separate approval after reviewing the prepared preview.
+Shawn subsequently explicitly approved publication of c3e9993 after the preview;
+published through b0945c2, deployment verified. No extra design scope authorized.
 To retain useful scrolling space at enlarged text sizes, Save/Later share one
 footer row and Manage billing stays in the scrolling body. Logo cause is an
 incorrect dashboard rewrite of its public mask asset; pass through only that

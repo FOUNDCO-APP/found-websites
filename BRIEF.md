@@ -9,7 +9,8 @@ another status/handoff source of truth without Shawn's approval.
 
 Latest October 27 follow-up: Shawn approved missing branding repair and responsive
 Pro chooser direction for a tested preview, then explicitly approved publication
-of tested c3e9993. Release verification in progress. Read latest SESSION_HANDOFF.md.
+of tested c3e9993. Published through b0945c2; Vercel success and live logo/login/
+four-client checks verified. Read latest SESSION_HANDOFF.md for exact evidence.
 
 Previous October 27 work: shared owner-dashboard visual direction approved and
 prepared locally, with previews and cross-industry checks. Shawn explicitly
