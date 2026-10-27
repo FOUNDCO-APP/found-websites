@@ -28,8 +28,8 @@ Home cases pass. Independent visual rereview accepts both normal/enlarged previe
 Final production build/TypeScript/86 pages pass. Independent engineering rereview
 finds no blockers; verified normalized spacing avoids that observer feedback and
 control nodes/state are retained during resizing. No actual Safari test claimed.
-No publication approval, push or deployment;
-live release remains quiet-opening source3366549 below.
+Shawn explicitly directed pushing tested source 8ccd17b after the final preview.
+Publication approved; push/deployment verification underway. No additional scope.
 
 ### Follow-up - Quiet Chooser Opening (Live)
 

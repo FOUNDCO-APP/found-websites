@@ -12,7 +12,8 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Complete-choice reading space, consent and resize checks pass; independent
   visual rereview accepts normal/enlarged preview. Eleven Chromium groups/92 layouts.
 - [x] Final production build/TypeScript/86 pages and independent engineering review pass.
-- [ ] Separate publication approval and verified release; NOT live yet.
+- [x] Shawn explicitly approved pushing tested source 8ccd17b.
+- [ ] Verify push, deployment and read-only live checks.
 
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.
