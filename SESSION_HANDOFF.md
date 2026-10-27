@@ -8,7 +8,7 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
-### Follow-up - Quiet Chooser Opening (Prepared, Not Published)
+### Follow-up - Quiet Chooser Opening (Publication Approved)
 
 Shawn rejected the highlighted X and directed consistency with Found's branding.
 Independent visual and engineering reviews identified showModal initial focus on
@@ -19,7 +19,9 @@ static title after showModal using preventScroll and tabIndex=-1; retain all
 interactive-control focus styles and existing layout. No global CSS rewrite,
 new corner treatment or theme change. Eleven Chromium groups/92 layouts pass,
 including initial heading focus, no initial Close ring, and visible keyboard Tab
-focus. No real Safari session claimed. Publication approval remains pending.
+focus. TypeScript and independent engineering review pass. No real Safari session
+claimed. Shawn explicitly approved publication of source 3366549; push/deployment
+verification underway. No additional design, billing or account scope authorized.
 
 ### New Approved Preview - Branding And Responsive Chooser
 

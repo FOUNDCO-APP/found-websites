@@ -7,7 +7,8 @@ historical divider below; old unchecked items are not automatic authorization.
 
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.
-- [ ] Publish focus correction after explicit approval; existing release stays live.
+- [x] Shawn explicitly approved publishing focus correction 3366549.
+- [ ] Push and verify focus-correction deployment and live page checks.
 
 - [x] Visible independent discussion and Shawn approval for preview direction.
 - [x] Prepare mobile sheet/desktop dialog, fixed title/X and Save/Later,
