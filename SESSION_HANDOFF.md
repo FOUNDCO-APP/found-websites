@@ -51,8 +51,8 @@ Preview artifacts (ignored, not production):
 dashboard-preview.html. HTML is standalone with explicit test-data notice and
 mocked saves; opening it cannot change an account. Keep this existing MD process;
 do not publish fixture routes or create another status document.
-Next: save the tested local change and obtain explicit production publication
-approval after showing the preview. Previous Pro release approval does not
+Saved tested visual source as local commit dfe2f13. Phone-size customer preview
+shown; publication approval question sent. Previous Pro release approval does not
 authorize publishing a later redesign. No new feature scope or pricing changes.
 
 ### Latest Approved Work - Pro Included Tool Selection

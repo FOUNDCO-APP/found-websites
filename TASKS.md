@@ -14,8 +14,9 @@ historical divider below; old unchecked items are not automatic authorization.
   actions pass. Existing Home/auth/recovery/retirement regressions pass.
 - [x] Independent visual/CX preview review and engineering review complete.
   Build/TypeScript/86 static pages pass. No backend or database changes.
-- [ ] Save tested change and show phone preview; obtain explicit publication
-  approval before push/deploy. No live visual changes yet.
+- [x] Save tested visual source dfe2f13 and show phone preview.
+- [ ] Obtain explicit publication approval before push/deploy; question sent.
+  No live visual changes yet.
 - [ ] Minor nonblocking Contacts icon/title spacing note retained for later
   visual review, not silent expansion into a full dashboard redesign.
 
