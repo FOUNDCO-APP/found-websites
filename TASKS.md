@@ -14,8 +14,8 @@ historical divider below; old unchecked items are not automatic authorization.
   pending-save close/reopen checks pass; 213 route checks and seven journey groups.
 - [x] Independent visual/engineering rereviews: no blockers; production build,
   TypeScript and 86 static pages pass. Fixed-size close icon refinement prepared.
-- [ ] Shawn preview acceptance and explicit publication approval.
-- [ ] Explicit publication approval and production release; NOT live yet.
+- [x] Shawn preview acceptance and explicit publication approval for c3e9993.
+- [ ] Push approved production release and verify deployment/live checks.
 
 ## Now - October 27 Shared Dashboard Visual Polish
 

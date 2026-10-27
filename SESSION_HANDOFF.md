@@ -24,15 +24,18 @@ Eleven Chromium groups plus 92 Home layout cases pass, including 320x480/root32,
 fixed controls during scroll and pending-save close/reopen. Actual wordmark PNG
 served/rendered in isolated preview. 213 route checks and seven journey groups
 pass. Synthetic fixtures only; no signed-in Safari/device proof or client writes.
+Shawn explicitly approved publishing this shared update after the tested preview.
+Source c3e99937179780740f0b5a8088ef3d45c9764a91 is approved for production.
+No additional product, billing, database or client-data changes authorized.
 Production build passed, TypeScript and all 86 static pages generated. Independent
 visual and engineering rereviews found no blockers after enlarged-text correction;
 fixed-size SVG close symbol addresses visual review's minor refinement. Final
-typecheck also run after that icon-only edit. No publication approval or push yet;
-current production remains the prior verified release below. Preview screenshots
+typecheck also run after that icon-only edit. Publication approved; push and
+deployment verification in progress. Preview screenshots
 chooser-initial-390.png, chooser-1440.png and chooser-enlarged-320.png are in the
 existing ignored .billing-audits/pro-included-choice folder; dashboard-preview.html
 opens a synthetic interactive Home/chooser with mocked saves. Files/commit are
-local until publication is separately approved; do not claim GitHub has this work.
+local until push is confirmed; do not claim deployment before verification.
 
 ### Latest Approved Work - Shared Dashboard Visual Polish
 

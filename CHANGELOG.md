@@ -10,7 +10,8 @@
   groups pass. Enlarged-text regression caught and corrected before preview.
 - Independent visual/engineering rereviews found no blockers. Production build,
   TypeScript and 86 static pages pass; fixed-size close icon refinement checked.
-  Preview prepared, awaiting separate publication approval. Existing process retained.
+  Preview saved c3e9993; Shawn explicitly approved shared publication. Release
+  verification in progress. Existing process retained.
 
 ## October 27, 2026 - Shared Dashboard Visual Polish Prepared
 
