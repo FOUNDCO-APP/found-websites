@@ -42,8 +42,9 @@ const react = bundle(require.resolve('react'))
 const client = bundle(require.resolve('react-dom/client'))
 const component = bundle(path.join(root, 'src/components/dashboard/IncludedProTool.tsx'))
 const homeComponent = bundle(path.join(root, 'src/components/dashboard/HomeClient.tsx'))
+const wordmarkComponent = bundle(path.join(root, 'src/components/FoundWordmark.tsx'))
 const script = `const process={env:{NODE_ENV:'development'}};const modules={${modules.join(',')}};const cache={};function load(id){if(cache[id])return cache[id].exports;const [fn,deps]=modules[id],m={exports:{}};cache[id]=m;fn(s=>load(deps[s]),m,m.exports);return m.exports}window.fixtureReact=load(${react});const root=load(${client}).createRoot(document.getElementById('root'));window.fixture={pathname:'/',refreshes:0,calls:[],result:{success:true},behavior:'success'};window.renderFixture=(props={})=>root.render(window.fixtureReact.createElement(load(${component}).default,{companyId:'synthetic-barrio',currentIncludedSlug:null,disabledAddonSlugs:['shopping_cart'],paidAddonSlugs:[],variant:'prompt',...props}));window.renderFixture();`
-const homeScript = `${script};window.renderHomeFixture=(options={})=>{
+const homeScript = `${script};window.renderBrandFixture=()=>root.render(window.fixtureReact.createElement(load(${wordmarkComponent}).default,{height:18,color:'white'}));window.renderHomeFixture=(options={})=>{
   document.body.style.padding='0';document.getElementById('root').style.maxWidth='760px';document.getElementById('root').style.margin='0 auto';
   const R=window.fixtureReact,e=R.createElement,{plan='found_pro',currentIncludedSlug=null,...rest}=options;
   const prompt=plan==='found_pro'&&!currentIncludedSlug?e(load(${component}).default,{companyId:'synthetic-barrio',currentIncludedSlug:null,disabledAddonSlugs:[],paidAddonSlugs:[],variant:'prompt'}):null;
@@ -51,7 +52,12 @@ const homeScript = `${script};window.renderHomeFixture=(options={})=>{
     e(load(${homeComponent}).default,{businessName:'Intelligence protection security llc',greeting:'morning',newCount:0,totalCount:0,topName:null,topCreatedAt:null,siteSlug:'synthetic-barrio',customDomain:null,isActive:true,recentLeads:[],lastPhotoAt:null,industry:'professional_services',smartNextStep:null,hasContacts:true,...rest,includedToolPrompt:prompt})));
 };if(new URLSearchParams(location.search).has('home')||location.protocol==='file:')window.renderHomeFixture();if(location.protocol==='file:'){document.title='Found dashboard design preview';const notice=document.createElement('p');notice.textContent='Design preview - test data only. No account changes.';notice.style.cssText='margin:0;padding:12px 24px;background:#202521;color:#d2d9d4;font:13px/1.5 Arial,sans-serif';document.body.prepend(notice);}`
 const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:20px;background:#101010;color:white;font-family:Arial,sans-serif}*{box-sizing:border-box}button,input{font:inherit}dialog::backdrop{background:#000b}</style></head><body><div id="root"></div><script>${homeScript.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
-const server = http.createServer((req, res) => { res.setHeader('Content-Type', 'text/html'); res.end(html) })
+const server = http.createServer((req, res) => {
+  if (req.url === '/brand/found-wordmark-black.png') {
+    res.setHeader('Content-Type', 'image/png'); res.end(fs.readFileSync(path.join(root, 'public/brand/found-wordmark-black.png'))); return
+  }
+  res.setHeader('Content-Type', 'text/html'); res.end(html)
+})
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const browser = await chromium.launch({ headless: true,
   ...(process.env.FOUND_BROWSER_EXECUTABLE ? { executablePath: process.env.FOUND_BROWSER_EXECUTABLE } : {}),
@@ -61,6 +67,14 @@ fs.mkdirSync(out, { recursive: true })
 fs.writeFileSync(path.join(out, 'dashboard-preview.html'), html)
 let groups = 0
 try {
+  const branding = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  await branding.goto(`http://127.0.0.1:${server.address().port}`)
+  const asset = await branding.request.get(`http://127.0.0.1:${server.address().port}/brand/found-wordmark-black.png`)
+  assert.equal(asset.headers()['content-type'], 'image/png')
+  await branding.evaluate(() => window.renderBrandFixture())
+  await branding.getByRole('img', { name: 'Found', exact: true }).waitFor()
+  await branding.screenshot({ path: path.join(out, 'found-wordmark-preview.png') })
+  await branding.close(); groups++
   for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 640 }, { width: 1440, height: 900 }]) {
     const page = await browser.newPage({ viewport })
     const errors = []
@@ -69,6 +83,21 @@ try {
     await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
     await page.getByRole('dialog').waitFor()
     assert.equal(await page.getByRole('radio').count(), 5)
+    await page.screenshot({ path: path.join(out, `chooser-initial-${viewport.width}.png`), fullPage: true })
+    // Header and actions stay in view while only the choices scroll.
+    const title = page.getByRole('heading', { name: 'Choose your Pro tool', exact: true })
+    const closeButton = page.getByRole('button', { name: 'Close chooser', exact: true })
+    const titleBefore = await title.boundingBox()
+    await page.locator('.included-pro-body').evaluate(el => { el.scrollTop = el.scrollHeight })
+    const titleAfter = await title.boundingBox()
+    assert.ok(Math.abs(titleBefore.y - titleAfter.y) < 1)
+    for (const control of [closeButton, page.getByRole('button', { name: 'Later', exact: true }), page.getByRole('button', { name: 'Save included tool', exact: true })]) {
+      const box = await control.boundingBox()
+      assert.ok(box.y >= 0 && box.y + box.height <= viewport.height + 1, 'persistent control remains in viewport')
+      assert.ok(box.height >= 44, '44px control target')
+    }
+    await closeButton.click()
+    await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
     await page.getByRole('button', { name: 'Later', exact: true }).click()
     await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
     assert.equal(await page.evaluate(() => window.fixture.calls.length), 0)
@@ -88,12 +117,29 @@ try {
     assert.deepEqual(errors, [])
     await page.close(); groups++
   }
+  const large = await browser.newPage({ viewport: { width: 320, height: 480 } })
+  await large.goto(`http://127.0.0.1:${server.address().port}`)
+  await large.evaluate(() => { document.documentElement.style.fontSize = '32px' })
+  await large.getByRole('button', { name: /^Choose your Pro tool/ }).click()
+  assert.equal(await large.getByRole('radio').count(), 5)
+  for (const control of [large.getByRole('button', { name: 'Close chooser', exact: true }), large.getByRole('button', { name: 'Later', exact: true }), large.getByRole('button', { name: 'Save included tool', exact: true })]) {
+    const box = await control.boundingBox()
+    assert.ok(box.y >= 0 && box.y + box.height <= 481, 'enlarged-text controls remain reachable')
+  }
+  assert.ok(await large.locator('.included-pro-body').evaluate(el => el.clientHeight > 40 && el.scrollHeight > el.clientHeight), 'choices retain scrollable space')
+  await large.getByRole('radio', { name: /Email Marketing/ }).check()
+  await large.screenshot({ path: path.join(out, 'chooser-enlarged-320.png'), fullPage: true })
+  await large.close(); groups++
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   await page.goto(`http://127.0.0.1:${server.address().port}`)
   await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
   await page.getByRole('radio', { name: /Booking Calendar/ }).check()
   await page.evaluate(() => { window.fixture.behavior = 'pending' })
   await page.getByRole('button', { name: 'Save included tool', exact: true }).click()
+  assert.equal(await page.getByRole('button', { name: /Saving choice/ }).isDisabled(), true)
+  await page.getByRole('button', { name: 'Close chooser', exact: true }).click()
+  await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
+  assert.equal(await page.evaluate(() => window.fixture.calls.length), 1, 'close/reopen never repeats pending save')
   assert.equal(await page.getByRole('button', { name: /Saving choice/ }).isDisabled(), true)
   await page.evaluate(() => window.fixture.resolve({ success: false, error: 'Synthetic save rejected. Please try again.' }))
   await page.getByRole('alert').waitFor()

@@ -27,6 +27,12 @@ export async function middleware(req: NextRequest) {
     hostname === "127.0.0.1"
   const isFoundOwnedHost = isRootHost || isDashboard || isAdmin
 
+  // Found headers use this public mask. Keep it outside app/admin rewrites;
+  // tenant paths continue through their existing routing below.
+  if (isFoundOwnedHost && pathname === "/brand/found-wordmark-black.png") {
+    return NextResponse.next()
+  }
+
   if (
     isFoundOwnedHost &&
     (pathname.startsWith("/icons/") || pathname === "/dashboard-manifest.json")

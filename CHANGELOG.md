@@ -1,3 +1,17 @@
+## October 27, 2026 - Branding And Chooser Preview
+
+- Following visible independent reviews, Shawn approved responsive chooser and
+  missing-branding repair for preview; no publication authorization yet.
+- Prepared mobile sheet/desktop native dialog, persistent title/X and actions,
+  simple scrollable rows with existing consent/save safeguards unchanged.
+- Fixed narrow public-wordmark asset routing on Found-owned hosts; preserved
+  tenant paths and protected dashboard routing. No database/account/billing work.
+- Eleven Chromium groups, 92 Home layouts, 213 routing checks and seven journey
+  groups pass. Enlarged-text regression caught and corrected before preview.
+- Independent visual/engineering rereviews found no blockers. Production build,
+  TypeScript and 86 static pages pass; fixed-size close icon refinement checked.
+  Preview prepared, awaiting separate publication approval. Existing process retained.
+
 ## October 27, 2026 - Shared Dashboard Visual Polish Prepared
 
 - After actual mobile screenshot review and visible independent role discussion,

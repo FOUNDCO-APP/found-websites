@@ -7,7 +7,11 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
-Latest October 27 work: shared owner-dashboard visual direction approved and
+Latest October 27 follow-up: Shawn approved missing branding repair and responsive
+Pro chooser direction for a tested preview. Prepared locally; publication needs
+separate approval. Read latest SESSION_HANDOFF.md entry before earlier live notes.
+
+Previous October 27 work: shared owner-dashboard visual direction approved and
 prepared locally, with previews and cross-industry checks. Shawn explicitly
 approved shared visual publication; pushed through 0c703b8, deployment success
 and read-only login/four-client Home checks verified.

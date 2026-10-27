@@ -22,7 +22,7 @@ const tools = [
   { slug: "email_marketing", label: "Email Marketing", description: "Send news and offers to customers who subscribe.", path: "/marketing" },
 ]
 
-const buttonStyle = { minHeight: 44, padding: "10px 16px", borderRadius: 12, border: "1px solid #555", background: "transparent", color: "white", fontSize: 14, cursor: "pointer" } as const
+const buttonStyle = { minHeight: 44, padding: "10px 16px", borderRadius: 12, border: "1px solid #555", background: "transparent", color: "white", fontSize: "1rem", cursor: "pointer" } as const
 
 export default function IncludedProTool({ companyId, currentIncludedSlug, disabledAddonSlugs, paidAddonSlugs, variant }: IncludedProToolProps) {
   const router = useRouter()
@@ -168,31 +168,105 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
         </div>
         <button ref={trigger} type="button" style={buttonStyle} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={openChooser}>{currentIncludedSlug ? "Manage" : "Choose a tool"}</button>
       </div>}
-      {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} style={{ width: "min(480px, calc(100vw - 24px))", maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", borderRadius: 20, border: "1px solid #555", padding: 20, background: "#161616", color: "white" }}>
-        <h2 id={titleId} style={{ margin: "0 0 8px", fontSize: 22 }}>{saved ? "Your choice is saved" : "Choose your included Pro tool"}</h2>
-        <p id={descriptionId} style={{ color: "#bbb", lineHeight: 1.5 }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool is included with Pro. This choice adds no charge and doesn't change any separately paid tools."}</p>
-        {saved ? <Link href={`${prefix}${saved.path}`} onClick={close} style={{ ...buttonStyle, display: "inline-flex", alignItems: "center", background: GREEN, color: BLACK, textDecoration: "none" }}>Continue setup</Link> : <>
+      {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} className="included-pro-dialog">
+        <header className="included-pro-header">
+          <h2 id={titleId} style={{ margin: 0, fontSize: "1rem", lineHeight: 1.25, overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
+          <button type="button" aria-label="Close chooser" onClick={close} style={{ ...buttonStyle, display: "grid", placeItems: "center", width: 44, minWidth: 44, height: 44, padding: 0, flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
+        </header>
+        <div className="included-pro-body">
+        <p id={descriptionId} style={{ color: "#bbb", lineHeight: 1.5 }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool included. No extra charge. Separately paid tools stay unchanged."}</p>
+        {!saved && <>
           <fieldset disabled={saving || uncertain} style={{ border: 0, padding: 0, margin: 0 }}>
             <legend style={{ marginBottom: 10 }}>Choose one tool</legend>
             {tools.map(tool => {
               const paid = paidAddonSlugs.includes(tool.slug)
-              return <label key={tool.slug} style={{ display: "flex", gap: 12, padding: "14px 10px", marginBottom: 8, borderRadius: 12, border: `1px solid ${selected === tool.slug ? GREEN : "#555"}`, lineHeight: 1.5 }}>
+              return <label key={tool.slug} style={{ display: "flex", gap: 12, minHeight: 44, padding: "16px 0", borderBottom: "1px solid #393939", lineHeight: 1.5, cursor: paid ? "default" : "pointer" }}>
                 <input type="radio" name={titleId} value={tool.slug} checked={selected === tool.slug} disabled={paid} onChange={() => { setSelected(tool.slug); setConfirmTurnOn(false); setError(null) }} style={{ marginTop: 5, accentColor: GREEN, flexShrink: 0 }} />
-                <span><strong>{tool.label}</strong><span style={{ display: "block", color: "#bbb", fontSize: 14 }}>{tool.description}</span>{tool.slug === currentIncludedSlug && <span style={{ display: "block", color: GREEN }}>Currently included</span>}{paid && <span style={{ display: "block", color: "#ddd", fontSize: 14 }}>Already paid separately. Manage this in Billing; choosing an included tool won't change that charge.</span>}</span>
+                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}><strong>{tool.label}</strong><span style={{ display: "block", color: "#bbb", fontSize: "0.875rem" }}>{tool.description}</span>{tool.slug === currentIncludedSlug && <span style={{ display: "block", color: GREEN }}>Currently included</span>}{paid && <span style={{ display: "block", color: "#ddd", fontSize: "0.875rem" }}>Already paid separately. Manage this in Billing; choosing an included tool won't change that charge.</span>}</span>
               </label>
             })}
             {current && selected && selected !== currentIncludedSlug && <p style={{ lineHeight: 1.5 }}>This replaces {current.label} as your included tool. It may no longer be available unless paid separately.</p>}
             {hidden && chosen && <label style={{ display: "flex", gap: 12, padding: "14px 0", lineHeight: 1.5 }}><input type="checkbox" checked={confirmTurnOn} onChange={event => setConfirmTurnOn(event.target.checked)} style={{ flexShrink: 0, marginTop: 5 }} /><span>Include this tool and turn it on for your website and tool settings. Review its website settings during setup before customers use it.</span></label>}
           </fieldset>
           {error && <p role="alert" style={{ color: "#fda4af", lineHeight: 1.5 }}>{error}</p>}
-          {uncertain ? <button type="button" style={buttonStyle} disabled={checking} onClick={checkSavedChoice}>{checking ? "Checking..." : "Check saved choice"}</button> : <button type="button" disabled={saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn)} onClick={save} style={{ ...buttonStyle, width: "100%", background: GREEN, color: BLACK, opacity: saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn) ? 0.5 : 1 }}>{saving ? "Saving choice..." : hidden ? "Include and turn on" : "Save included tool"}</button>}
           {uncertain && <p role="status" style={{ lineHeight: 1.5, color: "#bbb" }}>Current saved choice: {current?.label ?? "None"}. {rechecked ? "The latest choice is shown. Close and reopen to choose again." : "Check again after the original save finishes. No second save will be sent while it is unresolved."}</p>}
         </>}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 16 }}>
-          <button type="button" style={buttonStyle} onClick={close}>{saved ? "Close" : "Later"}</button>
-          <Link href={`${prefix}/billing`} onClick={close} style={{ color: "#ddd", padding: "12px 0" }}>Manage billing</Link>
+          <Link href={`${prefix}/billing`} onClick={close} style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: "#ddd", padding: "8px 0" }}>Manage billing</Link>
         </div>
+        <footer className="included-pro-footer">
+          {saved ? <Link href={`${prefix}${saved.path}`} onClick={close} style={{ ...buttonStyle, display: "inline-flex", alignItems: "center", background: GREEN, color: BLACK, textDecoration: "none" }}>Continue setup</Link> : <>
+          {uncertain ? <button type="button" style={buttonStyle} disabled={checking} onClick={checkSavedChoice}>{checking ? "Checking..." : "Check saved choice"}</button> : <button type="button" disabled={saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn)} onClick={save} style={{ ...buttonStyle, width: "100%", background: GREEN, color: BLACK, opacity: saving || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn) ? 0.5 : 1 }}>{saving ? "Saving choice..." : hidden ? "Include and turn on" : "Save included tool"}</button>}
+          </>}
+          <button type="button" style={buttonStyle} onClick={close}>{saved ? "Close" : "Later"}</button>
+        </footer>
       </dialog>}
+      <style>{`
+        .included-pro-dialog {
+          width: min(32rem, calc(100vw - 32px));
+          max-width: none;
+          max-height: calc(100dvh - 48px);
+          margin: auto;
+          padding: 0;
+          border: 1px solid #555;
+          border-radius: 20px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #161616;
+          color: white;
+          font-family: inherit;
+          font-size: 1rem;
+        }
+        .included-pro-dialog[open] { display: flex; flex-direction: column; }
+        .included-pro-dialog::backdrop { background: rgba(0,0,0,0.72); }
+        .included-pro-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-shrink: 0;
+          padding: 12px 20px;
+          border-bottom: 1px solid #393939;
+        }
+        .included-pro-body {
+          min-height: 0;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          padding: 0 20px 16px;
+          overflow-wrap: anywhere;
+          scrollbar-gutter: stable;
+        }
+        .included-pro-body fieldset { min-width: 0; }
+        .included-pro-footer {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: stretch;
+          gap: 12px;
+          flex-shrink: 0;
+          padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+          border-top: 1px solid #393939;
+        }
+        .included-pro-footer > button, .included-pro-footer > a {
+          min-width: 0;
+          box-sizing: border-box;
+          overflow-wrap: anywhere;
+          line-height: 1.25;
+        }
+        .included-pro-dialog button, .included-pro-dialog a { font-family: inherit; }
+        .included-pro-dialog button:focus-visible, .included-pro-dialog a:focus-visible,
+        .included-pro-dialog input:focus-visible { outline: 2px solid ${GREEN}; outline-offset: 3px; }
+        @media (max-width: 600px) {
+          .included-pro-dialog {
+            width: 100%;
+            max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
+            margin: auto 0 0;
+            border-radius: 20px 20px 0 0;
+          }
+          .included-pro-header, .included-pro-body, .included-pro-footer {
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+          }
+        }
+      `}</style>
       {variant === "prompt" && <style>{`
         .included-pro-prompt:hover { border-bottom-color: rgba(255,255,255,0.35) !important; }
         .included-pro-prompt:focus-visible { outline: 2px solid ${GREEN}; }

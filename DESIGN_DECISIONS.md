@@ -1,3 +1,17 @@
+## October 27, 2026 - Branding And Responsive Chooser Direction Approved
+
+After three independent AI reviewers' visible discussion (visual, product/CX,
+engineering), Shawn approved a preview: repair missing Found branding; mobile
+bottom sheet and centered desktop native dialog; persistent title/X and Save/
+Later, scrollable choices/consent, simpler radio rows and readable text. All five
+choices, warnings, explicit consent and save/recovery safeguards stay intact.
+This is shared across industries. Orange operator bar remains intentional.
+Publication requires separate approval after reviewing the prepared preview.
+To retain useful scrolling space at enlarged text sizes, Save/Later share one
+footer row and Manage billing stays in the scrolling body. Logo cause is an
+incorrect dashboard rewrite of its public mask asset; pass through only that
+exact asset on Found-owned hosts, preserving tenant routing and auth.
+
 ## October 27, 2026 - Shared Owner Dashboard Direction Approved
 
 Shawn approved the visible independent visual/CX review direction after seeing

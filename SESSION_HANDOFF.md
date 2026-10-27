@@ -8,6 +8,32 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
+### New Approved Preview - Branding And Responsive Chooser
+
+Shawn supplied three phone screenshots and requested visible independent design/
+product discussion. Three independent reviewers ran (visual, product/CX, engineering)
+and their recommendations were shown. Shawn approved the direction for a tested
+preview before publication. Prepared shared mobile bottom sheet/desktop centered
+native dialog: persistent title/X, Save/Later, scrollable choices/consent/errors,
+simple radio rows. Manage billing remains accessible in the body. Existing state,
+save/uncertain recovery, owner authorization and all five choices preserved.
+Found logo already existed in header: middleware incorrectly rewrote its mask
+asset to /dashboard/brand/found-wordmark-black.png. Narrow exact-asset exception
+on Found-owned hosts fixes this; tenant routes and protected pages unchanged.
+Eleven Chromium groups plus 92 Home layout cases pass, including 320x480/root32,
+fixed controls during scroll and pending-save close/reopen. Actual wordmark PNG
+served/rendered in isolated preview. 213 route checks and seven journey groups
+pass. Synthetic fixtures only; no signed-in Safari/device proof or client writes.
+Production build passed, TypeScript and all 86 static pages generated. Independent
+visual and engineering rereviews found no blockers after enlarged-text correction;
+fixed-size SVG close symbol addresses visual review's minor refinement. Final
+typecheck also run after that icon-only edit. No publication approval or push yet;
+current production remains the prior verified release below. Preview screenshots
+chooser-initial-390.png, chooser-1440.png and chooser-enlarged-320.png are in the
+existing ignored .billing-audits/pro-included-choice folder; dashboard-preview.html
+opens a synthetic interactive Home/chooser with mocked saves. Files/commit are
+local until publication is separately approved; do not claim GitHub has this work.
+
 ### Latest Approved Work - Shared Dashboard Visual Polish
 
 After viewing the live admin screenshot, Shawn requested independent visual/CX

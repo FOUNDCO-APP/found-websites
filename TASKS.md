@@ -3,6 +3,20 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Now - October 27 Branding And Chooser Follow-up
+
+- [x] Visible independent discussion and Shawn approval for preview direction.
+- [x] Prepare mobile sheet/desktop dialog, fixed title/X and Save/Later,
+  scrollable choices and warnings; retain all existing save/consent behavior.
+- [x] Diagnose missing logo: middleware rewrites public mask into dashboard.
+  Exact Found-owned-host asset exception prepared; tenant/auth routes preserved.
+- [x] Eleven Chromium groups, 92 Home layouts, short-screen enlarged-text and
+  pending-save close/reopen checks pass; 213 route checks and seven journey groups.
+- [x] Independent visual/engineering rereviews: no blockers; production build,
+  TypeScript and 86 static pages pass. Fixed-size close icon refinement prepared.
+- [ ] Shawn preview acceptance and explicit publication approval.
+- [ ] Explicit publication approval and production release; NOT live yet.
+
 ## Now - October 27 Shared Dashboard Visual Polish
 
 - [x] Visible independent visual/CX discussion and Shawn's direction approval:

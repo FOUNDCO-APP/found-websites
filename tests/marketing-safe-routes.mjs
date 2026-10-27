@@ -41,6 +41,24 @@ const { middleware } = load("src/middleware.ts")
 function nextUrl(value) { const url = new URL(value); url.clone = () => nextUrl(url.href); return url }
 function request(host, pathname, extra = {}) { return { headers: new Headers({ host, ...extra }), nextUrl: nextUrl(`https://${host}${pathname}`) } }
 const pages = ["support", "contact", "about"]
+const wordmarkPath = "/brand/found-wordmark-black.png"
+for (const host of ["foundco.app", "www.foundco.app", "my.foundco.app", "my.foundco.app:443", "admin.foundco.app", "localhost:3000", "127.0.0.1:3000"]) {
+  check((await middleware(request(host, `${wordmarkPath}?v=preview`))).kind === "next", `${host}: exact public wordmark bypasses app/admin routing`)
+}
+for (const host of ["fixture.foundco.app", "customer.example", "www.customer.example", "my.foundco.app.evil.invalid"]) {
+  const slug = host.endsWith(".foundco.app") ? host.slice(0, -".foundco.app".length) : `__domain__${host.replace(/^www\./, "")}`
+  const result = await middleware(request(host, wordmarkPath, { "x-forwarded-host": "my.foundco.app" }))
+  check(result.kind === "rewrite" && result.url.pathname === `/${slug}${wordmarkPath}`, `${host}: tenant brand asset routing preserved despite spoofed forwarded host`)
+}
+for (const [host, prefix] of [["my.foundco.app", "/dashboard"], ["admin.foundco.app", "/admin"]]) {
+  for (const pathname of ["/", "/settings", "/brand/other.png", "/brand/found-wordmark-black.png/extra"]) {
+    const result = await middleware(request(host, pathname))
+    const target = host === "admin.foundco.app" && pathname === "/" ? prefix : `${prefix}${pathname}`
+    check(result.kind === "rewrite" && result.url.pathname === target, `${host}${pathname}: protected pages and nonmatching assets still use existing app routing`)
+  }
+}
+const wordmarkBytes = fs.readFileSync(`public${wordmarkPath}`)
+check(wordmarkBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), "Wordmark pass-through points to a real PNG asset")
 for (const host of ["foundco.app", "www.foundco.app", "foundco.app:443", "localhost:3000", "127.0.0.1:3000"]) {
   for (const pathname of ["/pricing", "/pricing/", "/pricing?utm_source=legacy&next=https://evil.invalid"]) {
     const result = await middleware(request(host, pathname))
