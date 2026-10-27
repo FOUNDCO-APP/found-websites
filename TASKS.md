@@ -20,7 +20,11 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Shawn explicitly approved production publication and both database helpers.
 - [x] Install helpers via management migration; verify restricted privileges,
   unchanged company/membership fingerprints and security-advisor baseline.
-- [ ] Normal code push, deployment verification and public smoke checks pending.
+- [x] Push approved code/notes through 9f19a1f to main; remote SHA verified.
+  Vercel BvSJ8SfiMeB3QU7J2CE3Zf35ZnYM success. Login, four public client Home
+  pages and Hiram Services/Gallery HTTP 200; company fingerprints unchanged.
+  No real selection/login reset/email/charge submitted. Signed-in phone check
+  remains explicitly deferred, not a prerequisite silently marked complete.
 - [ ] Later: audit existing schedule save delete/insert transaction separately.
   This chooser does not initialize/overwrite hours; it opens Hours setup.
 

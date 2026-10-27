@@ -58,11 +58,20 @@ not proven by these fixtures. Independent reviewer reports no remaining findings
 in bounded changes, with the above residuals. Live company records: 52 unchanged,
 fingerprint 31c12a1946083789ee9b869b20b70d84; membership rows remain five.
 
-Saved source release: local commit 8aa08d4. Shawn explicitly answered "Approve
-production release" for code and both helpers. Database installation/permissions
-verified; company fingerprint and five memberships unchanged. Normal code push
-and deployment/public verification pending at this checkpoint. Do not replay a
-real client's selection to test.
+Saved source release: 8aa08d4. Shawn explicitly answered "Approve production
+release" for code and both helpers. Pushed source and notes to GitHub main at
+9f19a1f352a9067f6e6fcd600a419d14b2017116; remote SHA verified. Vercel deployment
+BvSJ8SfiMeB3QU7J2CE3Zf35ZnYM reports success for that exact commit. Code is live.
+Read-only public checks passed: my.foundco.app/login, four client Home pages
+(intellsecurity, rc-bicycles, divine-remodel, mbj-heating-and-cooling) and Hiram
+Services/Gallery all HTTP 200 with nonempty HTML. Both helpers are recognized
+through the REST API and safely reject null-company guard requests. No real
+selection, message, login reset or charge was submitted. Company fingerprint
+remains 31c12a1946083789ee9b869b20b70d84 for all 52 records, memberships five;
+Hiram choice null and RC email_marketing unchanged. Anonymous HTTP checks are not
+a signed-in Pro chooser/device roundtrip. Phone login check remains deferred.
+Subsequent documentation-only saving does not change this application release.
+Do not replay a real client's selection to test.
 Retain functions on rollback; do not restore stale array writers after usage.
 
 ### Approved First Reliability Release - Activation And Account Access

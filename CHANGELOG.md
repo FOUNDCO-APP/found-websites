@@ -11,13 +11,17 @@
 - 92 synthetic SQL/action checks, seven dashboard groups, eight real Chromium
   groups and previous activation/auth/retirement/membership/promo checks pass.
   Final post-review build, TypeScript and 86 static pages pass. Company record
-  fingerprint unchanged. No live client mutation, emails or charges. Code push
-  and deployment verification pending at this checkpoint.
+  fingerprint unchanged. No live client mutation, emails or charges.
 - Shawn deferred phone login check. Existing MD process retained. Publication
   approval remains separate; no new status file, no paid services/backups started.
 - Tested source saved as local commit 8aa08d4; Shawn explicitly approved production
   release. Installed helpers: browser execution denied, trusted server execution
   allowed, invoker/empty search_path verified and security-advisor baseline unchanged.
+- Pushed code/notes through 9f19a1f352a9067f6e6fcd600a419d14b2017116 to main,
+  verified remote SHA and Vercel success BvSJ8SfiMeB3QU7J2CE3Zf35ZnYM. Public
+  login, all four client Home pages and Hiram Services/Gallery HTTP 200. REST
+  helpers reject null-company probes; Hiram/RC choices unchanged. Phone login
+  remains deferred; no signed-in chooser end-to-end claim.
 
 ## Session: October 26, 2026 - Backup Stages And Pre-Store Team Discussion Saved
 

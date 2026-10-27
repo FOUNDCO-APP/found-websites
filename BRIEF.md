@@ -18,7 +18,8 @@ store submission authorized. Keep independent review visible to Shawn.
 
 Latest superseding approval: Pro included-tool chooser/source 8aa08d4 plus its two
 server-only helpers explicitly approved for production. Read SESSION_HANDOFF.md
-for installation/publication evidence. Phone login check remains deferred; never
+for installation/publication evidence: pushed through 9f19a1f, deployment and
+public checks pass. Phone login check remains deferred; never
 select a feature for Hiram or change billing as a test.
 
 **First reliability release published:** Shawn explicitly approved production
