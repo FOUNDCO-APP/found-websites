@@ -13,7 +13,8 @@ historical divider below; old unchecked items are not automatic authorization.
   visual rereview accepts normal/enlarged preview. Eleven Chromium groups/92 layouts.
 - [x] Final production build/TypeScript/86 pages and independent engineering review pass.
 - [x] Shawn explicitly approved pushing tested source 8ccd17b.
-- [ ] Verify push, deployment and read-only live checks.
+- [x] Pushed through df67fb5, remote SHA verified; Vercel
+  FHqCrwQ7dRpgrjGWknkcpaL3rA44 success. Logo/login/four client Home checks pass.
 
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.

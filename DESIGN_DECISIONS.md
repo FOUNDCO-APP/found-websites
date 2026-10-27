@@ -7,7 +7,8 @@ the constrained-layout fallback after reviewers found enlarged title crowded the
 reading area: let title scroll only when needed, retain fixed X and action footer,
 without shrinking text or changing choices, warnings or saving behavior. Apply
 across industries. Independent visual rereview accepts the prepared previews;
-publication remains separate.
+Shawn subsequently approved pushing tested 8ccd17b. Published through df67fb5;
+deployment and anonymous live-page checks verified. No further design scope.
 
 ## October 27, 2026 - Branding And Responsive Chooser Direction Approved
 

@@ -9,8 +9,10 @@
   fixed X/footer and compact constrained spacing. Full-choice/consent/resize
   checks pass; independent visual rereview accepts normal/enlarged screenshots.
   Final build/TypeScript/86 pages pass; independent engineering review finds no
-  blockers. Shawn explicitly approved pushing tested 8ccd17b; release verification
-  underway. No additional feature, billing, database or account scope.
+  blockers. Shawn explicitly approved pushing tested 8ccd17b; published through
+  df67fb5, remote verified and Vercel FHqCrwQ7dRpgrjGWknkcpaL3rA44 success.
+  Logo/login/four client Home checks pass. No additional feature, billing,
+  database or account scope; no signed-in phone test claimed.
 
 ## October 27, 2026 - Quiet Chooser Opening Prepared
 

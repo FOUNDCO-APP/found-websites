@@ -8,9 +8,9 @@ and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
 Latest October 27 work: approved typography hierarchy and constrained scrolling-
-title fallback prepared locally. Visual/engineering rereviews, browser checks and
-final build pass. Shawn approved pushing tested 8ccd17b; release verification
-underway. See handoff.
+title fallback live. Visual/engineering rereviews, browser checks and final build
+pass. Shawn approved tested 8ccd17b; published through df67fb5 with Vercel success
+and read-only logo/login/four-client checks. See handoff for exact evidence.
 
 Previous October 27 correction: quiet chooser opening explicitly approved and live
 through 72f7912. Vercel success and read-only logo/login/four-client checks pass.

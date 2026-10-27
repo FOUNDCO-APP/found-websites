@@ -8,7 +8,7 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
-### Typography Refinement - Approved Fallback Prepared
+### Typography Refinement - Live
 
 Shawn approved visible independent product/design recommendation to apply existing
 owner TYPE.title to chooser heading, TYPE.headline to names, TYPE.subhead to intro,
@@ -29,7 +29,12 @@ Final production build/TypeScript/86 pages pass. Independent engineering rerevie
 finds no blockers; verified normalized spacing avoids that observer feedback and
 control nodes/state are retained during resizing. No actual Safari test claimed.
 Shawn explicitly directed pushing tested source 8ccd17b after the final preview.
-Publication approved; push/deployment verification underway. No additional scope.
+Published through df67fb5694f016d76906e09c88a2f6c97300843d; GitHub main SHA
+verified. Vercel FHqCrwQ7dRpgrjGWknkcpaL3rA44 reports success for that SHA.
+Read-only post-release checks: logo HTTP200/valid PNG and login/four client Home
+pages HTTP200/nonempty HTML. These are not signed-in Safari tests; no customer
+selection or data was changed for verification. Subsequent notes-only commits
+retain the same verified application code. No additional scope.
 
 ### Follow-up - Quiet Chooser Opening (Live)
 
