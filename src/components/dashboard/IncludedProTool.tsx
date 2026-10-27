@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { switchIncludedAddon } from "@/app/dashboard/(app)/more/actions"
-import { GREEN, BLACK } from "@/lib/dashboard/typography"
+import { GREEN, BLACK, TYPE } from "@/lib/dashboard/typography"
 
 export type IncludedProToolProps = {
   companyId: string
@@ -173,19 +173,19 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
       </div>}
       {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} className="included-pro-dialog">
         <header className="included-pro-header">
-          <h2 id={titleId} ref={heading} tabIndex={-1} style={{ margin: 0, outline: "none", fontSize: "1rem", lineHeight: 1.25, overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
+          <h2 id={titleId} ref={heading} tabIndex={-1} style={{ ...TYPE.title, margin: 0, outline: "none", overflowWrap: "anywhere" }}>{saved ? "Your choice is saved" : "Choose your Pro tool"}</h2>
           <button type="button" aria-label="Close chooser" onClick={close} style={{ ...buttonStyle, display: "grid", placeItems: "center", width: 44, minWidth: 44, height: 44, padding: 0, flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
         </header>
         <div className="included-pro-body">
-        <p id={descriptionId} style={{ color: "#bbb", lineHeight: 1.5 }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool included. No extra charge. Separately paid tools stay unchanged."}</p>
+        <p id={descriptionId} style={{ ...TYPE.subhead, color: "#bbb" }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool included. No extra charge. Separately paid tools stay unchanged."}</p>
         {!saved && <>
           <fieldset disabled={saving || uncertain} style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend style={{ marginBottom: 10 }}>Choose one tool</legend>
+            <legend className="included-pro-sr-only">Choose one tool</legend>
             {tools.map(tool => {
               const paid = paidAddonSlugs.includes(tool.slug)
               return <label key={tool.slug} style={{ display: "flex", gap: 12, minHeight: 44, padding: "16px 0", borderBottom: "1px solid #393939", lineHeight: 1.5, cursor: paid ? "default" : "pointer" }}>
                 <input type="radio" name={titleId} value={tool.slug} checked={selected === tool.slug} disabled={paid} onChange={() => { setSelected(tool.slug); setConfirmTurnOn(false); setError(null) }} style={{ marginTop: 5, accentColor: GREEN, flexShrink: 0 }} />
-                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}><strong>{tool.label}</strong><span style={{ display: "block", color: "#bbb", fontSize: "0.875rem" }}>{tool.description}</span>{tool.slug === currentIncludedSlug && <span style={{ display: "block", color: GREEN }}>Currently included</span>}{paid && <span style={{ display: "block", color: "#ddd", fontSize: "0.875rem" }}>Already paid separately. Manage this in Billing; choosing an included tool won't change that charge.</span>}</span>
+                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}><strong style={TYPE.headline}>{tool.label}</strong><span style={{ ...TYPE.subhead, display: "block", marginTop: 4, color: "#bbb" }}>{tool.description}</span>{tool.slug === currentIncludedSlug && <span style={{ display: "block", color: GREEN }}>Currently included</span>}{paid && <span style={{ ...TYPE.subhead, display: "block", color: "#ddd" }}>Already paid separately. Manage this in Billing; choosing an included tool won't change that charge.</span>}</span>
               </label>
             })}
             {current && selected && selected !== currentIncludedSlug && <p style={{ lineHeight: 1.5 }}>This replaces {current.label} as your included tool. It may no longer be available unless paid separately.</p>}
@@ -194,7 +194,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
           {error && <p role="alert" style={{ color: "#fda4af", lineHeight: 1.5 }}>{error}</p>}
           {uncertain && <p role="status" style={{ lineHeight: 1.5, color: "#bbb" }}>Current saved choice: {current?.label ?? "None"}. {rechecked ? "The latest choice is shown. Close and reopen to choose again." : "Check again after the original save finishes. No second save will be sent while it is unresolved."}</p>}
         </>}
-          <Link href={`${prefix}/billing`} onClick={close} style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: "#ddd", padding: "8px 0" }}>Manage billing</Link>
+          <Link href={`${prefix}/billing`} onClick={close} style={{ ...TYPE.subhead, display: "inline-flex", alignItems: "center", minHeight: 44, color: "#bbb", padding: "8px 0" }}>Manage billing</Link>
         </div>
         <footer className="included-pro-footer">
           {saved ? <Link href={`${prefix}${saved.path}`} onClick={close} style={{ ...buttonStyle, display: "inline-flex", alignItems: "center", background: GREEN, color: BLACK, textDecoration: "none" }}>Continue setup</Link> : <>
@@ -204,6 +204,11 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
         </footer>
       </dialog>}
       <style>{`
+        .included-pro-sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0;
+          margin: -1px; overflow: hidden; clip-path: inset(50%);
+          white-space: nowrap; border: 0;
+        }
         .included-pro-dialog {
           width: min(32rem, calc(100vw - 32px));
           max-width: none;

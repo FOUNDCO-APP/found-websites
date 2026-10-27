@@ -8,6 +8,22 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
+### Typography Refinement - Prepared, Accessibility Follow-up Pending
+
+Shawn approved visible independent product/design recommendation to apply existing
+owner TYPE.title to chooser heading, TYPE.headline to names, TYPE.subhead to intro,
+descriptions and Billing; visually hide redundant legend retaining group label.
+Prepared locally, no state/save/global CSS changes. Eleven Chromium groups/92
+Home cases and TypeScript pass; explicit computed title/name/description hierarchy
+and accessible group assertions added. These passes do NOT close visual review:
+independent design reviewer accepts normal mobile/desktop but rejects 320x480 at
+root32 because only about 50px of reading space remains. Existing >40px assertion
+is too weak. Product reviewer agrees. Proposed bounded fallback: in constrained
+enlarged-text layouts allow title to scroll, keep X and footer persistent; require
+enough reading space for a complete choice. This changes prior persistent-title
+direction, so bring proposal to Shawn before implementation. No release approval,
+push or deployment; live release remains quiet-opening source3366549 below.
+
 ### Follow-up - Quiet Chooser Opening (Live)
 
 Shawn rejected the highlighted X and directed consistency with Found's branding.

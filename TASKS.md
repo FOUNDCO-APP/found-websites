@@ -5,6 +5,12 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Now - October 27 Branding And Chooser Follow-up
 
+- [x] Prepare approved existing-token typography hierarchy and hidden accessible
+  legend; normal preview and computed hierarchy checks pass.
+- [ ] Resolve independent enlarged-text visual blocker: current >40px body check
+  inadequate. Proposed constrained scrolling-title fallback awaits Shawn approval.
+- [ ] Recheck complete-choice reading space, preview review and release approval.
+
 - [x] Prepare narrow title-first initial focus correction after Shawn rejected
   auto-highlighted Close; visible independent reviews, browser focus checks pass.
 - [x] Shawn explicitly approved publishing focus correction 3366549.

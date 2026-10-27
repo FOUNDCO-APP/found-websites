@@ -1,3 +1,12 @@
+## October 27, 2026 - Typography Refinement Prepared, Not Released
+
+- Shawn approved existing TYPE.title/headline/subhead hierarchy and visually
+  hidden accessible legend. Prepared, TypeScript/11 Chromium groups/92 Home cases
+  pass, including computed hierarchy and group naming.
+- Independent design/product review rejects constrained root32/320x480 reading
+  space despite passing weak >40px check. Proposed scrolling-title fallback
+  awaits approval; no push/deployment or final visual acceptance claimed.
+
 ## October 27, 2026 - Quiet Chooser Opening Prepared
 
 - Shawn rejected initial highlighted X. Independent reviews identified native

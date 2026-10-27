@@ -88,6 +88,14 @@ try {
     const title = page.getByRole('heading', { name: 'Choose your Pro tool', exact: true })
     const closeButton = page.getByRole('button', { name: 'Close chooser', exact: true })
     const titleBefore = await title.boundingBox()
+    const hierarchy = await page.getByRole('dialog').evaluate(el => {
+      const size = node => parseFloat(getComputedStyle(node).fontSize)
+      const name = el.querySelector('label strong')
+      return { title: size(el.querySelector('h2')), name: size(name), description: size(name.nextElementSibling), weight: getComputedStyle(el.querySelector('h2')).fontWeight }
+    })
+    assert.ok(hierarchy.title > hierarchy.name && hierarchy.name > hierarchy.description, 'shared title/name/description type hierarchy')
+    assert.equal(hierarchy.weight, '700')
+    assert.equal(await page.getByRole('group', { name: 'Choose one tool', exact: true }).count(), 1, 'hidden legend retains accessible group name')
     assert.equal(await title.evaluate(el => document.activeElement === el), true, 'sheet opens with title focus, not highlighted Close')
     assert.equal(await closeButton.evaluate(el => el.matches(':focus-visible')), false)
     await page.keyboard.press('Tab')
