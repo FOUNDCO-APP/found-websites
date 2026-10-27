@@ -9,7 +9,8 @@ another status/handoff source of truth without Shawn's approval.
 
 Latest October 27 work: shared owner-dashboard visual direction approved and
 prepared locally, with previews and cross-industry checks. Shawn explicitly
-approved shared visual publication; push/deployment verification pending.
+approved shared visual publication; pushed through 0c703b8, deployment success
+and read-only login/four-client Home checks verified.
 Read SESSION_HANDOFF.md first; backend Pro-choice release remains
 live and unchanged. Phone login remains deferred; admin safety bar stays intact.
 

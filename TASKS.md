@@ -16,8 +16,9 @@ historical divider below; old unchecked items are not automatic authorization.
   Build/TypeScript/86 static pages pass. No backend or database changes.
 - [x] Save tested visual source dfe2f13 and show phone preview.
 - [x] Shawn explicitly approved publishing shared visual source dfe2f13.
-- [ ] Normal push/deployment and read-only public checks pending. No database or
-  billing work in this release; phone/inbox login check remains deferred.
+- [x] Published through 0c703b8; remote SHA verified. Vercel deployment
+  35hwxftsXbVXYK2GwB5YxVUnxCR5 success. Login/four client Home pages HTTP 200.
+  No database or billing work; signed-in phone/inbox check remains deferred.
 - [ ] Minor nonblocking Contacts icon/title spacing note retained for later
   visual review, not silent expansion into a full dashboard redesign.
 

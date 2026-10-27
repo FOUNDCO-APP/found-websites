@@ -16,7 +16,9 @@ bar is operator-only and remains unchanged. Apple-inspired is a design standard,
 not an endorsement by Apple or participation by the real named people.
 
 Shawn explicitly answered "Approve shared visual release" for dfe2f13 on
-October 27. Normal push/deployment verification is now authorized and pending:
+October 27. Published through 0c703b82db44d60ce1eac283d5e0df68cb311000 on GitHub
+main; remote SHA verified. Vercel deployment 35hwxftsXbVXYK2GwB5YxVUnxCR5
+reports success for that commit. Shared visual code is live:
 - Shared owner Home uses a modest greeting and smaller full business name that
   wraps, rather than repeating the legal name as oversized headline text.
 - Unset-choice Pro prompt is an unframed, full-width native button with chevron:
@@ -30,7 +32,7 @@ October 27. Normal push/deployment verification is now authorized and pending:
   or redesign of public-site templates. Starter/Business get the greeting polish
   without a Pro prompt. Worker Home and admin safety-bar source are untouched.
 - No database, auth, billing, API, template registry or public-site code changed.
-  No live account mutations, messages, charges, helper installation or deployment.
+  No live account mutations, messages, charges or helper installation.
 
 Verification: nine real Chromium groups including 92 Home layout cases across
 23 current manifest entries at 320/390/768/1440 widths, long/unbroken names,
@@ -55,6 +57,12 @@ do not publish fixture routes or create another status document.
 Saved tested visual source dfe2f13. Phone-size customer preview shown and explicit
 shared publication approval received. No new feature scope, schema, pricing,
 billing or selected-tool changes are authorized by this visual release.
+Read-only post-deployment checks: my.foundco.app/login and all four client Home
+pages (intellsecurity, rc-bicycles, divine-remodel, mbj-heating-and-cooling) HTTP
+200 with nonempty HTML. These anonymous HTTP checks are not a signed-in dashboard
+or real phone/inbox roundtrip; phone login remains deferred. Subsequent notes-only
+saving does not change the verified application code. Refresh an existing admin
+View As dashboard to inspect; do not select a real tool or send messages as a test.
 
 ### Latest Approved Work - Pro Included Tool Selection
 

@@ -11,7 +11,8 @@ Orange View As bar stays operator-only and unchanged. Do not auto-choose a tool,
 alter billing, redesign public sites or introduce industry-specific overrides.
 Independent reviewers recommend rendered local implementation, with a minor
 nonblocking Contacts spacing note. Shawn subsequently explicitly approved shared
-production publication of dfe2f13. Apple-inspired is not actual Apple approval.
+production publication of dfe2f13. Published through 0c703b8; deployment verified.
+Apple-inspired is not actual Apple approval.
 
 ## October 25, 2026 - Approved Presentation And Remaining Reviews
 
