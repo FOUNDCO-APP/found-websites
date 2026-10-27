@@ -15,7 +15,8 @@ review, saw their discussion, and approved the shared direction. Orange View As
 bar is operator-only and remains unchanged. Apple-inspired is a design standard,
 not an endorsement by Apple or participation by the real named people.
 
-Prepared locally, not published:
+Shawn explicitly answered "Approve shared visual release" for dfe2f13 on
+October 27. Normal push/deployment verification is now authorized and pending:
 - Shared owner Home uses a modest greeting and smaller full business name that
   wraps, rather than repeating the legal name as oversized headline text.
 - Unset-choice Pro prompt is an unframed, full-width native button with chevron:
@@ -51,9 +52,9 @@ Preview artifacts (ignored, not production):
 dashboard-preview.html. HTML is standalone with explicit test-data notice and
 mocked saves; opening it cannot change an account. Keep this existing MD process;
 do not publish fixture routes or create another status document.
-Saved tested visual source as local commit dfe2f13. Phone-size customer preview
-shown; publication approval question sent. Previous Pro release approval does not
-authorize publishing a later redesign. No new feature scope or pricing changes.
+Saved tested visual source dfe2f13. Phone-size customer preview shown and explicit
+shared publication approval received. No new feature scope, schema, pricing,
+billing or selected-tool changes are authorized by this visual release.
 
 ### Latest Approved Work - Pro Included Tool Selection
 

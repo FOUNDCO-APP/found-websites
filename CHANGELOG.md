@@ -14,8 +14,9 @@
 - No backend/database/public-template changes, account mutations or publication.
   Standalone test-data preview generated in ignored audit folder. Phone login
   remains deferred. Existing handoff files updated; no new status MD.
-- Tested visual source saved as dfe2f13; customer preview shown. Publication
-  approval remains pending and no visual change is live.
+- Tested visual source saved as dfe2f13; customer preview shown. Shawn explicitly
+  answered "Approve shared visual release" on October 27. Push/deployment checks
+  now authorized, not a new backend/database or billing scope.
 
 ## October 26, 2026 - Approved Pro Included Tool Preparation
 

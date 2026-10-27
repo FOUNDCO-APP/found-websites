@@ -10,8 +10,8 @@ existing chooser, persistent quiet entry, and all consent/save safeguards.
 Orange View As bar stays operator-only and unchanged. Do not auto-choose a tool,
 alter billing, redesign public sites or introduce industry-specific overrides.
 Independent reviewers recommend rendered local implementation, with a minor
-nonblocking Contacts spacing note. This records direction approval; separate
-production publication remains pending. Apple-inspired is not actual Apple approval.
+nonblocking Contacts spacing note. Shawn subsequently explicitly approved shared
+production publication of dfe2f13. Apple-inspired is not actual Apple approval.
 
 ## October 25, 2026 - Approved Presentation And Remaining Reviews
 
