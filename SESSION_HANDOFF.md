@@ -6,7 +6,54 @@ approvals and the plan; dated entries afterward are supporting history. Shawn
 confirmed the duplicate-client fix. No new Gallery, theme or image approval was
 given, and documentation-only saving authorizes no new product work.
 
-## Current Overview - October 26, 2026
+## Current Overview - October 27, 2026
+
+### Latest Approved Work - Shared Dashboard Visual Polish
+
+After viewing the live admin screenshot, Shawn requested independent visual/CX
+review, saw their discussion, and approved the shared direction. Orange View As
+bar is operator-only and remains unchanged. Apple-inspired is a design standard,
+not an endorsement by Apple or participation by the real named people.
+
+Prepared locally, not published:
+- Shared owner Home uses a modest greeting and smaller full business name that
+  wraps, rather than repeating the legal name as oversized headline text.
+- Unset-choice Pro prompt is an unframed, full-width native button with chevron:
+  "Choose your Pro tool" / "Included. No extra charge." Entire row is tappable,
+  focus-visible, and linked accessibly to the existing chooser dialog.
+- Camera remains primary; the four quick actions stay together. At enlarged
+  text sizes the tile pairs may stack to avoid overflow. Normal-size two-column
+  layout remains. Billing/manage variant, chooser/saving/consent behavior, owner/
+  Pro gating and existing selections are unchanged.
+- This is shared across dashboard industries, NOT a Hiram-specific conditional
+  or redesign of public-site templates. Starter/Business get the greeting polish
+  without a Pro prompt. Worker Home and admin safety-bar source are untouched.
+- No database, auth, billing, API, template registry or public-site code changed.
+  No live account mutations, messages, charges, helper installation or deployment.
+
+Verification: nine real Chromium groups including 92 Home layout cases across
+23 current manifest entries at 320/390/768/1440 widths, long/unbroken names,
+enlarged text, customer and simulated admin-banner frames, Starter/Business,
+camera event, mocked sharing, preserved links, chooser/Later/focus and save
+failures. Actual Home/chooser components rendered with synthetic data; surrounding
+operator banner is a test composite, not a signed-in admin/device roundtrip.
+Seven Home journey, nine activation recovery, 49 auth and 15 retirement groups
+pass. Final production build, TypeScript and all 86 static pages pass.
+No real phone/inbox test claimed; Shawn's deferral remains in force.
+
+Independent visual and CX reviewers examined supplied rendered previews and
+recommend the direction; visual review notes a minor, nonblocking Contacts
+icon/title spacing issue. Independent engineering source review found no
+functional regression. No actual Apple approval claimed.
+
+Preview artifacts (ignored, not production):
+.billing-audits/pro-included-choice/dashboard-customer-390.png and
+dashboard-preview.html. HTML is standalone with explicit test-data notice and
+mocked saves; opening it cannot change an account. Keep this existing MD process;
+do not publish fixture routes or create another status document.
+Next: save the tested local change and obtain explicit production publication
+approval after showing the preview. Previous Pro release approval does not
+authorize publishing a later redesign. No new feature scope or pricing changes.
 
 ### Latest Approved Work - Pro Included Tool Selection
 

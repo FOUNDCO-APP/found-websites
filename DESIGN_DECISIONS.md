@@ -1,3 +1,18 @@
+## October 27, 2026 - Shared Owner Dashboard Direction Approved
+
+Shawn approved the visible independent visual/CX review direction after seeing
+the Pro prompt screenshot. Shared across industries: smaller time greeting,
+full business name beneath at readable body size, compact unframed whole-row
+Pro choice with short included/no-charge copy, trailing chevron, visible keyboard
+focus and at least 44px target. Keep Camera primary and normal four-action grid
+together; allow stacking for enlarged accessibility text. Keep Later inside the
+existing chooser, persistent quiet entry, and all consent/save safeguards.
+Orange View As bar stays operator-only and unchanged. Do not auto-choose a tool,
+alter billing, redesign public sites or introduce industry-specific overrides.
+Independent reviewers recommend rendered local implementation, with a minor
+nonblocking Contacts spacing note. This records direction approval; separate
+production publication remains pending. Apple-inspired is not actual Apple approval.
+
 ## October 25, 2026 - Approved Presentation And Remaining Reviews
 
 - Approved/live: keep announcement headline, supporting text and button. A Page

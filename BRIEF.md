@@ -7,6 +7,11 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
+Latest October 27 work: shared owner-dashboard visual direction approved and
+prepared locally, with previews and cross-industry checks. No visual release
+published yet. Read SESSION_HANDOFF.md first; backend Pro-choice release remains
+live and unchanged. Phone login remains deferred; admin safety bar stays intact.
+
 **October 26 handoff:** Shawn is the only human; the team consists of the AI
 assistants/agents he uses. Read the October 26 overview in SESSION_HANDOFF.md for
 the latest approved customer-journey audit and first reliability repair. Shawn explicitly

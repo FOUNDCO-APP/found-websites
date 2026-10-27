@@ -30,6 +30,7 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
   const prefix = pathname?.startsWith("/dashboard") ? "/dashboard" : ""
   const titleId = useId()
   const descriptionId = useId()
+  const dialogId = useId()
   const dialog = useRef<HTMLDialogElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const inFlight = useRef(false)
@@ -91,6 +92,17 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
     if (savedSlug) router.refresh()
   }
 
+  function openChooser() {
+    if (!inFlight.current && (!uncertain || rechecked)) {
+      setSelected(currentIncludedSlug ?? "")
+      setConfirmTurnOn(false)
+      setSavedSlug(null)
+      setUncertain(false)
+      setError(null)
+    }
+    setOpen(true)
+  }
+
   async function save() {
     if (inFlight.current || !chosen || paidAddonSlugs.includes(selected) || (hidden && !confirmTurnOn)) return
     inFlight.current = true
@@ -131,24 +143,32 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
   if (variant === "prompt" && currentIncludedSlug && !open) return null
 
   return (
-    <section style={{ padding: 16, marginBottom: 16, border: "1px solid #444", borderRadius: 14, color: "white", background: "#161616" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
+    <section style={variant === "prompt"
+      ? { color: "white", minWidth: 0 }
+      : { padding: 16, marginBottom: 16, border: "1px solid #444", borderRadius: 14, color: "white", background: "#161616" }}>
+      {variant === "prompt" ? <button
+        ref={trigger}
+        type="button"
+        className="included-pro-prompt"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? dialogId : undefined}
+        onClick={openChooser}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, width: "100%", minHeight: 76, padding: "14px 0", margin: 0, border: 0, borderBottom: "1px solid rgba(255,255,255,0.14)", borderRadius: 0, background: "transparent", color: "white", textAlign: "left", fontFamily: "inherit", letterSpacing: 0, cursor: "pointer", outlineOffset: 4 }}
+      >
+        <span style={{ display: "block", minWidth: 0, overflowWrap: "anywhere" }}>
+          <span style={{ display: "block", fontSize: "1rem", fontWeight: 600, lineHeight: 1.4 }}>Choose your Pro tool</span>
+          <span style={{ display: "block", marginTop: 4, color: "#b7bcb9", fontSize: "0.875rem", lineHeight: 1.4, fontWeight: 400 }}>Included. No extra charge.</span>
+        </span>
+        <span aria-hidden="true" style={{ flexShrink: 0, color: "#b7bcb9", fontSize: 26, lineHeight: 1 }}>&rsaquo;</span>
+      </button> : <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ flex: "1 1 200px" }}>
           <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>{current ? `${current.label} is included with Pro` : "Choose your included Pro tool"}</h2>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#bbb" }}>One tool is included. No extra charge. Choose when you're ready.</p>
         </div>
-        <button ref={trigger} type="button" style={buttonStyle} onClick={() => {
-          if (!inFlight.current && (!uncertain || rechecked)) {
-            setSelected(currentIncludedSlug ?? "")
-            setConfirmTurnOn(false)
-            setSavedSlug(null)
-            setUncertain(false)
-            setError(null)
-          }
-          setOpen(true)
-        }}>{currentIncludedSlug ? "Manage" : "Choose a tool"}</button>
-      </div>
-      {open && <dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} style={{ width: "min(480px, calc(100vw - 24px))", maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", borderRadius: 20, border: "1px solid #555", padding: 20, background: "#161616", color: "white" }}>
+        <button ref={trigger} type="button" style={buttonStyle} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} onClick={openChooser}>{currentIncludedSlug ? "Manage" : "Choose a tool"}</button>
+      </div>}
+      {open && <dialog id={dialogId} ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={close} onClose={close} style={{ width: "min(480px, calc(100vw - 24px))", maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", borderRadius: 20, border: "1px solid #555", padding: 20, background: "#161616", color: "white" }}>
         <h2 id={titleId} style={{ margin: "0 0 8px", fontSize: 22 }}>{saved ? "Your choice is saved" : "Choose your included Pro tool"}</h2>
         <p id={descriptionId} style={{ color: "#bbb", lineHeight: 1.5 }}>{saved ? saved.slug === "reservation_calendar" ? "Booking Calendar is included. Set and save your hours before customers can book." : `${saved.label} is included. Continue setup before using it. Payments may need a connected payment account.` : "One tool is included with Pro. This choice adds no charge and doesn't change any separately paid tools."}</p>
         {saved ? <Link href={`${prefix}${saved.path}`} onClick={close} style={{ ...buttonStyle, display: "inline-flex", alignItems: "center", background: GREEN, color: BLACK, textDecoration: "none" }}>Continue setup</Link> : <>
@@ -173,6 +193,10 @@ export default function IncludedProTool({ companyId, currentIncludedSlug, disabl
           <Link href={`${prefix}/billing`} onClick={close} style={{ color: "#ddd", padding: "12px 0" }}>Manage billing</Link>
         </div>
       </dialog>}
+      {variant === "prompt" && <style>{`
+        .included-pro-prompt:hover { border-bottom-color: rgba(255,255,255,0.35) !important; }
+        .included-pro-prompt:focus-visible { outline: 2px solid ${GREEN}; }
+      `}</style>}
     </section>
   )
 }

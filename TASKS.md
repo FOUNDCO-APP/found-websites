@@ -3,6 +3,22 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Now - October 27 Shared Dashboard Visual Polish
+
+- [x] Visible independent visual/CX discussion and Shawn's direction approval:
+  shared dashboard across industries, no Hiram-only design, admin bar untouched.
+- [x] Prepare modest greeting/full business name, compact tappable Pro row,
+  keyboard focus/dialog linkage and enlarged-text-safe tile sizing.
+- [x] Nine Chromium groups including 92 layouts over 23 manifest entries;
+  Starter/Business, customer/operator-frame, long names, enlarged text and core
+  actions pass. Existing Home/auth/recovery/retirement regressions pass.
+- [x] Independent visual/CX preview review and engineering review complete.
+  Build/TypeScript/86 static pages pass. No backend or database changes.
+- [ ] Save tested change and show phone preview; obtain explicit publication
+  approval before push/deploy. No live visual changes yet.
+- [ ] Minor nonblocking Contacts icon/title spacing note retained for later
+  visual review, not silent expansion into a full dashboard redesign.
+
 ## Now - October 26 Documentation And Staged Protection
 
 ### Latest Priority - Approved Pro Included Tool Selection

@@ -29,8 +29,9 @@ function bundle(file, name) {
   const deps = {}
   for (const match of code.matchAll(/require\(["']([^"']+)["']\)/g)) {
     const spec = match[1]
-    const target = overrides[spec] ? spec : spec.startsWith('@/')
-      ? path.join(root, 'src', `${spec.slice(2)}.ts`)
+    const local = spec.startsWith('@/') ? ['.ts', '.tsx'].map(ext => path.join(root, 'src', `${spec.slice(2)}${ext}`)).find(fs.existsSync) : null
+    const target = overrides[spec] ? spec : local
+      ? local
       : require.resolve(spec, { paths: [path.dirname(file), root] })
     deps[spec] = bundle(target, spec)
   }
@@ -40,8 +41,16 @@ function bundle(file, name) {
 const react = bundle(require.resolve('react'))
 const client = bundle(require.resolve('react-dom/client'))
 const component = bundle(path.join(root, 'src/components/dashboard/IncludedProTool.tsx'))
+const homeComponent = bundle(path.join(root, 'src/components/dashboard/HomeClient.tsx'))
 const script = `const process={env:{NODE_ENV:'development'}};const modules={${modules.join(',')}};const cache={};function load(id){if(cache[id])return cache[id].exports;const [fn,deps]=modules[id],m={exports:{}};cache[id]=m;fn(s=>load(deps[s]),m,m.exports);return m.exports}window.fixtureReact=load(${react});const root=load(${client}).createRoot(document.getElementById('root'));window.fixture={pathname:'/',refreshes:0,calls:[],result:{success:true},behavior:'success'};window.renderFixture=(props={})=>root.render(window.fixtureReact.createElement(load(${component}).default,{companyId:'synthetic-barrio',currentIncludedSlug:null,disabledAddonSlugs:['shopping_cart'],paidAddonSlugs:[],variant:'prompt',...props}));window.renderFixture();`
-const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:20px;background:#101010;color:white;font-family:Arial,sans-serif}*{box-sizing:border-box}button,input{font:inherit}dialog::backdrop{background:#000b}</style></head><body><main id="root"></main><script>${script.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
+const homeScript = `${script};window.renderHomeFixture=(options={})=>{
+  document.body.style.padding='0';document.getElementById('root').style.maxWidth='760px';document.getElementById('root').style.margin='0 auto';
+  const R=window.fixtureReact,e=R.createElement,{plan='found_pro',currentIncludedSlug=null,...rest}=options;
+  const prompt=plan==='found_pro'&&!currentIncludedSlug?e(load(${component}).default,{companyId:'synthetic-barrio',currentIncludedSlug:null,disabledAddonSlugs:[],paidAddonSlugs:[],variant:'prompt'}):null;
+  root.render(e(R.Fragment,null,options.admin?e('div',{'data-fixture-admin':true,style:{padding:'10px 20px',background:'#FF9500',color:'#080A09',fontSize:12,fontWeight:800}},'Viewing as '+(options.businessName||'Test business')+' (Admin)'):null,
+    e(load(${homeComponent}).default,{businessName:'Intelligence protection security llc',greeting:'morning',newCount:0,totalCount:0,topName:null,topCreatedAt:null,siteSlug:'synthetic-barrio',customDomain:null,isActive:true,recentLeads:[],lastPhotoAt:null,industry:'professional_services',smartNextStep:null,hasContacts:true,...rest,includedToolPrompt:prompt})));
+};if(new URLSearchParams(location.search).has('home')||location.protocol==='file:')window.renderHomeFixture();if(location.protocol==='file:'){document.title='Found dashboard design preview';const notice=document.createElement('p');notice.textContent='Design preview - test data only. No account changes.';notice.style.cssText='margin:0;padding:12px 24px;background:#202521;color:#d2d9d4;font:13px/1.5 Arial,sans-serif';document.body.prepend(notice);}`
+const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:20px;background:#101010;color:white;font-family:Arial,sans-serif}*{box-sizing:border-box}button,input{font:inherit}dialog::backdrop{background:#000b}</style></head><body><div id="root"></div><script>${homeScript.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
 const server = http.createServer((req, res) => { res.setHeader('Content-Type', 'text/html'); res.end(html) })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const browser = await chromium.launch({ headless: true,
@@ -49,6 +58,7 @@ const browser = await chromium.launch({ headless: true,
 })
 const out = path.join(root, '.billing-audits/pro-included-choice')
 fs.mkdirSync(out, { recursive: true })
+fs.writeFileSync(path.join(out, 'dashboard-preview.html'), html)
 let groups = 0
 try {
   for (const viewport of [{ width: 390, height: 844 }, { width: 320, height: 640 }, { width: 1440, height: 900 }]) {
@@ -56,11 +66,11 @@ try {
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(`http://127.0.0.1:${server.address().port}`)
-    await page.getByRole('button', { name: 'Choose a tool', exact: true }).click()
+    await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
     await page.getByRole('dialog').waitFor()
     assert.equal(await page.getByRole('radio').count(), 5)
     await page.getByRole('button', { name: 'Later', exact: true }).click()
-    await page.getByRole('button', { name: 'Choose a tool', exact: true }).click()
+    await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
     assert.equal(await page.evaluate(() => window.fixture.calls.length), 0)
     await page.getByRole('radio', { name: /Shopping Cart/ }).check()
     await page.getByRole('checkbox').waitFor()
@@ -80,7 +90,7 @@ try {
   }
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   await page.goto(`http://127.0.0.1:${server.address().port}`)
-  await page.getByRole('button', { name: 'Choose a tool', exact: true }).click()
+  await page.getByRole('button', { name: /^Choose your Pro tool/ }).click()
   await page.getByRole('radio', { name: /Booking Calendar/ }).check()
   await page.evaluate(() => { window.fixture.behavior = 'pending' })
   await page.getByRole('button', { name: 'Save included tool', exact: true }).click()
@@ -98,12 +108,12 @@ try {
   await page.close()
   const keyboard = await browser.newPage()
   await keyboard.goto(`http://127.0.0.1:${server.address().port}`)
-  await keyboard.getByRole('button', { name: 'Choose a tool', exact: true }).click()
+  await keyboard.getByRole('button', { name: /^Choose your Pro tool/ }).click()
   await keyboard.keyboard.press('Escape')
   await keyboard.getByRole('dialog').waitFor({ state: 'detached' })
-  assert.equal(await keyboard.getByRole('button', { name: 'Choose a tool', exact: true }).evaluate(el => document.activeElement === el), true)
+  assert.equal(await keyboard.getByRole('button', { name: /^Choose your Pro tool/ }).evaluate(el => document.activeElement === el), true)
   await keyboard.evaluate(() => window.renderFixture({ currentIncludedSlug: 'email_marketing' }))
-  await keyboard.getByRole('button', { name: 'Choose a tool', exact: true }).waitFor({ state: 'detached' })
+  await keyboard.getByRole('button', { name: /^Choose your Pro tool/ }).waitFor({ state: 'detached' })
   groups++
   await keyboard.close()
   const manage = await browser.newPage({ viewport: { width: 390, height: 844 } })
@@ -130,7 +140,7 @@ try {
     const original = window.setTimeout.bind(window)
     window.setTimeout = (fn, ms, ...args) => original(fn, ms === 20000 ? 20 : ms, ...args)
   })
-  await timeout.getByRole('button', { name: 'Choose a tool', exact: true }).click()
+  await timeout.getByRole('button', { name: /^Choose your Pro tool/ }).click()
   await timeout.getByRole('radio', { name: /Estimates and Payments/ }).check()
   await timeout.getByRole('button', { name: 'Save included tool', exact: true }).click()
   await timeout.getByRole('button', { name: 'Check saved choice' }).waitFor()
@@ -140,6 +150,75 @@ try {
   assert.equal(await timeout.evaluate(() => window.fixture.calls.length), 1)
   groups++
   await timeout.close()
+  const manifestSource = ts.createSourceFile('industryManifests.ts', fs.readFileSync(path.join(root, 'src/lib/industryManifests.ts'), 'utf8'), ts.ScriptTarget.Latest, true)
+  let industries = []
+  function findIndustries(node) {
+    if (ts.isVariableDeclaration(node) && node.name.getText(manifestSource) === 'industryManifests' && ts.isObjectLiteralExpression(node.initializer)) {
+      industries = node.initializer.properties.filter(ts.isPropertyAssignment).map(property => {
+        assert.ok(ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+        return property.name.text
+      })
+    }
+    ts.forEachChild(node, findIndustries)
+  }
+  findIndustries(manifestSource)
+  assert.ok(industries.length >= 20, 'use the actual industry registry, not only security')
+  let layouts = 0
+  for (const width of [320, 390, 768, 1440]) {
+    const dashboard = await browser.newPage({ viewport: { width, height: 844 } })
+    const errors = []
+    dashboard.on('pageerror', error => errors.push(error.message))
+    await dashboard.goto(`http://127.0.0.1:${server.address().port}?home=1`)
+    await dashboard.getByRole('button', { name: /^Choose your Pro tool/ }).waitFor()
+    for (const industry of industries) {
+      await dashboard.evaluate(industry => window.renderHomeFixture({ industry, businessName: 'A Long Community Business Name for ' + industry.replaceAll('_', ' ') }), industry)
+      assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${industry}/${width}: no horizontal overflow`)
+      const greeting = dashboard.getByRole('heading', { name: 'Good morning.', exact: true })
+      assert.equal(await greeting.count(), 1)
+      const prompt = dashboard.getByRole('button', { name: /^Choose your Pro tool/ })
+      const box = await prompt.boundingBox()
+      assert.ok(box.height >= 44 && box.height <= 112, `${industry}/${width}: compact whole-row target`)
+      assert.equal(await dashboard.getByRole('button', { name: /Camera/ }).count(), 1)
+      layouts++
+    }
+    await dashboard.evaluate(() => window.renderHomeFixture())
+    await dashboard.getByText('Intelligence protection security llc', { exact: true }).waitFor()
+    await dashboard.waitForTimeout(650)
+    const camera = await dashboard.getByRole('button', { name: /Camera/ }).boundingBox()
+    assert.ok(camera.y + camera.height < 640, `${width}: core actions remain reachable`)
+    await dashboard.evaluate(() => {
+      window.fixture.cameraOpens = 0
+      window.addEventListener('found:open-camera', () => window.fixture.cameraOpens++)
+      Object.defineProperty(navigator, 'share', { configurable: true, value: async data => { window.fixture.shared = data } })
+    })
+    await dashboard.getByRole('button', { name: /Camera/ }).click()
+    assert.equal(await dashboard.evaluate(() => window.fixture.cameraOpens), 1)
+    await dashboard.getByRole('button', { name: /Share My Site/ }).click()
+    assert.equal(await dashboard.evaluate(() => window.fixture.shared.url), 'https://synthetic-barrio.foundco.app')
+    assert.equal(await dashboard.getByRole('link', { name: /My Contacts/ }).getAttribute('href'), '/contacts')
+    assert.equal(await dashboard.getByRole('link', { name: /Edit My Site/ }).getAttribute('href'), '/site')
+    await dashboard.screenshot({ path: path.join(out, `dashboard-customer-${width}.png`), fullPage: false })
+    await dashboard.evaluate(() => window.renderHomeFixture({ admin: true }))
+    await dashboard.locator('[data-fixture-admin]').waitFor()
+    await dashboard.screenshot({ path: path.join(out, `dashboard-admin-${width}.png`), fullPage: false })
+    for (const plan of ['found', 'found_business']) {
+      await dashboard.evaluate(plan => window.renderHomeFixture({ plan }), plan)
+      await dashboard.getByRole('button', { name: /^Choose your Pro tool/ }).waitFor({ state: 'detached' })
+      assert.equal(await dashboard.getByRole('button', { name: /Camera/ }).count(), 1)
+      assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    }
+    await dashboard.evaluate(() => {
+      document.documentElement.style.fontSize='32px'
+      window.renderHomeFixture({ businessName: 'AnExtremelyLongUnbrokenCompanyNameThatMustNeverOverflowTheDashboard' })
+    })
+    await dashboard.getByRole('button', { name: /^Choose your Pro tool/ }).waitFor()
+    const overflow = await dashboard.evaluate(() => [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().right > innerWidth + 1).map(el => ({ tag: el.tagName, text: el.textContent?.slice(0, 70), width: el.getBoundingClientRect().width, right: el.getBoundingClientRect().right })).slice(0, 8))
+    assert.ok(await dashboard.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}: enlarged text and unbroken name fit ${JSON.stringify(overflow)}`)
+    assert.deepEqual(errors, [])
+    await dashboard.close()
+  }
+  groups++
+  console.log(`${layouts} shared Home layouts across ${industries.length} industries passed; customer/admin, Starter/Business, enlarged text and long-name cases also passed.`)
   console.log(`${groups} real Chromium chooser groups passed; screenshots ${out}; synthetic server actions only.`)
 } finally {
   await browser.close()

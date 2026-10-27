@@ -262,14 +262,17 @@ export default function HomeClient({
     }}>
 
       {/* ── GREETING ── */}
-      <div style={{ padding: "28px 24px 0", ...fade(0) }}>
-        <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
-          Good {greeting},<br />{businessName}.
+      <div style={{ padding: "24px 24px 0", minWidth: 0, ...fade(0) }}>
+        <h1 style={{ margin: 0, color: "white", fontSize: "1.75rem", fontWeight: 500, lineHeight: 1.2, letterSpacing: 0 }}>
+          Good {greeting}.
         </h1>
+        <p className="dashboard-business-name" style={{ margin: "8px 0 0", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, fontSize: "1rem", fontWeight: 400, lineHeight: 1.45, letterSpacing: 0, overflowWrap: "anywhere" }}>
+          {businessName}
+        </p>
       </div>
 
       {includedToolPrompt && (
-        <div style={{ padding: "20px 24px 0" }}>{includedToolPrompt}</div>
+        <div style={{ padding: "12px 24px 0" }}>{includedToolPrompt}</div>
       )}
 
       {/* ── ALERT CARD — new leads ── */}
@@ -351,7 +354,7 @@ export default function HomeClient({
           Buttons sit right after status, close to the top. Only something
           urgent (the new-lead alert above) is allowed to outrank them. */}
       <div style={{ padding: "20px 20px 0", ...fade(0.12) }}>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr))", gap: 10 }}>
 
           {/* Camera — always */}
           <button
@@ -471,7 +474,7 @@ export default function HomeClient({
 
       {/* ── ROW 2 — My Contacts + Edit My Site ── */}
       <div style={{ padding: "12px 20px 0", ...fade(0.18) }}>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr))", gap: 10 }}>
 
           {/* My Contacts */}
           {hasContacts && (
