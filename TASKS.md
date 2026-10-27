@@ -16,7 +16,8 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Independent review races corrected and re-reviewed. 92 SQL/action checks,
   seven Home journey groups, eight Chromium groups and existing regressions pass.
 - [x] Final post-review production build, TypeScript and 86 static pages pass.
-- [ ] Save release/docs and obtain explicit production-publication approval.
+- [x] Save reviewed source release 8aa08d4 and existing handoff documents.
+- [ ] Obtain explicit production-publication approval; question sent.
   Both migrations remain unapplied; code not live.
 - [ ] With publication approval, install helpers and verify privileges/protected
   fingerprints before normal push, deployment verification and public smoke checks.

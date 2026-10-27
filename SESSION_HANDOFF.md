@@ -49,6 +49,7 @@ not proven by these fixtures. Independent reviewer reports no remaining findings
 in bounded changes, with the above residuals. Live company records: 52 unchanged,
 fingerprint 31c12a1946083789ee9b869b20b70d84; membership rows remain five.
 
+Saved source release: local commit 8aa08d4. Publication approval question sent.
 Publication: no push or production schema install performed. Obtain explicit
 approval for this release, install helpers before code publication, verify denied
 anon/authenticated execution and unchanged protected records, then normal push
