@@ -12,7 +12,8 @@
   returns four clients and all392 metadata records, correctly separated. Independent
   product/design/engineering rereviews accept bounded direction. Final selector
   polish/browser rerun, TypeScript and production build/all86 pages pass. No
-  publication approved or performed; existing handoff files retain pending stage2.
+  sending activated. Shawn approved publication of4b86c46; release verification
+  underway. Existing handoff files retain pending stage2.
 
 ## October 27, 2026 - Typography Refinement Prepared, Not Released
 

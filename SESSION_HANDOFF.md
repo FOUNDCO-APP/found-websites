@@ -57,7 +57,8 @@ latest site-live delivered; this is not proof both delivered to correct address.
 Production build/TypeScript/all86 pages pass. Final browser rerun and post-polish
 TypeScript check pass. Independent visual/product/engineering reviews found no
 remaining blockers; they did not independently rerun parent checks. Prepared only,
-no publication approval, push or deployment. Existing detail tools retain prior
+Shawn explicitly approved publication of tested source4b86c46 after the preview;
+push/deployment verification underway. Existing detail tools retain prior
 manual behavior; no actual actions were submitted for tests. All live work was reads.
 Known limit: metadata scan grows with history and is not transactional snapshot;
 count/duplicate changes fail closed rather than silently showing partial results.

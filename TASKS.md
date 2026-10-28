@@ -16,8 +16,8 @@ historical divider below; old unchecked items are not automatic authorization.
   Independent product/design/engineering reviews passed bounded refinement.
 - [x] Final narrow-phone selector polish; browser rerun, TypeScript and production
   build/all86 pages pass. Independent visual/product/engineering acceptance.
-- [ ] Shawn preview acceptance and separate publication approval.
-- [ ] Separate publication approval, push/deployment verification. NOT live yet.
+- [x] Shawn preview acceptance and explicit publication approval for4b86c46.
+- [ ] Push/deployment verification and live read-only checks.
 - [ ] Separately review Found customer-success journey/copy/triggers; no sending,
   backfill, automation or schedule authorized by this planning discussion.
 

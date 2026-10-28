@@ -9,7 +9,8 @@ another status/handoff source of truth without Shawn's approval.
 
 Latest October 27 work: Shawn approved Steve/Jony-led client-first admin Email
 history preparation. Shared conservative classification, server filtering/paging,
-overview and timelines prepared; no follow-up sending/schema/publication approved.
+overview and timelines tested. Shawn approved publication of4b86c46; release
+verification underway. No follow-up sending or schema changes authorized.
 Read SESSION_HANDOFF.md for reviews, tests, live read-only evidence and open release.
 
 Earlier October 27 work: approved typography hierarchy and constrained scrolling-
