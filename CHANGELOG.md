@@ -1,3 +1,13 @@
+## October 28, 2026 - Immediate Client Education Drafts Prepared
+
+- Shawn requested urgent pathway setup and initial outreach. Independent leads
+  recommend one reviewed orientation per current client, Camera7+ days later.
+- Prepared pure disabled path definitions and responsive personalized drafts; no
+  sender/DB/cron/enrollment.71 tests, TypeScript and12 local email-layout checks
+  pass. Verified four recipient/site pairs and suppression/delivery history read-only.
+- Exact private batch lives only in ignored audit artifacts. Final four-draft
+  approval pending; no messages sent, no live scheduling or publication.
+
 ## October 27, 2026 - Client-First Admin Email History Published
 
 - Shawn approved actual independent Steve/Jony-led client-first direction after

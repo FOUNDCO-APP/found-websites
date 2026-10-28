@@ -8,6 +8,48 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
+### Fountain Co Drip System - Immediate Four-Client Draft Batch Prepared
+
+Shawn directed moving forward urgently with pathways and one/maybe two messages
+for existing clients. Actual Steve/Jony/Craig review recommends ONE orientation
+per current client first; Camera no earlier than seven days after actual first send,
+separately reviewed. Prepare exact drafts/recipient scope for Shawn's final content
+approval before sending under his existing team-review process. No messages sent.
+
+Prepared pure src/lib/foundClientEducation.ts: planned new/existing/monthly path
+definitions disabled by default, fail-closed eligibility review helper, responsive
+orientation template. No transport, DB, enrollment, scheduler, cron or production
+route connected. These are definitions/drafts, NOT an active drip system.
+71 pure checks and TypeScript pass;12 local Chromium email layout checks over
+four drafts at320/390/768 pass with external requests blocked. Independent Jony
+visual, Steve exact-draft product and Craig source reviews accept preparation.
+
+Four current recipients verified read-only from company records: Hiram's corrected
+address, Carlos/Divine, Richard/MBJ and RC business inbox. No recorded recipient
+suppression, bounce/complaint or prior automation_draft at preflight. Recheck just
+before any send. All four current site URLs HTTP200 with business name match:
+intellsecurity.foundco.app, divineremodelaz.com, mbjheatingandcooling.com,rcbicycles.com.
+All four company-specific dashboard entry links reach sign-in anonymously; these
+checks do not prove a complete customer login roundtrip (still deferred). Route
+authenticates/checks access; logged-out link does not preserve selection through
+login, so promise dashboard Home only, not automatic lesson deep links.
+
+Exact private drafts are ignored artifacts .billing-audits/fountain-co-drip/
+review-batch.json, orientation-1..4.html/.txt and width PNGs. Hiram gets approved
+included-address/custom-domain explanation; verified custom-domain clients skip
+purchase education. RC contact name null -> Hi there, no guessed personal name.
+Subject: A quick check-in from Shawn at Found. Single Open my dashboard CTA.
+Footer directs questions/stop to shawnlopez@me.com (existing delivered admin inbox),
+explicitly included for final approval; no reply-handling promise to unverified
+hello/support inbox. Help/stop requests must be handled before further optional
+sends. No affiliate/automation claims or domain purchase performed.
+
+Final approval item: exact four drafts/recipients/contact address for one send each;
+no automatic enrollment, second batch, monthly messages or live scheduler implied.
+Use existing tracked Found correspondence semantics after approval, pre-send
+suppression/duplicate checks and stable idempotency key; reconcile uncertainty,
+never blind resend. Keep provider acceptance separate from delivery evidence.
+
 ### Fountain Co Drip System - Paths And Timeline Proposal
 
 Shawn requested actual team planning of new/existing-client education, then

@@ -5,6 +5,14 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Proposed - Fountain Co Drip System (October 28)
 
+- [x] Shawn requested urgent pathway preparation and first message(s); actual
+  product/design/engineering recommendation is one orientation per four clients,
+  camera no earlier than seven days later, no catch-up batch or scheduler.
+- [x] Prepare disabled path definitions/pure draft builder,71 checks, TypeScript,
+ 12 local layout checks; verify recipients/sites/suppression history read-only.
+- [ ] Final exact four-message review/approval, including help/stop contact;
+  no message sent or live client enrolled yet.
+
 - [x] Actual Steve/Jony-led discussion with independent engineering contribution:
   new-client lessons, reviewed existing-client enrollment, optional monthly path.
 - [x] Draft cadence/paths and domain branch recorded in existing SESSION_HANDOFF;
