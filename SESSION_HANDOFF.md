@@ -14,7 +14,15 @@ Shawn subsequently explicitly approved pushing the reviewed build so he can
 inspect it. Publication of source a1214e8 and its documentation/disabled education
 preparation is authorized. Receiving/sending flags remain off; no production
 migration installation, DNS/provider activation, schedule, paid upgrade or real
-client send is authorized by this publication. Deployment verification follows.
+client send is authorized by this publication.
+
+Publication verified: GitHub main b3c397795a322ffa81ae9d250a4f9795a871569e;
+Vercel24rPz5R8h7NxreCnvX7HbMwB3SFH reports success. Authenticated read-only
+/emails/received and /emails return200 with Received/Sent navigation; Received
+explicitly says receiving is not enabled. Unread API503 correctly indicates
+disabled receiving; anonymous request401. Four client Home pages return200.
+No forms, messages, production migrations, DNS/provider changes or activation.
+This verification note is saved locally for the next documentation push.
 
 Shawn chose complete in-app receiving over another personal/external inbox. Wants
 in-app notifications and strong spam protection BEFORE any client email/outreach.
