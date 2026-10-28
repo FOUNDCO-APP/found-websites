@@ -16,7 +16,8 @@ historical divider below; old unchecked items are not automatic authorization.
   reply/interaction/history checks,159 layout assertions/28 previews and five
   existing Sent-browser groups. Real delivery/concurrency remain unverified.
 - [x] Final frozen-source production build/TypeScript/all88 static pages pass;
-  source hashes match. Save locally and deliver preview; no live activation.
+  source hashes match. Local source save a1214e8 and preview ready; no push or
+  live activation. See current handoff for controlled-release prerequisites.
 - [ ] Verify Resend/DNS access, plan/quotas/costs, receiving/auth evidence and
   attachment/retention policy before separately approved live activation.
 - [ ] Controlled inbound/reply/spam/recovery/access tests before any held outreach.

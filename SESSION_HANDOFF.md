@@ -50,6 +50,9 @@ production build/TypeScript/all88 static pages pass. Before/after source hashes
 match f9b9a750801111265d581ed3d93286616d655201da621aed81f7067de8e29deb;
 ignored received-preview/final-build.json records exit0 at2026-10-28T21:17:36Z.
 No push, deployment, production install, live activation or real send authorized.
+Saved locally as a1214e8 (implementation/tests/existing documents); not pushed.
+Only SQL/test trailing EOF whitespace was normalized after the frozen build;
+application source remains the built version. Private previews are not committed.
 
 Preview artifacts are ignored .billing-audits/received-preview/; reproducible
 tests/received-mail-browser.cjs records managed-source hashes. No new MD authority.
