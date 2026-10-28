@@ -3,6 +3,17 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Proposed - Fountain Co Drip System (October 28)
+
+- [x] Actual Steve/Jony-led discussion with independent engineering contribution:
+  new-client lessons, reviewed existing-client enrollment, optional monthly path.
+- [x] Draft cadence/paths and domain branch recorded in existing SESSION_HANDOFF;
+  no enrollment, implementation, schema, sends or release authorized.
+- [ ] Shawn approval of proposed paths/timeline, then exact messages/eligibility,
+  preference/stop rules and verified company-safe links for implementation review.
+- [ ] Separately approve implementation, controlled tests and production sending;
+  no welcome replay, retroactive catch-up or guessed nonuse for current clients.
+
 ## Now - Admin Found Client Communication History
 
 - [x] Visible independent design/product/engineering meeting: accurate Found-client

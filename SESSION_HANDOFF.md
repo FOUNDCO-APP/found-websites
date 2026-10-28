@@ -6,7 +6,58 @@ approvals and the plan; dated entries afterward are supporting history. Shawn
 confirmed the duplicate-client fix. No new Gallery, theme or image approval was
 given, and documentation-only saving authorizes no new product work.
 
-## Current Overview - October 27, 2026
+## Current Overview - October 28, 2026
+
+### Fountain Co Drip System - Paths And Timeline Proposal
+
+Shawn requested actual team planning of new/existing-client education, then
+explicitly named it "Fountain Co Drip System" and requested paths AND timeline.
+Use that supplied planning name; do not silently rename. Independent Steve/product,
+Jony/design and Craig/engineering reviews ran; Steve/Jony exchanged cadence and
+ongoing-relationship proposals visibly. This is planning only, not implementation,
+enrollment, sending, schema or publication approval.
+
+Proposed new-client anchor: verified activation plus approved optional-education
+enrollment. Existing site-live/login emails remain separate; never resend because
+of rollout. Earliest proposed lessons: Day3 orientation/dashboard with actual current
+site address and included Found address explanation; Day7 Camera; Day14 explicit
+Gallery publication (Favorites private); Day21 one relevant website update; Day28
+eligible Pro chooser or verified unfinished setup; Day35 Share My Site and placing
+link on an existing Google Business Profile, without traffic/ranking promises.
+One optional email/week except initial Day3-to7 pair; skipping does not accelerate
+later messages. These are proposed offsets, not actual scheduled messages.
+
+Existing clients: review Hiram/RC/MBJ/Divine individually, select useful lesson,
+anchor Day0 to explicitly approved enrollment now, then weekly. No replayed
+welcome, retroactive catch-up or inactivity inference from absent events.
+Already-connected domain or explicit preference for included address skips purchase
+education. Current address must be checked; entered custom_domain alone is not
+proof of live DNS. Custom domain is optional: GoDaddy or existing registrar, own
+account, purchase/renewal separate. Example domains not availability promises.
+Exact registrar instructions/pricing must be verified when drafting, not invented.
+An interest-driven domain-help branch must obey the same total cadence cap.
+
+Third path proposed by Steve/Jony: separate opt-in monthly useful tip/help check,
+starting30 days after last lesson (Day35 finish -> Day65), then every30 days; not
+an endless repeat of the lessons. Real metrics only when verified/reliable,
+otherwise helpful content without fabricated results. All three paths remain
+subject to Shawn's plan/copy/eligibility approval before implementation or sending.
+
+Proposed skip/pause/stop rules: verified completion/client confirmation skips;
+unknown state reviewed, never guessed. Help request/manual pause suspends optional
+education; opt-out/preferences stop or adjust it; bounce/complaint/cancellation/
+retirement or uncertain eligibility stops/holds appropriate sends. Essential
+security/account/billing communications governed separately. Recheck eligibility,
+suppression, completed actions and duplicate protection at send time before release.
+Dashboard camera/publishing/edit controls and company-safe destinations must be
+verified before draft approval. Existing /api/select-company returns Home and
+does not preserve arbitrary lesson destination; don't promise direct lesson links
+until safe routing is implemented/tested. Admin must distinguish Planned vs real
+Scheduled vs provider Accepted vs Delivered; never infer opens/adoption.
+
+Next: Shawn reviews paths/cadence; prepare exact email drafts, decision rules,
+preferences and verified navigation for a concrete implementation proposal. No
+code or client state changed in this planning meeting.
 
 ### Admin Email Client-First Release - Live
 
