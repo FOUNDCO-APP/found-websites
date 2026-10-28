@@ -17,7 +17,10 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Final narrow-phone selector polish; browser rerun, TypeScript and production
   build/all86 pages pass. Independent visual/product/engineering acceptance.
 - [x] Shawn preview acceptance and explicit publication approval for4b86c46.
-- [ ] Push/deployment verification and live read-only checks.
+- [x] Published through aa90eb7, remote SHA verified; Vercel
+  EmaAqeSHGFrw7dnKm2tTgkN5zquS success. Authenticated read-only overview,
+  Hiram timeline, unlinked/Business/Admin alerts GETs pass. Login/four public
+  client Home pages pass. No sends, forms or account mutations.
 - [ ] Separately review Found customer-success journey/copy/triggers; no sending,
   backfill, automation or schedule authorized by this planning discussion.
 

@@ -9,7 +9,9 @@ No inferred disengagement from old/missing emails, guessed ownership, scheduled
 messages, opens or revenue claims. Reuse existing HQ typography/hairline rows.
 Refine mobile controls so clients appear early. Initial controls-first preview was
 rejected and corrected; read-only overview/list preserve existing detail tools.
-This is preparation approval only; publication and customer journeys separate.
+Shawn subsequently approved publication of tested4b86c46 after preview. Published
+through aa90eb7, deployment and authenticated read-only checks verified. Customer
+journeys and follow-up sending remain separate/unapproved.
 
 ## October 27, 2026 - Chooser Typography And Constrained Fallback
 

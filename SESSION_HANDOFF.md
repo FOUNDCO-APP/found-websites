@@ -8,13 +8,14 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
-### Admin Email Client-First Release - Approved Preparation
+### Admin Email Client-First Release - Live
 
 Shawn requested planning/design/function discussion so Found-to-client relationship
 emails are not buried under business lead emails. Three independent reviewers ran:
 visual, product/CX, engineering, with their exchange shown in chat. Steve/Jony then
 led the refinement to a client-first overview, not an email pile, and Shawn approved
-preparing that direction. No sending, schema changes or publication approved.
+preparing that direction and later explicitly approved publication of4b86c46.
+No follow-up sending or schema changes authorized.
 Source confirms raw email_scope is inadequate:
 default client includes account emails; found often marks internal alerts. Existing
 client classifier also lumps signup alerts with owner correspondence. Prior advice
@@ -57,8 +58,14 @@ latest site-live delivered; this is not proof both delivered to correct address.
 Production build/TypeScript/all86 pages pass. Final browser rerun and post-polish
 TypeScript check pass. Independent visual/product/engineering reviews found no
 remaining blockers; they did not independently rerun parent checks. Prepared only,
-Shawn explicitly approved publication of tested source4b86c46 after the preview;
-push/deployment verification underway. Existing detail tools retain prior
+Shawn explicitly approved publication of tested source4b86c46 after the preview.
+Published through aa90eb76c134903fb711437fd3e556fdfd958cbe, remote SHA verified;
+Vercel EmaAqeSHGFrw7dnKm2tTgkN5zquS reports success for that SHA. Authenticated
+read-only production GETs verified overview/all four clients, Hiram timeline,
+unlinked Found history, Business and Admin alerts categories. Used saved admin
+credential in memory, not printed; no forms/actions submitted. Login and all four
+public client Home pages HTTP200/nonempty HTML. Not a real iPhone/Safari test.
+Subsequent notes-only commits preserve verified code. Existing detail tools retain prior
 manual behavior; no actual actions were submitted for tests. All live work was reads.
 Known limit: metadata scan grows with history and is not transactional snapshot;
 count/duplicate changes fail closed rather than silently showing partial results.

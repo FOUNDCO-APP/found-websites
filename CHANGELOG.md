@@ -1,4 +1,4 @@
-## October 27, 2026 - Client-First Admin Email History Prepared
+## October 27, 2026 - Client-First Admin Email History Published
 
 - Shawn approved actual independent Steve/Jony-led client-first direction after
   visible discussion. Prepare overview/client timelines, category selector and
@@ -12,8 +12,10 @@
   returns four clients and all392 metadata records, correctly separated. Independent
   product/design/engineering rereviews accept bounded direction. Final selector
   polish/browser rerun, TypeScript and production build/all86 pages pass. No
-  sending activated. Shawn approved publication of4b86c46; release verification
-  underway. Existing handoff files retain pending stage2.
+  sending activated. Shawn approved4b86c46; published through aa90eb7, remote
+  verified, Vercel EmaAqeSHGFrw7dnKm2tTgkN5zquS success. Authenticated admin
+  overview/Hiram/unlinked/Business/Admin alert GETs and login/four public client
+  checks pass. No forms/actions submitted. Existing files retain pending stage2.
 
 ## October 27, 2026 - Typography Refinement Prepared, Not Released
 
