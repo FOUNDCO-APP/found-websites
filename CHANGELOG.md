@@ -1,5 +1,9 @@
 ## October 28, 2026 - Found Mail First Local Build Prepared
 
+- Shawn subsequently approved pushing the reviewed build for inspection. Publish
+  the disabled interface; keep migrations unapplied, live mail activation and
+  all client messages held. Verify deployment separately from push success.
+
 - Shawn explicitly approved the reviewed first-build scope before implementation.
   Prepared Received/Sent, in-app unread count, recoverable Spam/sender rules,
   safe plain text, quarantined attachment metadata and explicit manual replies.

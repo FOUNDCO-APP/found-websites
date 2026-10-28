@@ -10,6 +10,12 @@ given, and documentation-only saving authorizes no new product work.
 
 ### New Priority - Found In-App Receiving And Spam (First Local Build Approved)
 
+Shawn subsequently explicitly approved pushing the reviewed build so he can
+inspect it. Publication of source a1214e8 and its documentation/disabled education
+preparation is authorized. Receiving/sending flags remain off; no production
+migration installation, DNS/provider activation, schedule, paid upgrade or real
+client send is authorized by this publication. Deployment verification follows.
+
 Shawn chose complete in-app receiving over another personal/external inbox. Wants
 in-app notifications and strong spam protection BEFORE any client email/outreach.
 Hold the four drafted orientation emails and drip enrollment. No new sends.
