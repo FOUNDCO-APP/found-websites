@@ -3,7 +3,7 @@
 import { after } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../../lib"
-import { saveManualReplyDraft, sendSavedReply } from "@/lib/admin/mailReplies"
+import { saveManualComposeDraft, saveManualReplyDraft, sendSavedCompose, sendSavedReply } from "@/lib/admin/mailReplies"
 import { createReceivingAdapter, processIncomingMail } from "@/lib/admin/mailStore"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -23,7 +23,7 @@ export async function saveReplyDraft(form: FormData) {
   try {
     const messageId = text(form, "messageId")
     if (!uuid.test(messageId)) return { success: false, error: "Message is unavailable." }
-    const result = await saveManualReplyDraft(getAdminClient(), { messageId, replyId: text(form, "replyId"), body: text(form, "body") })
+    const result = await saveManualReplyDraft(getAdminClient(), { messageId, replyId: text(form, "replyId"), body: text(form, "body"), from: text(form, "from") || undefined })
     if (result.success) refresh(messageId)
     return result
   } catch { return { success: false, error: "Draft save could not be confirmed. Keep your text and refresh." } }
@@ -39,6 +39,7 @@ export async function sendManualReply(form: FormData) {
     if (!uuid.test(messageId)) return { success: false, error: "Message is unavailable." }
     const result = await sendSavedReply(getAdminClient(), { messageId, replyId: text(form, "replyId"),
       expectedTo: text(form, "expectedTo"), expectedVersion: text(form, "expectedVersion"),
+      expectedFrom: text(form, "expectedFrom") || undefined,
       confirmDifferentRecipient: text(form, "confirmDifferentRecipient") === "1" })
     refresh(messageId)
     return result
@@ -71,6 +72,40 @@ async function change(form: FormData, action: "read" | "move" | "rule" | "retry"
 export async function markMailRead(form: FormData) {
   await requireAdmin()
   return change(form, "read", text(form, "read"))
+}
+
+function unsupportedComposeFields(form: FormData) {
+  return ["cc", "bcc", "attachments", "attachment", "recipients", "bulk", "html", "ai"].some(key => form.has(key)) ||
+    ["to", "from", "subject", "body", "draftId", "replyId"].some(key => form.getAll(key).length > 1)
+}
+
+export async function saveComposeDraft(form: FormData) {
+  await requireAdmin()
+  if (!enabled()) return disabled
+  if (unsupportedComposeFields(form)) return { success: false, error: "Compose supports one recipient and plain text only." }
+  try {
+    const result = await saveManualComposeDraft(getAdminClient(), { replyId: text(form, "draftId") || text(form, "replyId"),
+      to: text(form, "to"), from: text(form, "from"), subject: text(form, "subject"), body: text(form, "body") })
+    if (result.success) { try { revalidatePath("/admin/emails/compose") } catch { /* Draft already saved. */ } }
+    return { ...result, draftId: result.replyId }
+  } catch { return { success: false, error: "Draft save could not be confirmed. Keep your text and refresh." } }
+}
+
+export async function sendComposeDraft(form: FormData) {
+  await requireAdmin()
+  if (!enabled() || process.env.FOUND_MAIL_SEND_ENABLED !== "true" || !process.env.RESEND_API_KEY) {
+    return { success: false, error: "Sending is not enabled yet." }
+  }
+  if (unsupportedComposeFields(form) || ["expectedTo", "expectedFrom", "expectedSubject", "expectedVersion"].some(key => form.getAll(key).length !== 1)) {
+    return { success: false, error: "Refresh and review one saved Compose draft before sending." }
+  }
+  try {
+    const result = await sendSavedCompose(getAdminClient(), { replyId: text(form, "draftId") || text(form, "replyId"),
+      expectedTo: text(form, "expectedTo"), expectedFrom: text(form, "expectedFrom"),
+      expectedSubject: text(form, "expectedSubject"), expectedVersion: text(form, "expectedVersion") })
+    try { revalidatePath("/admin/emails/compose"); revalidatePath("/admin/emails") } catch { /* Send state is durable. */ }
+    return result
+  } catch { return { success: false, error: "Send status is uncertain. Refresh and reconcile; do not resend blindly." } }
 }
 export async function moveMail(form: FormData) {
   await requireAdmin()

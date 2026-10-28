@@ -24,6 +24,11 @@ const login = {email_type:'magic_link_login',recipient_type:'client_owner',sourc
 const business = {email_type:'lead_notification',recipient_type:'client_owner',source:'actions/leads/submitLead'}
 check(classifyEmail({email_type:'found_manual_reply',recipient_type:'prospect',source:'admin/mail/manual-reply'}),'found_clients','manual Found reply has explicit purpose')
 check(classifyEmail({email_type:'found_manual_reply',recipient_type:'prospect',source:'unknown'}),'unclassified','manual label alone never establishes purpose')
+const composeTuple={email_type:'found_manual_compose',recipient_type:'prospect',source:'admin/mail/manual-compose'}
+check(classifyEmail(composeTuple),'found_clients','explicit approved Compose purpose appears in Found Sent')
+check(classifyEmail({...composeTuple,source:'admin/mail/manual-reply'}),'unclassified','Compose requires its exact source')
+check(classifyEmail({...composeTuple,recipient_type:'client_owner'}),'unclassified','Compose cannot guess client identity')
+check(classifyEmail({...composeTuple,lead_id:'conflict'}),'unclassified','conflicting Compose identity stays unknown')
 for (const scope of ['found','client',null,'unexpected']) {
   check(classifyEmail({...direct,email_scope:scope}),'found_clients','default scope does not override known tuple')
   check(classifyEmail({...business,email_scope:scope}),'business','business purpose remains separate')
@@ -132,6 +137,12 @@ check(plain(handled.rows.map(r=>r.id)),['handled'],'handled filter')
 const all=await getAdminEmailHistory(client().admin,{category:'all'})
 check(all.total,emails.length,'all records preserved')
 check(all.rows.every(r=>r.category===r.history_category),true,'compatibility category alias')
+emails.push(row('accepted-compose-fixture',{...composeTuple,company_id:null,lead_id:null,subject:'Standalone saved Compose fixture',delivery_status:'sent'}))
+const composeHistory=await getAdminEmailHistory(client().admin,{category:'found_clients',clientId:'unlinked',q:'Standalone saved Compose fixture'})
+check(composeHistory.total,1,'accepted standalone Compose visible in Found Sent after full scan')
+check(composeHistory.rows[0].category,'found_clients','Compose never falls into unclassified')
+check(composeHistory.rows[0].company_id,null,'Compose does not infer a customer link')
+emails.pop()
 for(const failure of [{failPage:300},{failTable:'companies'},{failTable:'leads'},{throwNetwork:true},{noCount:true},{drift:true}]){
   const result=await getAdminEmailHistory(client(failure).admin)
   check(typeof result.error,'string','incomplete metadata unavailable')

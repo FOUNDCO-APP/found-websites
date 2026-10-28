@@ -1,3 +1,25 @@
+## October 28, 2026 - Shared Mail Addresses And Compose Prepared
+
+- Shawn confirmed shawn@foundco.app and directed getting mail working. Actual
+  independent leads settled one inbox, known From identities, recoverable unknown
+  address Spam and single-recipient manual Compose with exact saved review.
+- Prepared additive 003 intent/alias migration and guarded Compose/reply handling;
+  no attachments, bulk, CC/BCC, automatic mail or inferred client association.
+- Verified Vercel/DNS access and sensitive production Resend-setting metadata.
+  Existing key is non-readable; local Resend values unavailable. User secure-key
+  handoff pending. No extraction endpoint, mail/DNS changes, installs or sends.
+- Independent leads accepted a safer read-only runtime configuration diagnostic:
+  use existing protected key internally, fixed provider GETs, public DNS/setup
+  metadata only, strict admin guard/size/time/output limits.577 synthetic checks
+  pass; no credential return, generic proxy or provider mutation. New-key request
+  is on hold while this approach is verified.
+- 215 Compose/alias,124 reply,229 store,46 safety,300 history,49 hydrated Compose
+  and15 page-boundary checks pass;22 existing interactions,329 browser assertions,
+  56 previews and five Sent-browser groups pass. Independent final visual review
+  accepts disabled-control correction. Final frozen build/TypeScript/all89 static
+  pages pass; source hash matches. Publication is for disabled feature/metadata
+  readiness only; no activation or sends. Four orientation drafts stay held.
+
 ## October 28, 2026 - Found Mail First Local Build Prepared
 
 - Shawn subsequently approved pushing the reviewed build for inspection. Publish

@@ -8,6 +8,88 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
+### Latest - Shared Addresses And Manual New Email
+
+Shawn confirmed shawn@foundco.app (not sean), then directed getting receiving and
+occasional manual sending working. Actual independent Steve/Jony/Craig discussion
+supports one admin Received inbox for hello/support/shawn; preserve original To,
+default replies to the unique recognized addressed identity, explicit selection
+when multiple approved identities were addressed. Unknown catch-all mail remains
+recoverably quarantined/non-notifying; rescue never grants sending authority to an
+unknown identity. Add only single-recipient plain-text New email: explicit approved
+From, To, subject/body, Save -> exact persisted review -> explicit Send. No CC/BCC,
+attachments, bulk, automatic replies or education enrollment. Local preparation
+authorized by Shawn's get-this-working instruction; no new approval loop for that
+bounded build. Provider/DNS installation and actual tests require verified exact
+configuration and review first. Four education drafts stay held.
+
+Access checked without printing secrets: original checkout .env.local has valid
+VERCEL_API_TOKEN (not VERCEL_TOKEN). Found project/team metadata, mail-setting IDs
+with decrypt=false and domain DNS records are readable. Production RESEND_API_KEY
+and RESEND_WEBHOOK_SECRET exist as sensitive settings. Single-setting API lookup
+confirms decrypted=false/no usable value; original local env has no Resend key and
+production snapshot has an empty Resend entry. Do not work around sensitive-secret
+protection or deploy a credential-extraction endpoint. A broad decrypted-env read
+was rejected by automatic approval review; safer metadata/single-setting check ran.
+User asked to save a Resend setup key securely as RESEND_API_KEY in the existing
+original .env.local, never in chat. Pending response. Current browser control is
+blocked by Windows Firefox URL-policy support; do not repeat that failed path.
+
+Subsequent safe alternative independently reviewed: Steve calls a narrow admin
+read-only runtime mail-configuration check an authorized implementation detail;
+Craig accepts the security design in principle. Existing protected runtime key may
+call fixed Resend GETs and return ONLY allowlisted foundco.app domain verification,
+public DNS records and expected webhook-event readiness. No key/signing secret,
+email content, raw responses, arbitrary URLs/headers, caching or configuration
+changes. Strict admin auth before requests, bounded size/time, redirects rejected.
+This is ordinary in-place credential use, not secret retrieval or a proxy. New
+automatic-review rejection must be respected without bypass. Prepared exact GET
+/api/admin/mail-config with fixed provider paths, strict auth before key/provider
+access, no query parameters/redirects/raw errors, bounded time/size, safe output
+allowlist and private no-store headers.577 synthetic safety checks pass; independent
+Craig review accepts bounded source. No provider mutation. Shawn told to hold off creating
+a new key while this option is checked; request remains a fallback, not a claim
+that replacement is definitely required. Insufficient permissions -> stop/report.
+
+Public DNS and Vercel DNS read agree: nameservers are Vercel, root MX absent,
+send MX remains SES feedback. DNS read access200,10 records. No modifications.
+Only missing provider setup credential identified so far; domain/receiving quotas,
+exact account-specific MX, webhook configuration and cost still unverified. Ignored
+found-mail-activation artifacts contain sanitized metadata only, no secret values.
+
+Bounded local implementation now prepared: three-address allowlist and reviewed
+From choice, recoverable unknown-address quarantine, standalone Compose intents
+stored separately by intent/null parent, exact reviewed To/From/subject/version,
+immutable one-send claim, existing atomic receipt/Sent persistence and distinct
+found_manual_compose classification without inferred client ownership. Additive
+20261028000300 migration remains unapplied; original two mail tables remain absent
+in production (read-only query verified). pg_cron is available but not installed;
+pg_net also not installed. Recovery scheduling remains an activation prerequisite,
+not a promise supplied by the current unregistered Vercel handler.
+
+Current checks:46 safety,229 storage/actions,124 legacy reply,215 Compose/alias SQL
+and orchestration,300 history,49 hydrated Compose/alias,22 existing hydrated
+interaction and15 page-boundary checks pass; TypeScript passes.329 Chromium
+assertions/56 screenshots pass and recorded source hashes match current UI.
+Tests use synthetic records/mock actions, never provider
+credentials or sends. Real multi-session scheduling/provider delivery unproven.
+Independent Craig accepts bounded source review; Steve accepts local product flow.
+Jony requested clearer disabled-control appearance; scoped existing-token fix and
+adjacent explanations are prepared; independent rendered rereview now accepts it.
+Final frozen production build with the read-only configuration check passes:
+TypeScript/all89 static pages; before/after hash
+6257f398af73bcf4c914c1fbe7de9d7edde484191254e1c0166f41874308a01f,
+exit0 at2026-10-28T22:22:42Z in ignored mail-config-final-build.json.
+Five existing Sent-browser groups also pass. Under Shawn's get-this-working
+instruction and independent bounded reviews, publish the reviewed extension and
+read-only diagnostic to verify existing runtime permissions. All mail gates stay
+off; migrations, DNS/provider changes and sends remain held until exact activation
+preflight. No production credential is returned or decrypted by this diagnostic.
+
+Important catch-all limitation: application Spam quarantine happens AFTER provider
+receipt and does not prevent provider quota consumption. Verify actual account
+capabilities/quotas/cost and retention before activation. Do not promise free forever.
+
 ### New Priority - Found In-App Receiving And Spam (First Local Build Approved)
 
 Shawn subsequently explicitly approved pushing the reviewed build so he can

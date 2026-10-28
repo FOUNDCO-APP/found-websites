@@ -1,3 +1,14 @@
+## October 28, 2026 - Shared Inbox And Manual Compose Extension
+
+Actual independent Jony/Steve review: From selects a sender identity, not another
+mailbox. Preserve one Received inbox and visible original To. Unknown-address mail
+is discoverable in Spam and never creates a new sending identity. A quiet New email
+entry opens one-recipient plain-text composition, approved From selection and the
+same Write/Save -> Review/Send sequence. Explicit disabled/pending state; use
+existing HQ typography/colors, full address wrapping and enlarged-text support.
+No separate inboxes, bulk toolbar, attachment editor or auto-sending affordances.
+Final rendered and source reviews remain required before release.
+
 ## October 28, 2026 - Found Mail First Build
 
 Shawn approved the independently reviewed first-build direction: Received/Sent

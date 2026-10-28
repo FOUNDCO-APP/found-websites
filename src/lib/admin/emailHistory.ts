@@ -61,6 +61,7 @@ export interface AdminEmailHistoryResult {
 // neither promote business notifications into client correspondence nor hide it.
 const rules: Array<[string, string, string, EmailCategory]> = [
   ["found_manual_reply", "prospect", "admin/mail/manual-reply", "found_clients"],
+  ["found_manual_compose", "prospect", "admin/mail/manual-compose", "found_clients"],
   ["site_live", "client_owner", "activationEmails/sendSiteLiveEmailOnce", "found_clients"],
   ["activation_reminder", "client_owner", "activationEmails/sendActivationReminderEmailOnce", "found_clients"],
   ["magic_link_login", "client_owner", "dashboard/api/send-login", "found_clients"],

@@ -1,5 +1,5 @@
 /** Pure inbound parsing. Provider API fields are evidence; message headers are not. */
-export const FOUND_MAIL_ADDRESSES = ["hello@foundco.app", "support@foundco.app"] as const
+export const FOUND_MAIL_ADDRESSES = ["hello@foundco.app", "support@foundco.app", "shawn@foundco.app"] as const
 export type MailAttachment = { id: string; filename: string; content_type: string; size: number | null; quarantined: true }
 export type ParsedInboundMail = {
   from_address: string | null; from_name: string | null; reply_to_address: string | null
@@ -42,7 +42,7 @@ export function parseInboundEmail(raw: unknown, options: { blocked?: boolean; al
   let score = 0, hard = false
   const flag = (reason: string, weight: number, severe = false) => { reasons.push(reason); score += weight; hard ||= severe }
   if (!sender) flag("Sender address could not be safely parsed", 10, true)
-  if (!recipients.some(address => FOUND_MAIL_ADDRESSES.some(supported => supported === address))) flag("Sent to an unsupported Found address", 10, true)
+  if (!recipients.some(address => FOUND_MAIL_ADDRESSES.some(supported => supported === address))) flag("Sent to an unsupported Found address; review before choosing an approved From", 5)
   if (options.blocked) flag("Sender is blocked", 10, true)
   if (replyValues.length > 1 || (replyValues.length === 1 && !reply)) { warnings.push("Reply address is ambiguous or invalid"); flag("Reply address requires review", 5, true) }
   if (reply && sender && reply.address !== sender.address) warnings.push("Reply-To differs from the sender. Check the recipient before sending.")
@@ -85,10 +85,19 @@ export function parseInboundEmail(raw: unknown, options: { blocked?: boolean; al
     hard_blocked: hard, authentication, reply_warnings: warnings }
 }
 
-export function getManualReplyTarget(message: { from_address: string | null; reply_to_address: string | null; to_addresses: string[]; hard_blocked?: boolean }): { to: string | null; from: string | null; warnings: string[] } {
+export function getManualReplyTarget(message: { from_address: string | null; reply_to_address: string | null; to_addresses: string[]; hard_blocked?: boolean; folder?: string }, selectedFrom?: string): { to: string | null; from: string | null; warnings: string[]; fromOptions: string[]; requiresFromChoice: boolean } {
   const to = parseSingleMailbox(message.reply_to_address ?? message.from_address)?.address ?? null
-  const from = FOUND_MAIL_ADDRESSES.find(address => message.to_addresses.includes(address)) ?? null
+  const known = FOUND_MAIL_ADDRESSES.filter(address => message.to_addresses.map(value => value.toLowerCase()).includes(address))
+  const fromOptions: string[] = known.length ? [...known] : [...FOUND_MAIL_ADDRESSES]
+  const requiresFromChoice = known.length !== 1
+  const selected = selectedFrom?.trim().toLowerCase()
+  const from = selected ? fromOptions.includes(selected) ? selected : null : known.length === 1 ? known[0] : null
   const warnings = message.reply_to_address && message.reply_to_address !== message.from_address ? ["Reply-To differs from the sender. Confirm the exact recipient."] : []
-  if (!to || !from || message.hard_blocked || FOUND_MAIL_ADDRESSES.some(address => address === to)) return { to: null, from, warnings: [...warnings, "This message requires review before replying."] }
-  return { to, from, warnings }
+  if (!known.length) warnings.push(message.folder === "inbox"
+    ? "This message used an unknown address. Explicitly choose an approved From before replying."
+    : "This message used an unknown address. Move it to Inbox, then explicitly choose an approved From.")
+  else if (requiresFromChoice && !from) warnings.push("Choose which received Found address to reply from.")
+  if (!to || message.hard_blocked || FOUND_MAIL_ADDRESSES.some(address => address === to)) return { to: null, from, fromOptions, requiresFromChoice, warnings: [...warnings, "This message requires review before replying."] }
+  if (!known.length && message.folder !== "inbox") return { to, from: null, fromOptions, requiresFromChoice, warnings }
+  return { to, from, fromOptions, requiresFromChoice, warnings }
 }

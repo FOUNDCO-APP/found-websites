@@ -16,6 +16,8 @@ export default function InboxWorkspace({ data, folder, page }: { data: Inbox; fo
         <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
           <p className="hq-row-title" style={{ fontWeight: row.read_at ? 500 : 750 }}>{!row.read_at && <span aria-label="Unread" style={{ color: "var(--hq-green)", marginRight: 8 }}>●</span>}{row.from_name || row.from_address || "Sender unavailable"}</p>
           <p className="hq-client-activity" style={{ color: "var(--hq-text)" }}>{row.subject || "No subject"}</p>
+          <p className="hq-row-meta" style={{ overflowWrap: "anywhere" }}>To: {row.to_addresses.join(", ") || "Recipient unavailable"}</p>
+          {row.spam_reasons.some(reason => /unsupported Found address|unknown recipient/i.test(reason)) && <p className="hq-row-meta">Unknown catch-all recipient / Explicit sender choice required after rescue</p>}
           <p className="hq-row-meta">{row.received_at ? new Date(row.received_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Phoenix" }) : "Date unavailable"} / {row.processing_state === "ready" ? "Ready to read" : row.processing_state === "pending" ? "Waiting for message content" : row.processing_state === "processing" ? "Retrieving message content" : row.processing_state === "failed" ? "Retrieval needs attention" : "Processing state unknown"}</p>
           {row.last_error && <p className="hq-row-meta">Processing needs review. Open details.</p>}
         </div><span className="hq-chevron" aria-hidden="true" />

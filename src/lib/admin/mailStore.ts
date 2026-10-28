@@ -10,7 +10,7 @@ export interface ReceivedMessage extends Omit<ParsedInboundMail, "subject" | "bo
   received_at: string; last_error: string | null
 }
 export interface ReceivedReply {
-  id: string; parent_id: string; body_text: string; to_address: string; from_address: string; subject: string
+  id: string; parent_id: string | null; intent: "reply" | "compose"; body_text: string; to_address: string; from_address: string; subject: string
   status: "draft" | "sending" | "accepted" | "delivered" | "failed" | "unconfirmed"
   provider_email_id: string | null; provider_message_id: string | null; idempotency_key: string
   lease_until: string | null; lease_token: string | null; last_error: string | null
@@ -53,6 +53,21 @@ export async function getReceivedMessage(admin: Admin, id: string) {
     })
     return { message: message as ReceivedMessage | null, replies: projected, error: null as string | null }
   } catch { return { message: null, replies: [] as ReceivedReply[], error: unavailable } }
+}
+
+/** Only standalone Compose drafts, never a received-message reply by UUID. */
+export async function getComposeDraft(admin: Admin, id: string) {
+  try {
+    if (!uuid.test(id)) throw new Error("Invalid draft")
+    const { data, error } = await admin.from("found_mail_replies").select("*")
+      .eq("id", id).eq("intent", "compose").is("parent_id", null).maybeSingle()
+    if (error) throw error
+    const draft = data as ReceivedReply | null
+    if (draft?.status === "sending" && (!draft.lease_until || !Number.isFinite(Date.parse(draft.lease_until)) || Date.parse(draft.lease_until) <= Date.now())) {
+      return { draft: { ...draft, status: "unconfirmed" as const, last_error: draft.last_error || "Send confirmation was interrupted. Reconcile before sending again." }, error: null as string | null }
+    }
+    return { draft, error: null as string | null }
+  } catch { return { draft: null as ReceivedReply | null, error: "Compose draft is unavailable. Please refresh." } }
 }
 
 export async function getUnreadMailCount(admin: Admin) {

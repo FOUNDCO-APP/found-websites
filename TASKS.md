@@ -5,6 +5,26 @@ historical divider below; old unchecked items are not automatic authorization.
 
 ## Priority - Found In-App Receiving Before Outreach
 
+- [x] Disabled interface published/verified through b3c3977; four sites200.
+- [x] Shawn confirms shawn address; actual independent leads review bounded shared
+  aliases, unknown catch-all quarantine and manual single-recipient Compose.
+- [x] Verify existing Vercel/DNS access; production Resend credentials exist but
+  sensitive/non-readable. User setup-key handoff pending, no secret in chat.
+- [x] Prepare alias+manual-composer extension and unapplied003 migration; core,
+  SQL, history, hydrated interaction/page-boundary checks and TypeScript pass.
+- [x] Final disabled-control rendered rereview; independent product/design/security
+  acceptance.329 local browser assertions/56 screenshots,49+22 hydration checks,
+  15 page boundaries; no provider/real-action proof.
+- [x] Final frozen production build/TypeScript/all89 static pages; hash matches.
+  Existing Sent-browser regression passes; save/publish reviewed disabled build.
+- [x] Prepare/review narrowly scoped runtime configuration check (577 synthetic
+  checks), using existing protected credential without retrieving or returning it.
+  Only fixed Resend GET metadata; no secrets, message contents or mutations.
+- [ ] Build/publish read-only check, verify existing runtime permissions and exact
+  setup before deciding whether a new key is needed. User told key request on hold.
+- [ ] Obtain usable Resend setup access, verify account routing/webhook/quota/cost,
+  then concrete activation review. No mail/DNS mutations or real sends yet.
+
 - [x] Shawn chooses in-app receiving/notifications and strong spam protection;
   hold all four education messages and drip activation.
 - [x] Actual Steve/Jony-led discussion with Craig review: Received/Sent, spam

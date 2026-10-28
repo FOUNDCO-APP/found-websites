@@ -22,7 +22,7 @@ function load(file,extra={}){
  }})
  return module.exports
 }
-const signatures={found_mail_save_reply:['p_parent_id','p_reply_id','p_body','p_to','p_from','p_subject'],found_mail_claim_reply:['p_id','p_parent_id','p_to','p_token','p_expected_updated_at'],found_mail_finish_reply:['p_id','p_token','p_status','p_provider_id','p_error'],found_mail_record_reply_delivery:['p_provider_id','p_status','p_event_at']}
+const signatures={found_mail_claim_reply_reviewed:['p_id','p_parent_id','p_to','p_from','p_token','p_expected_updated_at'],found_mail_save_reply:['p_parent_id','p_reply_id','p_body','p_to','p_from','p_subject'],found_mail_claim_reply:['p_id','p_parent_id','p_to','p_token','p_expected_updated_at'],found_mail_finish_reply:['p_id','p_token','p_status','p_provider_id','p_error'],found_mail_record_reply_delivery:['p_provider_id','p_status','p_event_at']}
 async function rpc(name,args){
  assert.ok(signatures[name],name)
  try {const r=await db.query(`select public.${name}(${signatures[name].map((_,i)=>'$'+(i+1)).join(',')}) as v`,signatures[name].map(k=>args[k]??null));return {data:r.rows[0].v,error:null}}
@@ -46,6 +46,9 @@ try{
  grant select,insert,update on email_log to service_role;`)
  await db.exec(fs.readFileSync('supabase/migrations/20261028000100_found_inbound_mail.sql','utf8'))
  await db.exec(fs.readFileSync('supabase/migrations/20261028000200_found_mail_reply_actions.sql','utf8'))
+ const composeMigrations=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('_found_mail_compose.sql'))
+ assert.equal(composeMigrations.length,1,'one additive compose migration')
+ await db.exec(fs.readFileSync('supabase/migrations/'+composeMigrations[0],'utf8'))
  for(const role of ['anon','authenticated']){
   for(const sig of ['found_mail_save_reply(uuid,uuid,text,text,text,text)','found_mail_claim_reply(uuid,uuid,text,uuid,timestamptz)','found_mail_finish_reply(uuid,uuid,text,text,text)','found_mail_record_reply_delivery(text,text,timestamptz)']){
    eq((await db.query("select has_function_privilege($1,$2,'EXECUTE') as ok",[role,'public.'+sig])).rows[0].ok,false,role+' RPC denial')

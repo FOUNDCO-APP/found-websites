@@ -2,7 +2,7 @@ import "server-only"
 import { randomUUID } from "node:crypto"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getReceivedMessage, type ReceivedReply } from "@/lib/admin/mailStore"
-import { getManualReplyTarget, safeMessageId } from "@/lib/mailSafety"
+import { FOUND_MAIL_ADDRESSES, getManualReplyTarget, parseSingleMailbox, safeMessageId } from "@/lib/mailSafety"
 
 type Admin = Pick<SupabaseClient, "from" | "rpc">
 type Result = { success: boolean; error?: string; message?: string; state?: string; replyId?: string }
@@ -40,11 +40,11 @@ export function createReplyTransport(): ReplyTransport {
 }
 
 /** Caller must requireAdmin first. Saving is never sending. */
-export async function saveManualReplyDraft(admin: Admin, input: { messageId: string; replyId: string; body: string }): Promise<Result> {
+export async function saveManualReplyDraft(admin: Admin, input: { messageId: string; replyId: string; body: string; from?: string }): Promise<Result> {
   if (!uuid.test(input.messageId) || !uuid.test(input.replyId) || !input.body.trim() || input.body.length > 20000 || input.body.includes("\0")) return { success: false, error: "Enter a reply of up to 20,000 characters." }
   const thread = await getReceivedMessage(admin, input.messageId)
   if (thread.error || !thread.message) return { success: false, error: "Message could not be loaded." }
-  const target = getManualReplyTarget(thread.message)
+  const target = getManualReplyTarget(thread.message, input.from)
   if (!target.to || !target.from || thread.message.folder !== "inbox" || thread.message.processing_state !== "ready") return { success: false, error: "Review this message before replying." }
   const subject = /^re:/i.test(thread.message.subject ?? "") ? thread.message.subject! : `Re: ${thread.message.subject || "No subject"}`
   const result = await admin.rpc("found_mail_save_reply", { p_parent_id: input.messageId, p_reply_id: input.replyId, p_body: input.body, p_to: target.to, p_from: target.from, p_subject: subject })
@@ -53,16 +53,16 @@ export async function saveManualReplyDraft(admin: Admin, input: { messageId: str
 }
 
 /** Every send claims a persisted immutable draft once. Ambiguity never retries. */
-export async function sendSavedReply(admin: Admin, input: { messageId: string; replyId: string; expectedTo: string; expectedVersion: string; confirmDifferentRecipient: boolean }, transport: ReplyTransport = createReplyTransport()): Promise<Result> {
+export async function sendSavedReply(admin: Admin, input: { messageId: string; replyId: string; expectedTo: string; expectedFrom?: string; expectedVersion: string; confirmDifferentRecipient: boolean }, transport: ReplyTransport = createReplyTransport()): Promise<Result> {
   if (!replySendingEnabled()) return { success: false, error: "Reply sending is not enabled yet." }
   if (!uuid.test(input.messageId) || !uuid.test(input.replyId) || !Number.isFinite(Date.parse(input.expectedVersion))) return { success: false, error: "Refresh and review the saved draft before sending." }
   const thread = await getReceivedMessage(admin, input.messageId)
   if (thread.error || !thread.message) return { success: false, error: "Message could not be loaded. Nothing was sent." }
-  const target = getManualReplyTarget(thread.message)
+  const target = getManualReplyTarget(thread.message, input.expectedFrom)
   if (!target.to || !target.from || target.to !== input.expectedTo || thread.message.folder !== "inbox" || thread.message.processing_state !== "ready") return { success: false, error: "Recipient or message state changed. Review before sending." }
-  if (target.warnings.length && !input.confirmDifferentRecipient) return { success: false, error: "Confirm the different Reply-To recipient before sending." }
+  if (thread.message.reply_to_address && thread.message.reply_to_address !== thread.message.from_address && !input.confirmDifferentRecipient) return { success: false, error: "Confirm the different Reply-To recipient before sending." }
   const token = randomUUID()
-  const claim = await admin.rpc("found_mail_claim_reply", { p_id: input.replyId, p_parent_id: input.messageId, p_to: input.expectedTo, p_token: token, p_expected_updated_at: input.expectedVersion })
+  const claim = await admin.rpc("found_mail_claim_reply_reviewed", { p_id: input.replyId, p_parent_id: input.messageId, p_to: input.expectedTo, p_from: target.from, p_token: token, p_expected_updated_at: input.expectedVersion })
   if (claim.error || !claim.data) return { success: false, error: "Draft changed or a send is already recorded. Refresh; do not resend blindly." }
   const draft = claim.data as ReceivedReply
   // SQL claim is authoritative; distrust malformed adapter responses too.
@@ -73,6 +73,10 @@ export async function sendSavedReply(admin: Admin, input: { messageId: string; r
     headers["In-Reply-To"] = messageId
     headers.References = [...new Set([...thread.message.reference_ids.map(safeMessageId).filter((id): id is string => !!id), messageId])].slice(-20).join(" ")
   }
+  return dispatchSavedMail(admin, draft, token, headers, transport)
+}
+
+async function dispatchSavedMail(admin: Admin, draft: ReceivedReply, token: string, headers: Record<string, string>, transport: ReplyTransport): Promise<Result> {
   let outcome: Awaited<ReturnType<ReplyTransport["send"]>>
   try { outcome = await transport.send({ from: draft.from_address, to: draft.to_address, subject: draft.subject, text: draft.body_text, headers, idempotencyKey: draft.idempotency_key }) }
   catch { outcome = { kind: "unconfirmed" } }
@@ -92,6 +96,43 @@ export async function sendSavedReply(admin: Admin, input: { messageId: string; r
     return { success: false, state: "unconfirmed", error: "Send status could not be confirmed. Refresh; do not resend." }
   }
   return status === "accepted" ? { success: true, state: "accepted", message: "Provider accepted the reply. Delivery is not yet confirmed." } : { success: false, state: status, error: error! }
+}
+
+/** Compose uses the same durable draft/claim/finish lifecycle, without a received parent. */
+export async function saveManualComposeDraft(admin: Admin, input: { replyId: string; to: string; from: string; subject: string; body: string }): Promise<Result> {
+  const to = parseSingleMailbox(input.to)?.address
+  const from = input.from.trim().toLowerCase()
+  if (!uuid.test(input.replyId) || !to || !FOUND_MAIL_ADDRESSES.some(address => address === from) ||
+    !input.subject.trim() || input.subject.length > 500 || /[\u0000-\u001f\u007f]/.test(input.subject) ||
+    !input.body.trim() || input.body.length > 20000 || input.body.includes("\0")) {
+    return { success: false, error: "Enter one recipient, an approved From, a subject, and plain text of up to 20,000 characters." }
+  }
+  try {
+    const result = await admin.rpc("found_mail_save_compose", { p_reply_id: input.replyId, p_to: to,
+      p_from: from, p_subject: input.subject.trim(), p_body: input.body })
+    if (result.error || !result.data?.id) return { success: false, error: "Compose draft could not be saved. Keep your text and refresh." }
+    return { success: true, replyId: result.data.id, state: "draft", message: "Draft saved. Review To, From, subject and text before sending." }
+  } catch { return { success: false, error: "Compose draft could not be confirmed. Keep your text and refresh." } }
+}
+
+export async function sendSavedCompose(admin: Admin, input: { replyId: string; expectedTo: string; expectedFrom: string; expectedSubject: string; expectedVersion: string }, transport: ReplyTransport = createReplyTransport()): Promise<Result> {
+  if (!replySendingEnabled()) return { success: false, error: "Sending is not enabled yet." }
+  if (!uuid.test(input.replyId) || !Number.isFinite(Date.parse(input.expectedVersion)) ||
+    !parseSingleMailbox(input.expectedTo) || !FOUND_MAIL_ADDRESSES.some(address => address === input.expectedFrom)) {
+    return { success: false, error: "Refresh and review the saved Compose draft before sending." }
+  }
+  const token = randomUUID()
+  try {
+    const claim = await admin.rpc("found_mail_claim_compose", { p_id: input.replyId, p_to: input.expectedTo,
+      p_from: input.expectedFrom, p_subject: input.expectedSubject, p_token: token, p_expected_updated_at: input.expectedVersion })
+    if (claim.error || !claim.data) return { success: false, error: "Draft changed or a send is already recorded. Refresh; do not resend blindly." }
+    const draft = claim.data as ReceivedReply
+    if (draft.intent !== "compose" || draft.parent_id !== null || draft.id !== input.replyId ||
+      draft.to_address !== input.expectedTo || draft.from_address !== input.expectedFrom || draft.subject !== input.expectedSubject) {
+      return { success: false, state: "unconfirmed", error: "Compose send state could not be confirmed. Review before taking another action." }
+    }
+    return dispatchSavedMail(admin, draft, token, {}, transport)
+  } catch { return { success: false, state: "unconfirmed", error: "Compose send state is uncertain. Refresh and reconcile before sending again." } }
 }
 
 /** Called only after the existing Svix signature validation. */

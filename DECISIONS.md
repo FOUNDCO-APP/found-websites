@@ -1,3 +1,23 @@
+## October 28, 2026 - Shared Found Addresses And Occasional New Email
+
+Shawn confirmed shawn@foundco.app and directed making this work. After actual
+independent Steve/Jony/Craig discussion, the bounded next preparation is one inbox
+for hello/support/shawn; unexpected catch-all addresses remain recoverably in Spam
+without ordinary alerts. Original To remains visible. Receiving at any address or
+rescuing Spam never authorizes that address as an outgoing identity. Replies use
+the unique recognized addressed alias; multiple or no recognized aliases require
+an explicit approved From choice. Dangerous/authentication-blocked mail stays
+blocked independently of address choice or sender allow rules.
+
+Occasional New email is admin-only, one recipient, approved From, subject/plain
+text, Save -> persisted exact review -> explicit Send. Preserve immutable intents,
+stale-version protection, one transport claim and honest uncertainty. No bulk,
+CC/BCC, attachments, automated mail, client enrollment or new tenant mailbox.
+Shawn's get-this-working instruction authorizes this bounded preparation without
+another product approval loop. Actual provider configuration/installation requires
+verified access, exact safe settings and concrete activation review. No paid
+upgrades or education sends. Access findings and current status remain in handoff.
+
 ## October 28, 2026 - Found Mail First Local Build Approved
 
 After visible independent Steve/Jony-led discussion with Craig security review,

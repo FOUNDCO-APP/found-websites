@@ -7,11 +7,12 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
-Latest October28 priority: Shawn approved the first local build of receiving/reply
-handling inside Found, in-app notifications and strong spam protection BEFORE
-outreach. Four drafts stay held. Local implementation/testing is underway;
-provider/DNS changes, production installation, publication and real sends require
-separate approval. Read SESSION_HANDOFF.md for current build evidence.
+Latest October28 priority: disabled Found Received/Sent interface is published and
+verified through b3c3977. Shawn confirmed shawn@foundco.app and directed making
+shared receiving/manual mail work. Independent leads support known aliases,
+unknown-address quarantine and a narrow single-recipient composer. Preparation
+underway; Resend setup access is blocked by non-readable production secrets.
+Vercel/DNS API access verified. Four education drafts remain held. See handoff.
 
 Earlier October28 work: urgent four-client orientation batch prepared after Shawn's
 move-forward direction. Disabled pathway definitions/template builder tested; exact
