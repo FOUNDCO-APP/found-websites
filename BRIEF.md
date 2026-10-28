@@ -7,12 +7,12 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
-Latest October28 priority: disabled Found Received/Sent interface is published and
-verified through b3c3977. Shawn confirmed shawn@foundco.app and directed making
-shared receiving/manual mail work. Independent leads support known aliases,
-unknown-address quarantine and a narrow single-recipient composer. Preparation
-underway; Resend setup access is blocked by non-readable production secrets.
-Vercel/DNS API access verified. Four education drafts remain held. See handoff.
+Latest October28: reviewed shared identities/Compose/read-only configuration check
+published and verified through cef7142. Existing runtime Resend credential is
+present but provider setup reads are forbidden; secure setup-key handoff required.
+Vercel/DNS access works. Mail flags off; all migrations unapplied; four client
+sites200. No actual mail tests or sends, provider/DNS changes or paid upgrades.
+Four education drafts remain held. Read current handoff for exact next steps.
 
 Earlier October28 work: urgent four-client orientation batch prepared after Shawn's
 move-forward direction. Disabled pathway definitions/template builder tested; exact

@@ -8,6 +8,37 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
+### Latest Verified Release And Actual Access Blocker
+
+Published cef71423b201d6d0235c50c0dbecc5387d376a4f; GitHub main matches and
+Vercel4J2R3xt9sFgkYLB8pTpeRUwSvPi9 reports success. Existing credentials were
+used only INSIDE runtime for fixed read-only metadata calls. Authenticated
+/api/admin/mail-config200 confirms keyConfigured=true, domain/webhook access
+cannot_verify with reason forbidden. This covers401/403 generically: do not claim
+the key is definitely send-only or valid for all sends. It lacks usable setup
+authorization; do not try broader extraction, proxying or indirect escalation.
+Anonymous readiness401. Source/table installation and actual mail remain separate.
+
+Authenticated /emails, /emails/received and /emails/compose return200. Received is
+explicitly disabled; Compose shows shawn identity and disabled sending. Four
+client Home pages200. No forms, production migrations, flags, DNS/provider settings,
+live sends, enrollment or billing changed. The protected key never returned to the
+agent. New-key request was paused for the safe check; result now establishes that
+an appropriately authorized setup credential/user account action is required.
+Next human step: create Resend setup key with Full access and save RESEND_API_KEY
+securely in original checkout .env.local, NEVER chat. Original async question is
+pending. Can guide saving if needed; don't delete/replace the existing live key.
+Do not claim receiving works or ask Shawn to test Hello until activation succeeds.
+
+Retry readiness: Vercel team plan is Hobby. pg_cron/pg_net available but not
+installed; Vault installed and anon/authenticated SELECT denied (metadata query
+only, no secrets read). Independent Craig recommends periodic private-token
+pg_cron/pg_net recovery rather than treating daily3-message cron as sufficient.
+This remains a reviewed proposal, not an installed job. Need concrete scheduler,
+provider quota/cost, real concurrency/recovery and controlled mail verification.
+Four orientation drafts remain held. This release verification note saved locally
+for the next normal documentation push; no extra deployment for this note.
+
 ### Latest - Shared Addresses And Manual New Email
 
 Shawn confirmed shawn@foundco.app (not sean), then directed getting receiving and

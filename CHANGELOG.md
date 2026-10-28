@@ -1,5 +1,11 @@
 ## October 28, 2026 - Shared Mail Addresses And Compose Prepared
 
+- Published cef7142; Vercel4J2R3xt9sFgkYLB8pTpeRUwSvPi9 success, remote verified.
+  Live read-only config check uses existing key internally: present but provider
+  metadata access forbidden. Anonymous401; three admin mail views/four sites200.
+  Appropriate setup credential remains required; no indirect escalation or secrets
+  exposed. Flags off, migrations unapplied, DNS/provider/sends/billing unchanged.
+
 - Shawn confirmed shawn@foundco.app and directed getting mail working. Actual
   independent leads settled one inbox, known From identities, recoverable unknown
   address Spam and single-recipient manual Compose with exact saved review.

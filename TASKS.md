@@ -20,8 +20,11 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Prepare/review narrowly scoped runtime configuration check (577 synthetic
   checks), using existing protected credential without retrieving or returning it.
   Only fixed Resend GET metadata; no secrets, message contents or mutations.
-- [ ] Build/publish read-only check, verify existing runtime permissions and exact
-  setup before deciding whether a new key is needed. User told key request on hold.
+- [x] Build/publish read-only check through cef7142, Vercel success. Runtime key
+  present but provider setup reads forbidden; anon401. Secure setup key needed.
+- [x] Live read-only Sent/Received/Compose and four client Home pages200; gates off.
+- [ ] Human secure Resend setup-key handoff (never chat), then account verification
+  and concrete safe activation/recovery plan. No credential escalation workaround.
 - [ ] Obtain usable Resend setup access, verify account routing/webhook/quota/cost,
   then concrete activation review. No mail/DNS mutations or real sends yet.
 
