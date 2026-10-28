@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { after, NextRequest, NextResponse } from "next/server"
 import { Webhook } from "svix"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { acceptReceivedEvent, createReceivingAdapter, processIncomingMail } from "@/lib/admin/mailStore"
+import { recordReplyDelivery } from "@/lib/admin/mailReplies"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing signature headers" }, { status: 400 })
   }
 
-  let event: { type?: string; data?: { email_id?: string } }
+  let event: { type?: string; created_at?: string; data?: { email_id?: string } }
   try {
     const wh = new Webhook(secret)
     event = wh.verify(body, {
@@ -47,6 +49,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
+  if (event.type === "email.received") {
+    if (process.env.FOUND_INBOUND_ENABLED !== "true") {
+      return NextResponse.json({ error: "Incoming mail is not enabled" }, { status: 503 })
+    }
+    try {
+      const admin = getAdminClient()
+      const result = await acceptReceivedEvent(admin, svixId, event.data)
+      if (result.success) {
+        // Queue is committed first. The immediate attempt is best-effort;
+        // durable recovery still requires the separately enabled retry trigger.
+        after(async () => { await processIncomingMail(admin, createReceivingAdapter(), 1) })
+      }
+      return NextResponse.json(result.success ? { received: true } : { error: result.error }, { status: result.success ? 200 : 503 })
+    } catch { return NextResponse.json({ error: "Incoming mail queue unavailable" }, { status: 503 }) }
+  }
+
   const status = event.type ? STATUS_BY_EVENT[event.type] : undefined
   const resendEmailId = event.data?.email_id
   if (!status || !resendEmailId) {
@@ -54,11 +72,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  const admin = getAdminClient()
-  await admin
-    .from("email_log")
-    .update({ delivery_status: status, delivery_status_at: new Date().toISOString() })
-    .eq("resend_email_id", resendEmailId)
+  try {
+    const admin = getAdminClient()
+    const updated = await admin
+      .from("email_log")
+      .update({ delivery_status: status, delivery_status_at: new Date().toISOString() })
+      .eq("resend_email_id", resendEmailId)
+    if (updated.error) return NextResponse.json({ error: "Delivery update unavailable" }, { status: 503 })
+    if (process.env.FOUND_INBOUND_ENABLED === "true") {
+      const receipt = await recordReplyDelivery(admin, resendEmailId, status, event.created_at)
+      if (!receipt.success) return NextResponse.json({ error: "Reply delivery receipt unavailable" }, { status: 503 })
+    }
+  } catch { return NextResponse.json({ error: "Delivery persistence unavailable" }, { status: 503 }) }
 
   return NextResponse.json({ received: true })
 }

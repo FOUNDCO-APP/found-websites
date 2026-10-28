@@ -1,3 +1,22 @@
+## October 28, 2026 - Found Mail First Local Build Approved
+
+After visible independent Steve/Jony-led discussion with Craig security review,
+Shawn approved the first build: admin Received/Sent navigation, in-app polling
+unread indicator, recoverable Spam, safe plain-text viewing, quarantined attachment
+metadata and explicit single-recipient manual replies with saved drafts, reviewed
+recipient/body and duplicate-send protection. Receiving is Found's own mailbox,
+not a new tenant-business inbox. Preserve the shipped client-first Sent history.
+
+No automatic replies, forwarding, reply-all, general outreach composer, external
+personal inbox alerts, paid AI service or automatic spam deletion. Sender identity
+and account ownership are never inferred from matching an email address. Familiar
+wording or a provider acceptance is not authentication or delivery proof.
+
+This approval covers local implementation, unapplied migrations and synthetic
+tests/previews only. Production schema installation/publication, domain/provider
+activation, costs/retention and controlled real-message testing remain separate.
+All four education drafts remain held; no client sends or drip enrollment.
+
 ## October 26, 2026 - Staged Protection And Pre-Store Team Handoff
 
 Latest approved scope: Pro included-tool selection, following visible independent

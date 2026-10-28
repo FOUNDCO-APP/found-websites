@@ -60,6 +60,7 @@ export interface AdminEmailHistoryResult {
 // Exact tuples verified in the sending source. A default/legacy scope must
 // neither promote business notifications into client correspondence nor hide it.
 const rules: Array<[string, string, string, EmailCategory]> = [
+  ["found_manual_reply", "prospect", "admin/mail/manual-reply", "found_clients"],
   ["site_live", "client_owner", "activationEmails/sendSiteLiveEmailOnce", "found_clients"],
   ["activation_reminder", "client_owner", "activationEmails/sendActivationReminderEmailOnce", "found_clients"],
   ["magic_link_login", "client_owner", "dashboard/api/send-login", "found_clients"],

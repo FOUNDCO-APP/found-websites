@@ -8,13 +8,56 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
-### New Priority - Found In-App Receiving And Spam (Proposed Build Scope)
+### New Priority - Found In-App Receiving And Spam (First Local Build Approved)
 
 Shawn chose complete in-app receiving over another personal/external inbox. Wants
 in-app notifications and strong spam protection BEFORE any client email/outreach.
 Hold the four drafted orientation emails and drip enrollment. No new sends.
 Actual independent Steve/Jony-led discussion with Craig security contribution ran;
-proposed implementation scope below awaits Shawn's concrete-scope approval.
+Shawn explicitly approved the concrete first-build scope. Local code/schema/test
+preparation is authorized; production installation, publication, live DNS/provider
+activation and real messages remain separately gated. The four drafts stay held.
+
+Local first build prepared in the managed pro-included-choice worktree:
+Received/Sent navigation, ready-Inbox-only unread polling, admin-safe plain-text
+conversation, quarantined attachment metadata, recoverable Spam and sender rules,
+retrieval recovery, saved draft/review/explicit single-recipient Send. No hidden
+copies, automatic replies or outgoing retry worker. Sender matching never assigns
+client ownership. Accepted manual replies log as Found correspondence, unlinked
+unless an independent relationship is established. Acceptance is not delivery.
+
+Two unapplied service-only/RLS migrations prepare durable signed receipt queue,
+leases/retry, sender serialization and one-claim reply intent/atomic Sent logging.
+FOUND_INBOUND_ENABLED and FOUND_MAIL_SEND_ENABLED default off. Incoming cron
+handler prepared but deliberately NOT registered in vercel.json; verified recovery
+scheduling is a live-activation requirement. Preserve existing outbound DNS/MX.
+
+Frozen-source checks:46 parser/safety,229 store/webhook/actions/unread/SQL,
+124 reply SQL/orchestration,21 hydrated React interaction and280 existing-history
+checks pass.159 Chromium layout assertions/28 screenshots and five existing Sent
+browser groups pass using synthetic data. No real message, provider call, live DB
+read/write, installation or DNS change in these tests. PGlite does NOT prove real
+multi-session lock scheduling. Hydrated interactions mock actions/count endpoint;
+they do NOT establish real Next server-action/provider integration or delivery.
+
+Independent Steve product and Jony rendered-design rereviews accept the final
+local presentation after grouped Write/Save -> Review/Send, readable metadata,
+full address wrapping and explicit disabled receiving. Craig source review accepts
+the bounded local freeze after uncertain-send persistence, winning receipt timestamp,
+expired-lease recovery and identical sender locks. Sender rules are collapsed by
+default; browser fixtures open them only for inspection. Final frozen-source
+production build/TypeScript/all88 static pages pass. Before/after source hashes
+match f9b9a750801111265d581ed3d93286616d655201da621aed81f7067de8e29deb;
+ignored received-preview/final-build.json records exit0 at2026-10-28T21:17:36Z.
+No push, deployment, production install, live activation or real send authorized.
+
+Preview artifacts are ignored .billing-audits/received-preview/; reproducible
+tests/received-mail-browser.cjs records managed-source hashes. No new MD authority.
+Next: verify actual Resend account/access/domain/quotas/costs and retention policy,
+then separately approve production migration/release/routing/schedule and controlled
+real inbound/reply/spam/duplicate/recovery/access/multi-session checks. Held four
+education drafts remain DRAFT_NOT_SENT until that route is proven and exact batch
+approval/preflight is complete. No paid upgrade or client-billing changes.
 
 Received/Sent switch: Received inbox and polling unread indicator inside admin;
 Sent retains shipped client-first history and categories. No personal-email alerts
@@ -52,7 +95,8 @@ read-only verification, retention proposal, then separately approved installatio
 DNS activation and controlled end-to-end tests before releasing held outreach.
 Acceptance: genuine inbound arrives; duplicate once; failed retrieval recovers;
 spam quarantines/rescues; manual reply delivered/threaded; unauthorized reads fail.
-No code, schema, DNS, provider account changes or sends made for this meeting.
+Local source and unapplied migration preparation began after this approval.
+No live schema, DNS, provider account changes or sends made.
 
 ### Reply Receiving Check - Before Initial Batch
 

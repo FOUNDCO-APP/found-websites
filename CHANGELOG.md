@@ -1,3 +1,20 @@
+## October 28, 2026 - Found Mail First Local Build Prepared
+
+- Shawn explicitly approved the reviewed first-build scope before implementation.
+  Prepared Received/Sent, in-app unread count, recoverable Spam/sender rules,
+  safe plain text, quarantined attachment metadata and explicit manual replies.
+- Added unapplied service-only migrations for durable signed receipt/retrieval,
+  retry leases, sender locking, saved reply intents and atomic tracked history.
+  Sending/receiving gates default off; receiving cron not registered. No live
+  installation, DNS/provider change, deployment, payment change or real send.
+- 46 safety,229 store,124 reply,21 hydrated interaction,280 existing-history
+  checks pass;159 Chromium assertions/28 screenshots and five Sent browser groups.
+  Tests use synthetic data; no real provider or multi-session concurrency proof.
+- Actual independent Steve/Jony rereviews accept refined local presentation;
+  Craig accepts bounded source freeze after reliability findings were corrected.
+  Final frozen-source build/TypeScript/all88 static pages pass with matching
+  before/after hashes; details in SESSION_HANDOFF. Four drafts stay held.
+
 ## October 28, 2026 - Immediate Client Education Drafts Prepared
 
 - Shawn requested urgent pathway setup and initial outreach. Independent leads

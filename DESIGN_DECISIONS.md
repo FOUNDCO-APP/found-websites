@@ -1,3 +1,17 @@
+## October 28, 2026 - Found Mail First Build
+
+Shawn approved the independently reviewed first-build direction: Received/Sent
+navigation in existing Found HQ styling, separate recoverable Spam and an in-app
+unread indicator. No new visual identity or tenant template changes. Reuse HQ
+type, spacing, muted supporting text and clear primary actions; mobile first.
+
+Messages render as escaped plain text with remote imagery disabled. Attachments
+show quarantined metadata only; first build provides no download or malware-clean
+promise. Reply has one visible To/From/subject, a Save draft action, persisted
+review and a separate explicit Send. Differing Reply-To requires confirmation.
+Unavailable, disabled and uncertain states must be visible rather than implying
+an empty operational inbox, successful delivery or permission to resend.
+
 ## October 27, 2026 - Admin Client Communication Overview
 
 After visible independent review, Shawn approved the Steve/Jony-led direction:

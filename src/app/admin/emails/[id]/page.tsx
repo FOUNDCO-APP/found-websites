@@ -135,6 +135,8 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
               sandbox="allow-same-origin"
               title={row.subject}
             />
+          ) : row.text_body ? (
+            <pre style={{ padding: 24, whiteSpace: "pre-wrap", overflowWrap: "anywhere", color: "#111", fontFamily: "inherit" }}>{row.text_body}</pre>
           ) : (
             <div style={{ padding: 24 }}>
               <p style={{ color: "#555555", fontSize: 13, margin: 0 }}>No stored copy of this email&apos;s content (sent before this page tracked it).</p>

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { adminLogout } from "./adminAuth"
+import MailUnread from "./emails/received/MailUnread"
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Today", icon: "today", match: ["/admin"] },
@@ -31,7 +32,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <nav className="found-hq-nav" aria-label="Found HQ">
           {NAV_ITEMS.map((item) => {
             const active = item.match.some((path) => path === "/admin" ? pathname === path : pathname.startsWith(path))
-            return <Link key={item.href} href={item.href} className="found-hq-navlink" data-active={active}><NavIcon name={item.icon} /><span>{item.label}</span></Link>
+            return <Link key={item.href} href={item.href} className="found-hq-navlink" data-active={active}><NavIcon name={item.icon} /><span>{item.label}</span>{item.icon === "emails" && <MailUnread />}</Link>
           })}
         </nav>
         <form action={adminLogout} className="found-hq-signout"><button type="submit" className="found-hq-navlink"><NavIcon name="signout" /><span>Sign out</span></button></form>

@@ -22,6 +22,8 @@ const direct = {email_type:'site_live',recipient_type:'client_owner',source:'act
 const alert = {email_type:'new_signup_alert',recipient_type:'admin',source:'adminAlerts/sendNewSignupAlert'}
 const login = {email_type:'magic_link_login',recipient_type:'client_owner',source:'dashboard/api/send-login'}
 const business = {email_type:'lead_notification',recipient_type:'client_owner',source:'actions/leads/submitLead'}
+check(classifyEmail({email_type:'found_manual_reply',recipient_type:'prospect',source:'admin/mail/manual-reply'}),'found_clients','manual Found reply has explicit purpose')
+check(classifyEmail({email_type:'found_manual_reply',recipient_type:'prospect',source:'unknown'}),'unclassified','manual label alone never establishes purpose')
 for (const scope of ['found','client',null,'unexpected']) {
   check(classifyEmail({...direct,email_scope:scope}),'found_clients','default scope does not override known tuple')
   check(classifyEmail({...business,email_scope:scope}),'business','business purpose remains separate')
@@ -148,6 +150,7 @@ const page=load('src/app/admin/emails/page.tsx',{
   '../lib':{requireAdmin:async()=>{if(!authorized)throw new Error('Not authorized')},getAdminClient:()=>{clientCalls++;return {}}},
   '@/lib/admin/emailHistory':{getAdminEmailHistory:async()=>{loaderCalls++;return history}},
   './EmailsWorkspace':{default:()=>null},'react/jsx-runtime':{jsx:()=>null,jsxs:()=>null},
+  './MailNavigation':{default:()=>null},
   'next/link':{default:()=>null},
 }).default
 await assert.rejects(page({searchParams:Promise.resolve({})}),/Not authorized/);checks++

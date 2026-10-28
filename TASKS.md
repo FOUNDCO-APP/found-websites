@@ -9,7 +9,14 @@ historical divider below; old unchecked items are not automatic authorization.
   hold all four education messages and drip activation.
 - [x] Actual Steve/Jony-led discussion with Craig review: Received/Sent, spam
   quarantine, unread indicator, safe message viewing/recovery and manual replies.
-- [ ] Shawn approval of concrete first-build scope; prepare previews and tests.
+- [x] Shawn approval of concrete first-build scope, local preparation only.
+- [x] Prepare local inbox/reply implementation and two unapplied service-only
+  migrations; flags off, receiving cron deliberately unregistered.
+- [x] Independent product/design/security rereviews;700 synthetic safety/storage/
+  reply/interaction/history checks,159 layout assertions/28 previews and five
+  existing Sent-browser groups. Real delivery/concurrency remain unverified.
+- [x] Final frozen-source production build/TypeScript/all88 static pages pass;
+  source hashes match. Save locally and deliver preview; no live activation.
 - [ ] Verify Resend/DNS access, plan/quotas/costs, receiving/auth evidence and
   attachment/retention policy before separately approved live activation.
 - [ ] Controlled inbound/reply/spam/recovery/access tests before any held outreach.
