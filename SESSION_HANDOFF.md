@@ -8,6 +8,69 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
+### New Priority - Found In-App Receiving And Spam (Proposed Build Scope)
+
+Shawn chose complete in-app receiving over another personal/external inbox. Wants
+in-app notifications and strong spam protection BEFORE any client email/outreach.
+Hold the four drafted orientation emails and drip enrollment. No new sends.
+Actual independent Steve/Jony-led discussion with Craig security contribution ran;
+proposed implementation scope below awaits Shawn's concrete-scope approval.
+
+Received/Sent switch: Received inbox and polling unread indicator inside admin;
+Sent retains shipped client-first history and categories. No personal-email alerts
+or OS push by default. Spam separate, recoverable, excluded from normal unread
+notifications. Rescue/block/allow must retain malicious-content protection; no
+automatic deletion/auto-bounces/automatic replies or paid AI dependency assumed.
+Lead spamGuard keyword rules are NOT suitable unchanged: marketing/client/link
+language is legitimate Found support content. New inbound-specific scoring must
+use verified provider evidence if available, not forged sender-supplied auth headers,
+plus rate/size/content/link checks. Familiar From address not identity/access proof.
+
+Leads separately confirmed manual Reply inside Found belongs in minimum complete
+release so Shawn need not leave to another inbox: visible single To/From/subject,
+explicit Send, safely parsed From/Reply-To with discrepancy warning, threading,
+duplicate protection and recoverable drafts/errors. No reply-all, forwarding,
+hidden copies, AI/auto replies or general outreach composer in first scope.
+Replies should appear in the conversation and tracked Found Sent history.
+
+Technical proposal: signed raw-body webhook verification, durable deduplicated
+receipt/retrieval queue before acknowledgement, retry/recovery states and admin-only
+RLS/access for all message/body/count/attachment paths. Plain text first; remote
+images off; attachments quarantined/no inline execution; never claim malware clean
+without real scanner. Unknown recipient addresses quarantined/non-notifying until
+address policy verified; advertise hello/support only initially. Preserve existing
+outbound send.foundco.app records and all client sites/billing.
+
+Official Resend docs verified Oct28: custom receiving requires exact domain-specific
+MX from account (do not use guide example values); email.received webhook carries
+metadata only, content/headers/attachments retrieved through Receiving API. Pricing
+page lists inbound feature/quotas and30-day provider retention, but actual account
+plan/permissions, trusted spam verdict availability, DNS control and costs remain
+unverified; no purchase/upgrade authorized. No Resend API key in current saved env.
+Need local inbox/spam/reply previews and mock reliability/security tests, account
+read-only verification, retention proposal, then separately approved installation/
+DNS activation and controlled end-to-end tests before releasing held outreach.
+Acceptance: genuine inbound arrives; duplicate once; failed retrieval recovers;
+spam quarantines/rescues; manual reply delivered/threaded; unauthorized reads fail.
+No code, schema, DNS, provider account changes or sends made for this meeting.
+
+### Reply Receiving Check - Before Initial Batch
+
+Shawn asked whether Found uses Resend and replies can arrive in Found without
+Namecheap email hosting. Source/previous tracked delivery confirm Resend outbound.
+Public DNS-over-HTTPS check: foundco.app MX query status0/no answers; send.foundco.app
+has SES feedback MX, not a hello/support customer inbox. Existing signed webhook
+handles sent/delivered/delayed/bounced/complained only; no inbound message ingestion
+or admin received-mail view. Do not promise replies to hello/support reach Shawn
+or Found. Official Resend receiving documentation confirms custom-domain MX plus
+received-email processing can support this without a separate Namecheap mailbox;
+that setup/integration has NOT been implemented or authorized in this check.
+Existing first batch remains DRAFT_NOT_SENT pending reply-route discussion and
+final exact-send review. No DNS, account, webhook or sending changes made.
+Resend domain-management read could not run because the current saved env file
+does not contain RESEND_API_KEY; no keys printed or requested. Source capability
+and public DNS check are not a direct Resend-account receiving configuration audit.
+
 ### Fountain Co Drip System - Immediate Four-Client Draft Batch Prepared
 
 Shawn directed moving forward urgently with pathways and one/maybe two messages

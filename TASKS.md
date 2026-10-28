@@ -3,6 +3,17 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Priority - Found In-App Receiving Before Outreach
+
+- [x] Shawn chooses in-app receiving/notifications and strong spam protection;
+  hold all four education messages and drip activation.
+- [x] Actual Steve/Jony-led discussion with Craig review: Received/Sent, spam
+  quarantine, unread indicator, safe message viewing/recovery and manual replies.
+- [ ] Shawn approval of concrete first-build scope; prepare previews and tests.
+- [ ] Verify Resend/DNS access, plan/quotas/costs, receiving/auth evidence and
+  attachment/retention policy before separately approved live activation.
+- [ ] Controlled inbound/reply/spam/recovery/access tests before any held outreach.
+
 ## Proposed - Fountain Co Drip System (October 28)
 
 - [x] Shawn requested urgent pathway preparation and first message(s); actual
