@@ -8,6 +8,60 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 27, 2026
 
+### Admin Email Client-First Release - Approved Preparation
+
+Shawn requested planning/design/function discussion so Found-to-client relationship
+emails are not buried under business lead emails. Three independent reviewers ran:
+visual, product/CX, engineering, with their exchange shown in chat. Steve/Jony then
+led the refinement to a client-first overview, not an email pile, and Shawn approved
+preparing that direction. No sending, schema changes or publication approved.
+Source confirms raw email_scope is inadequate:
+default client includes account emails; found often marks internal alerts. Existing
+client classifier also lumps signup alerts with owner correspondence. Prior advice
+to use Found filter as complete relationship history was incomplete.
+Approved stage1: client overview default, tap client for chronological Found history;
+single mobile category selector
+instead of five equal tabs (product challenge to design); Business emails, Admin
+alerts, Unclassified and All accessible. Issues remain a visible secondary filter.
+Purpose/recipient/source classification shared across list/detail/client history;
+preserve raw records, keep conflicts/unknowns visible. Filter/search/paginate/count
+server-side before limits, including client history's current15/latest300 global
+limitations. Unlinked login messages visible; no inferred ownership from recipient
+address alone. Clear loading/error/empty states, accepted vs delivered truth.
+Stage2 separately propose reviewed customer success journeys/copy/triggers using
+verified actions. No implicit sends, catch-up campaign, fake schedules or claims of
+opens/adoption/results. Hiram's delivered login/site-live history is not a retention
+journey. Prepared shared admin/emailHistory server-only metadata classifier/loader,
+server GET filtering/search/pagination and exact counts, explicit unknown handling,
+client overview including no-history and canceled clients (explicit account/test/
+retired flags only), unlinked Found history without guessed association. Shared
+classification used in detail/client pages; recent Found excerpts link to full
+history. Existing detail-only manual handling/flag tools remain; new overview/list
+have no write controls. All history routes authenticate before data access.
+Independent engineering P2s corrected: preserve staff-flagged lead discovery as
+separate signal from delivery issues; retired record scoped heading plus all-history
+link. Steve/Jony accepted compact mobile refinement; initial controls-first preview
+rejected, optional filters collapsed and latest subject made prominent. Narrow320
+selector now spans a full row; browser rerun passes. No automatic emails or billing changes.
+Tests: 278 synthetic metadata checks (>300 rows, server cap73, conservative tuples,
+errors, counts, client eligibility, flags and auth); five actual Chromium page/UI
+groups at320/390/768/1440, selected-client path, category GET/resetpagination,
+pagination, staff-flag discovery, unlinked history and read failure. Synthetic
+records, no real sessions or customer writes. Preview screenshots in ignored
+.billing-audits/admin-email-history: overview-390.png and client-timeline-390.png;
+all widths320/390/768/1440. No preview fixtures deployed or included in Git.
+Read-only live loader check: 392 metadata records; 27 Found-client,359 business,
+6 admin alerts,0 unclassified at that check. Four current clients returned;15
+unlinked Found login records retained. Hiram has2 company-linked Found records,
+latest site-live delivered; this is not proof both delivered to correct address.
+Production build/TypeScript/all86 pages pass. Final browser rerun and post-polish
+TypeScript check pass. Independent visual/product/engineering reviews found no
+remaining blockers; they did not independently rerun parent checks. Prepared only,
+no publication approval, push or deployment. Existing detail tools retain prior
+manual behavior; no actual actions were submitted for tests. All live work was reads.
+Known limit: metadata scan grows with history and is not transactional snapshot;
+count/duplicate changes fail closed rather than silently showing partial results.
+
 ### Typography Refinement - Live
 
 Shawn approved visible independent product/design recommendation to apply existing

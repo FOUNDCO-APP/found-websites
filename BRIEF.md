@@ -7,7 +7,12 @@ is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add
 another status/handoff source of truth without Shawn's approval.
 
-Latest October 27 work: approved typography hierarchy and constrained scrolling-
+Latest October 27 work: Shawn approved Steve/Jony-led client-first admin Email
+history preparation. Shared conservative classification, server filtering/paging,
+overview and timelines prepared; no follow-up sending/schema/publication approved.
+Read SESSION_HANDOFF.md for reviews, tests, live read-only evidence and open release.
+
+Earlier October 27 work: approved typography hierarchy and constrained scrolling-
 title fallback live. Visual/engineering rereviews, browser checks and final build
 pass. Shawn approved tested 8ccd17b; published through df67fb5 with Vercel success
 and read-only logo/login/four-client checks. See handoff for exact evidence.

@@ -1,8 +1,9 @@
-import { cookies } from "next/headers"
-import { redirect, notFound } from "next/navigation"
+import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@supabase/supabase-js"
 import { markEmailHandled, setLeadFlag } from "../actions"
+import { requireAdmin } from "../../lib"
+import { classifyEmail, emailDeliveryLabel } from "@/lib/admin/emailHistory"
 
 function getAdminClient() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 
@@ -14,22 +15,13 @@ const RECIPIENT_LABELS: Record<string, string> = {
   prospect: "Prospect",
 }
 
-const DELIVERY_LABELS: Record<string, string> = {
-  sent: "Sent",
-  delivered: "Delivered",
-  delayed: "Delayed",
-  bounced: "Bounced",
-  complained: "Marked as spam",
-}
-
 const ADMIN_TIME_ZONE = "America/Phoenix"
 
 export const metadata = { title: "Email - Found HQ" }
 
 export default async function AdminEmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const cookieStore = await cookies()
-  if (cookieStore.get("admin_key")?.value !== process.env.ADMIN_KEY) redirect("/admin")
+  await requireAdmin()
 
   const admin = getAdminClient()
   const emailResult = await admin
@@ -47,7 +39,10 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
       .maybeSingle()
   const row = handlingReady ? emailResult.data : fallbackResult?.data
 
+  if (emailResult.error && fallbackResult?.error) throw new Error("Email history could not be loaded. Please try again.")
   if (!row) notFound()
+  const categoryLabels = { found_clients: "Found → Our clients", business: "Business emails", admin_alerts: "Admin alerts", unclassified: "Unclassified" }
+  const category = classifyEmail(row)
   const handledAtValue = "handled_at" in row ? row.handled_at : null
   const handledNoteValue = "handled_note" in row ? row.handled_note : null
   const handledAt = typeof handledAtValue === "string" ? handledAtValue : null
@@ -63,18 +58,14 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
       <Link href="/admin/emails" className="hq-back-link"><span className="hq-back-chevron" />Emails</Link>
       <header className="hq-header">
         <div>
-          <p className="hq-eyebrow">{row.email_scope === "found" ? "Found" : company?.name ?? "No company"}</p>
+          <p className="hq-eyebrow">{categoryLabels[category]}</p>
           <h1 className="hq-title" style={{ fontSize: 22 }}>{row.subject}</h1>
           <p className="hq-subtitle">
             To {row.recipient_email} ({RECIPIENT_LABELS[row.recipient_type] ?? row.recipient_type}) · {row.email_type}
-            {!row.success && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Failed</span>}
-            {row.delivery_status && (
-              <span className={`hq-badge ${row.delivery_status === "bounced" || row.delivery_status === "complained" || row.delivery_status === "delayed" ? "hq-badge-warning" : "hq-badge-quiet"}`} style={{ marginLeft: 8 }}>
-                {DELIVERY_LABELS[row.delivery_status] ?? row.delivery_status}
-              </span>
-            )}
+            <span className="hq-badge hq-badge-quiet" style={{ marginLeft: 8 }}>{emailDeliveryLabel(row)}</span>
           </p>
           <p className="hq-subtitle">{new Date(row.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: ADMIN_TIME_ZONE })}</p>
+          <p className="hq-row-meta">{company?.name ?? "Not linked to a client"}. Delivery does not confirm that the email was opened or read.</p>
         </div>
       </header>
 

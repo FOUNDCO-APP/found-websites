@@ -3,6 +3,24 @@
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 
+## Now - Admin Found Client Communication History
+
+- [x] Visible independent design/product/engineering meeting: accurate Found-client
+  history first, mobile category selector, separate business/admin/unknown records.
+- [x] Shawn approved Steve/Jony-led client-first direction for preparation.
+- [x] Prepare conservative shared classification, complete metadata pagination,
+  exact counts, client overview/timelines and separate unknown/unlinked records.
+- [x] Preserve staff-flag review, scoped retired history, auth, explicit clientflags;
+  new overview/history read-only, existing manual detail tools retained.
+- [x] 278 synthetic checks/five Chromium groups and read-only live loader check.
+  Independent product/design/engineering reviews passed bounded refinement.
+- [x] Final narrow-phone selector polish; browser rerun, TypeScript and production
+  build/all86 pages pass. Independent visual/product/engineering acceptance.
+- [ ] Shawn preview acceptance and separate publication approval.
+- [ ] Separate publication approval, push/deployment verification. NOT live yet.
+- [ ] Separately review Found customer-success journey/copy/triggers; no sending,
+  backfill, automation or schedule authorized by this planning discussion.
+
 ## Now - October 27 Branding And Chooser Follow-up
 
 - [x] Prepare approved existing-token typography hierarchy and hidden accessible

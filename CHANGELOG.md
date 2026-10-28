@@ -1,3 +1,19 @@
+## October 27, 2026 - Client-First Admin Email History Prepared
+
+- Shawn approved actual independent Steve/Jony-led client-first direction after
+  visible discussion. Prepare overview/client timelines, category selector and
+  server-side complete-history search/filter/pagination instead of latest300.
+- Conservative purpose/recipient/source classification preserves raw history,
+  unknowns and unlinked login records. Never infer client ownership from address.
+- Existing manual detail tools retained; no new list write controls, sends,
+  billing, schema or account changes. Staff-flagged lead review preserved apart
+  from delivery issues; retired records link all recorded history.
+- 278 synthetic checks and five Chromium groups pass; live read-only loader
+  returns four clients and all392 metadata records, correctly separated. Independent
+  product/design/engineering rereviews accept bounded direction. Final selector
+  polish/browser rerun, TypeScript and production build/all86 pages pass. No
+  publication approved or performed; existing handoff files retain pending stage2.
+
 ## October 27, 2026 - Typography Refinement Prepared, Not Released
 
 - Shawn approved existing TYPE.title/headline/subhead hierarchy and visually

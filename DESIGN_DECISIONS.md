@@ -1,3 +1,16 @@
+## October 27, 2026 - Admin Client Communication Overview
+
+After visible independent review, Shawn approved the Steve/Jony-led direction:
+Found-to-clients starts with current client rows, including no-history clients;
+tap for chronological correspondence. One category selector, optional search/
+review filters, separate business/admin/unclassified views. Latest message and
+recorded delivery are distinct from stored relationship/subscription status.
+No inferred disengagement from old/missing emails, guessed ownership, scheduled
+messages, opens or revenue claims. Reuse existing HQ typography/hairline rows.
+Refine mobile controls so clients appear early. Initial controls-first preview was
+rejected and corrected; read-only overview/list preserve existing detail tools.
+This is preparation approval only; publication and customer journeys separate.
+
 ## October 27, 2026 - Chooser Typography And Constrained Fallback
 
 Shawn approved visible product/design recommendation to reuse owner-dashboard

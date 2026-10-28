@@ -6,6 +6,7 @@ import { getStripe } from "@/lib/stripe/connect"
 import type Stripe from "stripe"
 import { getStoredBillingSummaries } from "@/lib/stripe/billingSummary"
 import { getClientBillingFacts, type ClientBillingFacts } from "@/lib/stripe/clientBillingFacts"
+import { classifyEmail, getAdminEmailHistory } from "@/lib/admin/emailHistory"
 
 export const metadata = { title: "Client - Found HQ" }
 
@@ -29,12 +30,9 @@ type ClientEmailHistory = ClientDetail["emails"][number] & {
 }
 
 function emailHistoryCategory(row: Omit<ClientEmailHistory, "history_category">): ClientEmailHistory["history_category"] {
-  if (row.lead_id || /^(lead_|reservation_|owner_reply_to_lead$)/.test(row.email_type) ||
-    row.source === "api/cron/lead-followup" || row.source.startsWith("actions/leads/")) return "lead_automation"
-  if (["magic_link_login", "site_live", "activation_reminder", "deferred_billing_add_card", "permanent_comp_live",
-    "billing_payment_attention", "team_invite", "domain_help_request", "new_signup_alert", "abandoned_onboarding_save"].includes(row.email_type)) return "owner_account"
-  if (/^(booking_|online_order_|shop_order_|estimate_)/.test(row.email_type)) return "business_operations"
-  if (row.email_scope === "found" && ["client_owner", "team_member", "admin"].includes(row.recipient_type)) return "owner_account"
+  const category = classifyEmail(row)
+  if (category === "found_clients") return "owner_account"
+  if (category === "business") return "business_operations"
   return "unknown"
 }
 
@@ -122,7 +120,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       .eq("id", id)
       .maybeSingle(),
     admin.from("client_activities").select("summary, activity_type, metadata, created_at").eq("company_id", id).order("created_at", { ascending: false }).limit(30),
-    admin.from("email_log").select("id, subject, email_type, recipient_email, recipient_type, lead_id, source, email_scope, success, delivery_status, delivery_status_at, resend_email_id, created_at").eq("company_id", id).order("created_at", { ascending: false }).limit(15),
+    getAdminEmailHistory(admin, { category: "found_clients", clientId: id }).then(history => ({ data: history.rows.map(row => ({ ...row, subject: row.subject ?? "", email_type: row.email_type ?? "", recipient_email: row.recipient_email ?? "", recipient_type: row.recipient_type ?? "", source: row.source ?? "", email_scope: row.email_scope ?? "" })), error: history.error })),
     admin.from("customer_activity_events").select("event_type, surface, feature, created_at").eq("company_id", id).eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(80),
   ])
 
@@ -138,11 +136,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div><p className="hq-row-title">{activity.summary}</p><p className="hq-row-meta">{activity.created_at}</p></div>
         </div>)}
       </div></section>
-      <section><h2 className="hq-section-title">Email History</h2><div className="hq-list">
+      <section><h2 className="hq-section-title">Recent Found Emails</h2><div className="hq-list">
         {(emails ?? []).map(email => <div className="hq-row" key={email.id}>
           <div><p className="hq-row-title">{email.subject}</p><p className="hq-row-meta">{email.created_at}</p></div>
         </div>)}
       </div></section>
+      <Link href={`/admin/emails?category=all&client=${encodeURIComponent(id)}`}>View all recorded email history</Link>
     </div>
   }
   const [billingPaymentSignal, summaries, billingFacts] = await Promise.all([

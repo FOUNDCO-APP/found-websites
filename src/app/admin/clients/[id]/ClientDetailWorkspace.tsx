@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 import { setViewAsCookie, toggleTest, setIncludedAddon, setDisabledAddon } from "../../businesses/actions"
 import { getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
 import { activityEventLabel, activitySurfaceLabel } from "../../customerActivitySignals"
@@ -52,7 +53,7 @@ export type ClientDetail = {
   }
   created_at: string
   activities: { summary: string; activity_type: string; metadata?: Record<string, unknown> | null; created_at: string }[]
-  emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string; delivery_status?: string | null; history_category: "owner_account" | "lead_automation" | "business_operations" | "unknown" }[]
+  emails: { subject: string; email_type: string; recipient_email: string; success: boolean | null; created_at: string; delivery_status?: string | null; history_category: "owner_account" | "lead_automation" | "business_operations" | "unknown" }[]
   customer_activities: { event_type: string; surface: string; feature: string | null; created_at: string }[]
   customer_activity_ready: boolean
 }
@@ -152,14 +153,14 @@ function outreachMethodLabel(value: string) {
 }
 
 function emailDeliveryLabel(email: ClientDetail["emails"][number]) {
-  if (!email.success) return "Failed"
+  if (email.success === false) return "Failed"
   const status = email.delivery_status?.replace(/^email\./, "")
   if (status === "delivered") return "Delivered"
   if (status === "bounced") return "Bounced"
   if (status === "delivery_delayed" || status === "delayed") return "Delayed"
   if (status === "complained") return "Spam complaint"
   if (status === "failed") return "Failed"
-  if (status === "sent" || !status) return "Accepted - delivery unconfirmed"
+  if (status === "sent" || (!status && email.success === true)) return "Accepted - delivery unconfirmed"
   return "Delivery unknown"
 }
 
@@ -569,7 +570,6 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           </form>
       </section>
 
-      {(client.activities.length > 0 || client.emails.length > 0 || !client.email_history_ready) && (
         <section className="hq-section">
           <div className="hq-section-head"><h2 className="hq-section-title">History</h2></div>
           <div className="hq-panel" style={{ padding: 16 }}>
@@ -586,7 +586,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             )}
             {accountEmails.length > 0 && (
               <div className="hq-form-note">
-                <strong>Found account emails</strong>
+                <strong>Recent Found emails</strong>
                 <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                   {accountEmails.map((email, i) => (
                     <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>
@@ -595,13 +595,14 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               </div>
             )}
             {client.email_history_ready && accountEmails.length === 0 && <p className="hq-client-compact-empty">No Found account emails in the recent history</p>}
+            <p className="hq-form-note"><Link href={`/admin/emails?category=found_clients&client=${encodeURIComponent(client.id)}`}>View Found email history</Link></p>
+            <p className="hq-form-note"><Link href={`/admin/emails?category=business&client=${encodeURIComponent(client.id)}`}>View business email history</Link></p>
             {leadEmails.length > 0 && <details className="hq-client-history"><summary>Website lead emails</summary><ul>
               {leadEmails.map((email, i) => <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>)}
             </ul></details>}
             {otherEmails.length > 0 && <details className="hq-client-history"><summary>Other business emails</summary><ul>{otherEmails.map((email, i) => <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>)}</ul></details>}
           </div>
         </section>
-      )}
     </div>
   )
 }
