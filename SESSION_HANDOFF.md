@@ -8,6 +8,28 @@ given, and documentation-only saving authorizes no new product work.
 
 ## Current Overview - October 28, 2026
 
+### Latest - User-Supplied Key Confirms Correct Resend Domain
+
+Shawn supplied a credential in chat and asked whether the SayItMarketing account
+label/login meant the key belonged to another website. Read-only validation used
+no-echo stdin; no key was written to files, environment, Git, response or logs.
+Do not copy the credential from chat into documentation or use it as a new live
+production secret; it should be replaced because it was disclosed in chat.
+
+Both provider GETs200. Domains list complete (has_more=false) contains ONLY
+foundco.app, verified, us-east-1, domainID0a6a7b0e-752e-4894-ac85-87524729102b.
+Enabled webhookIDf2d4d17d-3dbc-4ce7-872e-742d14e5da84 has hostfoundco.app and
+path/api/resend/webhook; delivery events configured, email.received absent. No
+SayItMarketing.com domain appears in that key's domain list. Account display name
+itself was not returned/verified; the supplied key reaches the correct Found
+domain/configuration. It can read setup metadata, unlike the live stored
+credential's generic forbidden response. Do not claim an exact old-key scope or
+compare protected secret values; cannot distinguish stale/restricted/malformed
+credential solely from those results. No writes, sends, new DNS, migration or
+provider settings changes. No old/live key revoked. Need fresh securely supplied
+setup/runtime credential before production installation; preserve live services
+while replacing, then retire the disclosed key only when safe/authorized.
+
 ### Latest Verified Release And Actual Access Blocker
 
 Published cef71423b201d6d0235c50c0dbecc5387d376a4f; GitHub main matches and
