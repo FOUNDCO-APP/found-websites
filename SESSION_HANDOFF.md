@@ -65,7 +65,17 @@ Still open:
 - Sending ON: Shawn explicitly asked; FOUND_MAIL_SEND_ENABLED=true (production),
   redeployed dpl_3wkqcNMDqubhCoufwn2FU8mE7xHu READY, sites 200. Real send untested.
 - Shawn: reading view feels wrong (all-black, save-draft-before-send). Staged mail
-  redesign going to the team; nothing approved or built yet.
+  redesign PROPOSED to Shawn (role views by one assistant), NOT approved/built:
+  Stage 1 = light reading panel + real mail header, top toolbar (Reply / Mark
+  unread / Spam), one-button Send with quick confirm (keep the server-side
+  one-send claim; no schema change), same for New email, plain-word labels.
+  Stage 2 = threads, search, signature, attachments, phone layout. Stage 3 =
+  client mail (separate topic). Open: Jony's light panel inside dark admin vs
+  Steve's whole Emails area light. Awaiting Shawn's answers.
+- Shawn's broader note (Nov 19): the whole Found HQ admin should feel more
+  user-friendly, "more like an admin backend." Future team topic; not scoped.
+- Shawn's priority right now is FUNCTION for the D-U-N-S request (receiving
+  works, sending on); redesign comes after.
 - Backup recovery scheduler (pg_cron/pg_net) not installed; relies on Resend
   webhook retries for now. Quota/cost of catch-all receiving still unverified.
 - Spam/unknown-address quarantine and reply flows not yet exercised with real mail.
