@@ -1,7 +1,6 @@
-import { after, NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { Webhook } from "svix"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { acceptReceivedEvent, createReceivingAdapter, processIncomingMail } from "@/lib/admin/mailStore"
 import { recordReplyDelivery } from "@/lib/admin/mailReplies"
 
 function getAdminClient() {
@@ -50,19 +49,8 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === "email.received") {
-    if (process.env.FOUND_INBOUND_ENABLED !== "true") {
-      return NextResponse.json({ error: "Incoming mail is not enabled" }, { status: 503 })
-    }
-    try {
-      const admin = getAdminClient()
-      const result = await acceptReceivedEvent(admin, svixId, event.data)
-      if (result.success) {
-        // Queue is committed first. The immediate attempt is best-effort;
-        // durable recovery still requires the separately enabled retry trigger.
-        after(async () => { await processIncomingMail(admin, createReceivingAdapter(), 1) })
-      }
-      return NextResponse.json(result.success ? { received: true } : { error: result.error }, { status: result.success ? 200 : 503 })
-    } catch { return NextResponse.json({ error: "Incoming mail queue unavailable" }, { status: 503 }) }
+    // Receiving is retired. Acknowledge verified late events without storing mail.
+    return NextResponse.json({ received: true, retired: true })
   }
 
   const status = event.type ? STATUS_BY_EVENT[event.type] : undefined
@@ -79,10 +67,9 @@ export async function POST(req: NextRequest) {
       .update({ delivery_status: status, delivery_status_at: new Date().toISOString() })
       .eq("resend_email_id", resendEmailId)
     if (updated.error) return NextResponse.json({ error: "Delivery update unavailable" }, { status: 503 })
-    if (process.env.FOUND_INBOUND_ENABLED === "true") {
-      const receipt = await recordReplyDelivery(admin, resendEmailId, status, event.created_at)
-      if (!receipt.success) return NextResponse.json({ error: "Reply delivery receipt unavailable" }, { status: 503 })
-    }
+    // Historical manual sends still need delivery receipts after receiving retires.
+    const receipt = await recordReplyDelivery(admin, resendEmailId, status, event.created_at)
+    if (!receipt.success) return NextResponse.json({ error: "Reply delivery receipt unavailable" }, { status: 503 })
   } catch { return NextResponse.json({ error: "Delivery persistence unavailable" }, { status: 503 }) }
 
   return NextResponse.json({ received: true })

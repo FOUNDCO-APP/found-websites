@@ -2,6 +2,11 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+Latest November20: Shawn confirms Namecheap/Spark working and approved retiring
+Found's general inbox/composer/alerts. Admin email stays focused on clients and
+automated delivery history. Cleanup prepared/tested; see latest handoff for release
+evidence. This supersedes older inbox-building tasks and October28 setup blockers.
+
 **October 25 clarification:** Keep the existing documentation process. This file
 is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,
 and the existing decision/change logs retain approvals and history. Do not add

@@ -6,7 +6,6 @@ type History = Awaited<ReturnType<typeof getAdminEmailHistory>>
 type Filters = { category: string; clientId: string; q: string; status: string; page: number }
 const categories = [
   ["found_clients", "Found to our clients"], ["business", "Business email"],
-  ["admin_alerts", "Admin alerts"], ["unclassified", "Unclassified"], ["all", "All email"],
 ] as const
 
 function dateLabel(value: string) {
@@ -32,7 +31,7 @@ export default function EmailsWorkspace({ data, filters }: { data: History; filt
       <div className="hq-email-category-controls" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "end", gap: 8 }}>
         <label style={{ minWidth: 0 }}>Email category
           <select className="hq-input" name="category" defaultValue={filters.category}>
-            {categories.map(([value, label]) => <option key={value} value={value}>{label}{data.categoryCounts && value !== "all" ? ` (${data.categoryCounts[value]})` : ""}</option>)}
+            {categories.map(([value, label]) => <option key={value} value={value}>{label}{data.categoryCounts ? ` (${data.categoryCounts[value]})` : ""}</option>)}
           </select>
         </label>
         <button className="hq-button hq-button-secondary" type="submit" style={{ minHeight: 44 }}>Apply</button>
@@ -56,7 +55,6 @@ export default function EmailsWorkspace({ data, filters }: { data: History; filt
         </div>
       </details>
     </form>
-    {data.categoryCounts && <p className="hq-row-meta" style={{ marginBottom: 12 }}>Counts: all recorded email. <Link href={href(filters, { category: "unclassified", clientId: "", q: "", status: "all", page: 1 })}>Unclassified: {data.categoryCounts.unclassified}</Link></p>}
     {data.error && <p role="alert" className="hq-subtitle">Email history could not be fully loaded. Please refresh before relying on these results.</p>}
     {!data.handlingReady && <p className="hq-page-footnote">Handling status is unavailable. Delivery records are shown separately.</p>}
     {overview ? <section aria-label="Client email overview">
@@ -77,12 +75,10 @@ export default function EmailsWorkspace({ data, filters }: { data: History; filt
         </Link>)}
       </div>
       <p className="hq-page-footnote">Relationship and subscription: stored status, not verified billing.</p>
-      <p className="hq-page-footnote">Unknown email types remain in <Link href={href(filters, { category: "unclassified", page: 1 })}>Unclassified</Link>.</p>
       {data.unlinkedFoundCount !== null && data.unlinkedFoundCount > 0 && <p className="hq-page-footnote">{data.unlinkedFoundCount} Found emails have no linked client{data.unlinkedLoginCount !== null ? `, including ${data.unlinkedLoginCount} login emails` : ""}. <Link href={href(filters, { category: "found_clients", clientId: "unlinked", page: 1 })}>View unlinked Found email</Link>. No client association has been guessed.</p>}
     </section> : <section aria-label="Email history">
       <div className="hq-section-head"><h2 className="hq-section-title">{filters.clientId === "unlinked" ? "Unlinked Found email" : selectedClient ? `${selectedClient.name} - email history` : "Recorded email"}</h2><span className="hq-section-meta">{data.total === null ? "Count unavailable" : `${data.total} matching`}</span></div>
       {filters.clientId && <p><Link href={href(filters, { clientId: "", page: 1 })}>Back to clients</Link>{filters.clientId !== "unlinked" && <> / <Link href={`/admin/clients/${encodeURIComponent(filters.clientId)}`}>Client details</Link></>}</p>}
-      {filters.clientId && filters.clientId !== "unlinked" && filters.category !== "unclassified" && <p className="hq-page-footnote"><Link href={href(filters, { category: "unclassified", status: "all", q: "", page: 1 })}>View this client's unclassified emails</Link></p>}
       <p className="hq-page-footnote">Most recent first. Handling records staff review; it does not change delivery.</p>
       <div className="hq-panel hq-email-list">
         {data.rows.length === 0 && <div className="hq-empty-state"><strong>{data.error ? "History unavailable." : "No recorded emails match."}</strong><span>Try a different search or review filter.</span></div>}

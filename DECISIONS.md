@@ -1,3 +1,12 @@
+## November 20, 2026 - Ordinary Mail In Namecheap/Spark; Admin For Clients
+
+Shawn confirmed Namecheap and Spark working, rejected general inbox/history in
+Found admin, and approved cleanup after visible independent role review.
+Retire general Received/Compose/unread controls and processing. Preserve stored
+records, client email history, automated sending and delivery/bounce tracking.
+This supersedes the general inbox/compose and redesign direction below. No
+customer outreach or data deletion authorized by this cleanup.
+
 ## October 28, 2026 - Shared Found Addresses And Occasional New Email
 
 Shawn confirmed shawn@foundco.app and directed making this work. After actual

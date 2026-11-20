@@ -1,5 +1,63 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 20, 2026 - Approved Client-Only Admin Email Cleanup
+
+Shawn explicitly rejected keeping general inbox history visible and approved
+client-only admin email. Independent Craig implementation/review and a separate
+Steve/Angela product review ran; final product scope accepted. No archive UI.
+
+Prepared: authenticated Received/detail/Compose routes redirect to client email
+history; general navigation/unread polling removed; manual mail actions reject;
+cron/unread endpoints retired after authorization. Signed late incoming events
+acknowledged without storage. Automated and historical manual outbound receipts
+continue regardless of retired mailbox flags. General category filters removed;
+existing client correspondence and business-email categories preserved.
+
+Live setup: Namecheap MX unchanged. Resend webhook now omits only email.received,
+retaining all five outgoing events (PATCH200). Both production mailbox flags set
+false (PATCH200), effective on next deployment. No message deletion/schema writes.
+Queue read found two ready messages and no unfinished retrievals.
+
+Checks: 54 targeted backend regression cases (mocked DB/auth, real signatures),
+300 email history checks, 577 configuration checks, five Chromium groups pass.
+Final production build passed (TypeScript, all89 static pages, exit0). Publishing
+and live checks in progress. Four education drafts still held.
+
+## November 20, 2026 - Namecheap And Spark Confirmed Working
+
+Shawn confirms the Namecheap mailbox and Spark now work. Earlier webmail sending
+and reply receipt were also confirmed by Shawn. Apple Mail setup is unnecessary
+for this chosen workflow. Hello/support alias sending remains unverified.
+
+Shawn requested a visible team review of the task list and whether the admin
+inbox should remain active. Incoming DNS already routes to Namecheap. Custom
+Received/Compose UI, unread polling and enabled flags still require a separate
+cleanup decision. Preserve automated client sending and delivery/bounce tracking.
+No cleanup code, flags or provider settings changed in this review.
+
+## November 19, 2026 - Namecheap Incoming Mail Switch Approved And Applied
+
+Shawn chose Namecheap Launch for ordinary correspondence and explicitly approved
+the concrete incoming MX/SPF switch after the delivery test. New incoming mail
+now routes to Namecheap, so Found Received is historical rather than the current
+inbox. Existing stored messages remain. No app source or customer billing changed.
+
+- Added supplied public DKIM TXT at privateemail._domainkey, exact value verified
+  against public Google DNS. Added root SPF v=spf1 include:spf.privateemail.com ~all.
+- Root MX now mx1.privateemail.com and mx2.privateemail.com, both priority10,
+  TTL300. Removed only root receive.forge.rmta.net MX. Google public DNS confirms.
+- Preserved send MX/TXT and resend._domainkey. Resend domain GET after switch
+  reports verified sending records. Existing DMARC and website records preserved.
+- Single authorized direct Resend test to Shawn's personal address was delivered,
+  and Shawn confirmed receipt. This proves provider sending, not individual app
+  notification/estimate workflows. No client messages sent.
+- Next: Shawn signs into privateemail.com as shawn@foundco.app, sends to personal
+  inbox and replies back. Real Namecheap sending/receipt, aliases hello/support,
+  catch-all behavior and Apple Mail setup remain unverified. Screenshot shows
+  catch-all directed to Shawn's mailbox; do not assume aliases can send.
+- Earlier Nov19 receiving/sending rollout notes below are historical. Recovery
+  scheduler and custom email UI redesign remain pending and are separate scope.
+
 **October 25 closeout:** This remains the current source of truth under the
 existing BRIEF.md process. The overview below consolidates live state, open
 approvals and the plan; dated entries afterward are supporting history. Shawn

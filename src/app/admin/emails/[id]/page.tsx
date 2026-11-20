@@ -43,6 +43,7 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
   if (!row) notFound()
   const categoryLabels = { found_clients: "Found → Our clients", business: "Business emails", admin_alerts: "Admin alerts", unclassified: "Unclassified" }
   const category = classifyEmail(row)
+  if (category !== "found_clients" && category !== "business") notFound()
   const handledAtValue = "handled_at" in row ? row.handled_at : null
   const handledNoteValue = "handled_note" in row ? row.handled_note : null
   const handledAt = typeof handledAtValue === "string" ? handledAtValue : null

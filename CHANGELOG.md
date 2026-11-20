@@ -1,3 +1,20 @@
+## November 20, 2026 - Approved Client-Only Admin Email Cleanup
+
+- Retired general Received/Compose routes/actions and unread polling. Client
+  correspondence/business history and outgoing tracking preserved.
+- Removed incoming webhook event only; mailbox flags false for next release.
+- 54 backend, 300 history, 577 config checks and five Chromium groups pass.
+- Final production build/TypeScript/all89 static pages passed. Publication and
+  live verification in progress. No client sends/data deletion.
+
+## November 19, 2026 - Approved Namecheap Incoming Routing
+
+- Installed supplied public DKIM, root Namecheap SPF and two priority10 MX records.
+- Removed only Resend root incoming MX after explicit Shawn approval. Public DNS confirms.
+- Resend send-subdomain SPF/MX and DKIM preserved and verified through provider GET.
+- One authorized personal delivery test delivered and confirmed. Namecheap webmail
+  roundtrip and individual application workflows remain untested. No source deployment.
+
 ## October 28, 2026 - Shared Mail Addresses And Compose Prepared
 
 - Published cef7142; Vercel4J2R3xt9sFgkYLB8pTpeRUwSvPi9 success, remote verified.

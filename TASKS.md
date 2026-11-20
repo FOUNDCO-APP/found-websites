@@ -1,5 +1,23 @@
 # Found Task Board
 
+## November 20 - Client-Only Email Cleanup (Approved)
+
+- [x] Namecheap/Spark send and receive confirmed by Shawn.
+- [x] Independent product/engineering review; general inbox, manual composer and unread alerts retired in source.
+- [x] Preserve client correspondence/business email history and automated delivery tracking.
+- [x] Remove only incoming webhook event; disable general mailbox flags for next deploy.
+- [ ] Finish build, publish cleanup and verify live client/admin boundaries.
+- [ ] Verify hello/support aliases, then exact review of four held education drafts.
+- Custom inbox redesign, attachments, threads and inbound recovery work below are superseded by the approved retirement.
+
+## November 19 - Namecheap Mailbox Transition
+
+- [x] Explicit approval, Namecheap DKIM/SPF and incoming MX installed, public DNS checked.
+- [x] Resend sending DNS preserved and provider verified; controlled personal test delivered and confirmed by Shawn.
+- [x] Shawn confirms Namecheap webmail send/reply and Spark working (Nov19-20).
+- [ ] Validate hello/support alias sending if required; Spark is the chosen mail app.
+- [ ] Decide future Found Received UI behavior now that incoming mail routes to Namecheap.
+
 Follow BRIEF.md; SESSION_HANDOFF.md holds current truth. Active items are above the
 historical divider below; old unchecked items are not automatic authorization.
 

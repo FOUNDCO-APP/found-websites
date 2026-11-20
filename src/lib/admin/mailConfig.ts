@@ -2,7 +2,7 @@ import "server-only"
 
 const DOMAIN = "foundco.app"
 const ENDPOINT = "https://foundco.app/api/resend/webhook"
-const EVENTS = ["email.received", "email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained"] as const
+const EVENTS = [ "email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained"] as const
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}
 const choice = (value: unknown, allowed: string[]) => typeof value === "string" && allowed.includes(value) ? value : "unknown"
@@ -77,6 +77,7 @@ export async function getAdminMailConfig() {
   if (!webhookReason && (!Array.isArray(hooks[0].events) || !hooks[0].events.every(event => typeof event === "string"))) webhookReason = "invalid_response"
   const events = Object.fromEntries(EVENTS.map(event => [event, webhookReason ? null : (hooks[0].events as string[]).includes(event)]))
   return { keyConfigured: !!key,
+    correspondence: { provider: "Namecheap", adminInbox: "retired" },
     domain: { access: domainReason ? "cannot_verify" : "readable", reason: domainReason, data: domain },
     webhook: { access: webhookReason ? "cannot_verify" : "readable", reason: webhookReason, endpointMatched: webhookReason ? null : true,
       status: webhookReason ? "unknown" : choice(hooks[0].status, ["enabled", "disabled"]), events,
