@@ -6,6 +6,27 @@ approvals and the plan; dated entries afterward are supporting history. Shawn
 confirmed the duplicate-client fix. No new Gallery, theme or image approval was
 given, and documentation-only saving authorizes no new product work.
 
+## November 19, 2026 - Legal Entity Formed: Found Co Apps LLC
+
+Shawn formed the company that will own the Apple Developer account and publish
+Found, Mambo Studio and future industry-specific apps. Decided with Shawn after
+visible Steve/Phil/Chris/Priya discussion: Found Co is the parent company and each
+app is a product under it.
+
+- Legal name: **Found Co Apps LLC** (exact spelling everywhere: EIN, D-U-N-S,
+  Apple, bank, Stripe). Domestic Arizona LLC, perpetual.
+- ACC Business ID: 25149661. Approved and verified 2026-11-19 (expedited filing).
+- NAICS: 511210 Software Publishers (primary), 541511002 custom software
+  development, 518210 data processing/hosting.
+- Documents saved in Shawn's iCloud Drive/Documents (Articles, filing doc, receipt).
+
+Next, in order (none done yet): EIN from IRS -> D-U-N-S via Apple's lookup ->
+Apple Developer Program enrollment as an organization using an @foundco.app email.
+Moving Stripe/Vercel/Supabase/Resend billing to the LLC is a separate, planned task;
+do not change the live Stripe platform account without that plan. Mambo Studio's
+publishing route (Found Co Apps account vs Spa Mambo's own/custom app) gets
+checked against Apple's rules before submission.
+
 ## Current Overview - October 28, 2026
 
 ### Latest - User-Supplied Key Confirms Correct Resend Domain
