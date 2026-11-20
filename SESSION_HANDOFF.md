@@ -29,6 +29,45 @@ do not change the live Stripe platform account without that plan. Mambo Studio's
 publishing route (Found Co Apps account vs Spa Mambo's own/custom app) gets
 checked against Apple's rules before submission.
 
+## November 19, 2026 - Found In-App RECEIVING Is Live (sending still off)
+
+Why: Apple's D-U-N-S request needs a working @foundco.app address. Shawn chose the
+full Found inbox (option 1) over a stopgap and explicitly approved steps 1-6 after
+a visible role-perspective review (written by one assistant; no independent agents).
+
+Done and verified 2026-11-19:
+- Shawn created a NEW Full-access Resend key; delivered via a temporary iCloud file
+  (never chat), saved as RESEND_API_KEY in the original checkout .env.local
+  (git-ignored), iCloud copy deleted. Domains GET200, foundco.app verified.
+- New key test-sent to delivered@resend.dev (200) BEFORE swapping the live key.
+- Production migrations 20261028000100/000200/000300 applied in order via
+  Management API, each in a transaction; recorded in schema_migrations; all five
+  found_mail_* tables have RLS on.
+- Vercel production RESEND_API_KEY (env TxMZXfJNDV5va7fN) replaced with the new
+  key; FOUND_INBOUND_ENABLED=true added (production). FOUND_MAIL_SEND_ENABLED
+  NOT set: sending/replying intentionally still off until Shawn approves.
+- Redeployed same source cef7142 -> dpl_G5rLWnCgAYimeJ6iqeBgUXfesqng READY.
+  foundco.app and barriobuilders.foundco.app 200; unsigned webhook POST 400;
+  anonymous mail-unread 401.
+- Resend webhook f2d4d17d now includes email.received. Domain receiving enabled.
+- Vercel DNS: root MX 10 receive.forge.rmta.net (rec_074698245c5f8a54659a5af5);
+  Resend Receiving record verified; 8.8.8.8 and 1.1.1.1 resolve it.
+- Live test: two messages from Shawn's personal address to shawn@foundco.app show
+  in Admin -> Emails -> Received as "Ready to read" (first one was delayed by the
+  sender's cached no-MX lookup, then arrived).
+
+Still open:
+- Shawn has not yet opened /api/admin/mail-config post-swap to confirm the live key
+  reads domain settings; client estimate/notification sending not separately
+  re-tested in production (new key proven able to send).
+- Old send-only key and the key pasted in chat Oct 28 still exist in Resend; revoke
+  only after live sending is confirmed with the new key.
+- Turn on sending (FOUND_MAIL_SEND_ENABLED) only with Shawn's approval.
+- Backup recovery scheduler (pg_cron/pg_net) not installed; relies on Resend
+  webhook retries for now. Quota/cost of catch-all receiving still unverified.
+- Spam/unknown-address quarantine and reply flows not yet exercised with real mail.
+- Four orientation drafts remain held.
+
 ## Current Overview - October 28, 2026
 
 ### Latest - User-Supplied Key Confirms Correct Resend Domain

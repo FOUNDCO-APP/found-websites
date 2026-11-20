@@ -23,10 +23,13 @@ historical divider below; old unchecked items are not automatic authorization.
 - [x] Build/publish read-only check through cef7142, Vercel success. Runtime key
   present but provider setup reads forbidden; anon401. Secure setup key needed.
 - [x] Live read-only Sent/Received/Compose and four client Home pages200; gates off.
-- [ ] Human secure Resend setup-key handoff (never chat), then account verification
-  and concrete safe activation/recovery plan. No credential escalation workaround.
-- [ ] Obtain usable Resend setup access, verify account routing/webhook/quota/cost,
-  then concrete activation review. No mail/DNS mutations or real sends yet.
+- [x] Nov 19: new Full-access key handed off securely; Shawn approved activation.
+  Migrations applied, live key swapped, receiving flag on, webhook+MX live.
+  Two real test messages received in Admin -> Emails -> Received.
+- [ ] Shawn confirms /api/admin/mail-config with the new live key; then revoke the
+  old send-only key and the Oct 28 chat-pasted key.
+- [ ] Shawn approval to turn on sending (FOUND_MAIL_SEND_ENABLED), then reply test.
+- [ ] Recovery scheduler, quota/cost check, spam/quarantine real-mail test.
 
 - [x] Shawn chooses in-app receiving/notifications and strong spam protection;
   hold all four education messages and drip activation.
