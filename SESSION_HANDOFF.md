@@ -21,7 +21,8 @@ app is a product under it.
   development, 518210 data processing/hosting.
 - Documents saved in Shawn's iCloud Drive/Documents (Articles, filing doc, receipt).
 
-Next, in order (none done yet): EIN from IRS -> D-U-N-S via Apple's lookup ->
+EIN obtained 2026-11-19 (IRS letter saved by Shawn; number kept out of the repo).
+Next, in order: D-U-N-S via Apple's lookup ->
 Apple Developer Program enrollment as an organization using an @foundco.app email.
 Moving Stripe/Vercel/Supabase/Resend billing to the LLC is a separate, planned task;
 do not change the live Stripe platform account without that plan. Mambo Studio's
