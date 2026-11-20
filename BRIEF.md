@@ -4,8 +4,9 @@
 
 Latest November20: Shawn confirms Namecheap/Spark working and approved retiring
 Found's general inbox/composer/alerts. Admin email stays focused on clients and
-automated delivery history. Cleanup prepared/tested; see latest handoff for release
-evidence. This supersedes older inbox-building tasks and October28 setup blockers.
+automated delivery history. Cleanup live through f37a17c, Vercel SUCCESS and admin/
+four-client checks pass; see latest handoff. This supersedes older inbox-building
+tasks and October28 setup blockers.
 
 **October 25 clarification:** Keep the existing documentation process. This file
 is the entry point; SESSION_HANDOFF.md holds current truth, TASKS.md holds work,

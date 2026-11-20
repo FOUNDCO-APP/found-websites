@@ -6,7 +6,7 @@
 - [x] Independent product/engineering review; general inbox, manual composer and unread alerts retired in source.
 - [x] Preserve client correspondence/business email history and automated delivery tracking.
 - [x] Remove only incoming webhook event; disable general mailbox flags for next deploy.
-- [ ] Finish build, publish cleanup and verify live client/admin boundaries.
+- [x] Build/TypeScript/all89 pages pass; f37a17c pushed, Vercel SUCCESS, live admin/auth and four-site checks pass.
 - [ ] Verify hello/support aliases, then exact review of four held education drafts.
 - Custom inbox redesign, attachments, threads and inbound recovery work below are superseded by the approved retirement.
 

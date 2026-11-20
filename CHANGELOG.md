@@ -4,8 +4,10 @@
   correspondence/business history and outgoing tracking preserved.
 - Removed incoming webhook event only; mailbox flags false for next release.
 - 54 backend, 300 history, 577 config checks and five Chromium groups pass.
-- Final production build/TypeScript/all89 static pages passed. Publication and
-  live verification in progress. No client sends/data deletion.
+- Final production build/TypeScript/all89 static pages passed. f37a17c pushed,
+  Vercel6qRoKpqTHdEj8esXiRkqGjDqpmCh SUCCESS. Client/business history200, retired
+  routes307, unread0, sending domain verified, all five outbound events ready.
+  Anonymous unread401, unsigned webhook400, four client sites200. No client sends/data deletion.
 
 ## November 19, 2026 - Approved Namecheap Incoming Routing
 
