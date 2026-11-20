@@ -22,7 +22,9 @@ app is a product under it.
 - Documents saved in Shawn's iCloud Drive/Documents (Articles, filing doc, receipt).
 
 EIN obtained 2026-11-19 (IRS letter saved by Shawn; number kept out of the repo).
-Next, in order: D-U-N-S via Apple's lookup ->
+D-U-N-S requested 2026-11-19 via Apple lookup with shawn@foundco.app; awaiting
+Dun & Bradstreet confirmation email + number (can take days to ~2 weeks).
+Then ->
 Apple Developer Program enrollment as an organization using an @foundco.app email.
 Moving Stripe/Vercel/Supabase/Resend billing to the LLC is a separate, planned task;
 do not change the live Stripe platform account without that plan. Mambo Studio's
