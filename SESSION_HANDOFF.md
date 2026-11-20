@@ -9,8 +9,9 @@ given, and documentation-only saving authorizes no new product work.
 ## November 19, 2026 - Legal Entity Formed: Found Co Apps LLC
 
 Shawn formed the company that will own the Apple Developer account and publish
-Found, Mambo Studio and future industry-specific apps. Decided with Shawn after
-visible Steve/Phil/Chris/Priya discussion: Found Co is the parent company and each
+Found, Mambo Studio and future industry-specific apps. Shawn decided after a visible
+in-chat discussion of Steve/Phil/Chris/Priya role perspectives, all written by one
+assistant (no independent agent reviews ran): Found Co is the parent company and each
 app is a product under it.
 
 - Legal name: **Found Co Apps LLC** (exact spelling everywhere: EIN, D-U-N-S,
