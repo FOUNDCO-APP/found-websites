@@ -62,7 +62,10 @@ Still open:
   re-tested in production (new key proven able to send).
 - Old send-only key and the key pasted in chat Oct 28 still exist in Resend; revoke
   only after live sending is confirmed with the new key.
-- Turn on sending (FOUND_MAIL_SEND_ENABLED) only with Shawn's approval.
+- Sending ON: Shawn explicitly asked; FOUND_MAIL_SEND_ENABLED=true (production),
+  redeployed dpl_3wkqcNMDqubhCoufwn2FU8mE7xHu READY, sites 200. Real send untested.
+- Shawn: reading view feels wrong (all-black, save-draft-before-send). Staged mail
+  redesign going to the team; nothing approved or built yet.
 - Backup recovery scheduler (pg_cron/pg_net) not installed; relies on Resend
   webhook retries for now. Quota/cost of catch-all receiving still unverified.
 - Spam/unknown-address quarantine and reply flows not yet exercised with real mail.

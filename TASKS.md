@@ -28,7 +28,8 @@ historical divider below; old unchecked items are not automatic authorization.
   Two real test messages received in Admin -> Emails -> Received.
 - [ ] Shawn confirms /api/admin/mail-config with the new live key; then revoke the
   old send-only key and the Oct 28 chat-pasted key.
-- [ ] Shawn approval to turn on sending (FOUND_MAIL_SEND_ENABLED), then reply test.
+- [x] Sending turned on at Shawn's request (Nov 19). [ ] First real send test.
+- [ ] Staged admin mail redesign (reading view, one-step send): team review pending.
 - [ ] Recovery scheduler, quota/cost check, spam/quarantine real-mail test.
 
 - [x] Shawn chooses in-app receiving/notifications and strong spam protection;
