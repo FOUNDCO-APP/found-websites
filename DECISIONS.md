@@ -1,3 +1,11 @@
+## November 21, 2026 - First Camera Repair Approved
+
+Shawn approved the independently reviewed recorded-video filename correction and
+asked for team signoff and regression protection. Scope is the actual uploadVideo
+filename argument, preserving its MP4/WebM extension through the existing helper
+and API. No microphone/lifecycle change, schema migration or old-file rewrite is
+included. Run upload/reload and still/annotation checks before release.
+
 ## November 21, 2026 - Store Version1 Scope And Shared Preparation
 
 Shawn explicitly defined version1 as the full existing Found product including

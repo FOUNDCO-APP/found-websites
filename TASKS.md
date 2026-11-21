@@ -5,7 +5,8 @@
 - [x] Confirm audited checkout0aee66f matches GitHub main; clean working tree at start.
 - [x] Three independent camera/design/native reviews visible to Shawn; current source findings recorded in handoff.
 - [x] Existing92 Pro-choice checks and7 journey groups pass on synthetic data.
-- [ ] Shawn approves first bounded camera filename repair, then implement/review/regressions/release.
+- [x] Shawn approves first bounded camera filename repair; one-line patch and independent engineering source signoff.
+- [ ] Finish actual video/photo/annotation persistence regressions, production build, release and live checks.
 - [ ] Review microphone timing and denial outcome, recorder session/stop/close cleanup.
 - [ ] Shared accessibility preview and all3 plan journeys, including visibility/discovery mismatch.
 - [ ] Account deletion and privacy/storage/AI data-flow review.

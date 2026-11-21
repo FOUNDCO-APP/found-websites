@@ -240,7 +240,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
     uploadStatus.start(1)
     try {
-      const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
+      const photo = await uploadDashboardMedia(blob, { fileName: `video-${id}.${ext}`, albumId: pendingAlbumId ?? null })
       onUploaded(photo)
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
       uploadStatus.complete(true)

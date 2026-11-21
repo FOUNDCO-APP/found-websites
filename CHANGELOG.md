@@ -1,3 +1,12 @@
+## November 21, 2026 - First Camera Video Repair Approved
+
+- Corrected actual recorded-video upload filename to video-id.mp4/webm, matching MIME.
+- Independent engineering source/test review accepted conditional on build pass.
+  Five handler/helper/API scenarios pass and three old-source variants fail in
+  memory; no live I/O. Production build/TypeScript/all89 pages passed, exit0.
+  Publication and live checks pending.
+- Older incorrectly named media requires separate assessment; no data migration.
+
 ## November 21, 2026 - Shared Store Readiness Review And Documentation
 
 - Three separate AI camera/design/native reviewers inspected current0aee66f.

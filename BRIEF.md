@@ -2,6 +2,10 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November21 follow-up: Shawn approved the first camera video filename repair with
+team review. One-line source correction prepared; independent engineering source
+signoff passed. Regression tests and build/release underway; see newest handoff.
+
 Latest November21: Apple-led shared store-readiness review completed against
 0aee66f (GitHub main verified). All three plans and the existing product belong
 in version1; web and in-app subscription channels approved in principle. Android

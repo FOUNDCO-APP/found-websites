@@ -1,5 +1,26 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Approved Camera Video Filename Repair
+
+Shawn approved the bounded first repair and requested team review/approval and
+regression protection. One actual uploadVideo argument changed in CameraSheet.tsx
+from annotated-${id}.jpg to video-${id}.${ext}. Photo and annotation paths remain
+JPEG; existing incorrectly named recordings require separate assessment.
+
+Independent reviewer01a1fd01-2a44-7450-b5ba-e2dd58cebba2 approved the source diff
+with no blocker. Camera specialist01a1fcf9-fbed-7300-8fd9-6b9cfc056b45 is preparing
+test-only coverage of actual uploadVideo/helper/API GET with synthetic data.
+tests/camera-video-persistence.mjs passes five fixed scenarios (three video MIME
+variants, still photo, annotation) and three old-source failures in memory.
+Parent reran successfully. Independent reviewer reran exit0 and verified no
+file changes from test execution; approved release conditional on build pass.
+Negative controls fail at filename assertion before persisted misclassification;
+positive cases exercise fresh GET without stored MIME. Synthetic bytes/mocked
+browser/storage do not certify real recording, codecs or physical playback.
+Final production build passed (TypeScript, all89 static pages, exit0) with source
+unchanged during verification. Publication and live checks pending.
+Microphone timing, lifecycle, native packaging and old media fixes are separate.
+
 ## November 21, 2026 - Apple-Led Shared Store Readiness Review
 
 Shawn approved moving forward with the shared readiness check, Apple as lead,
