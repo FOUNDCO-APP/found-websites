@@ -7,7 +7,8 @@
 - [x] Jony-led/Steve-co-led visible review; Shawn approves device saving and automatic foreground/reopening recovery.
 - [x] Combined compact UI + verified durable queue implemented;53helper/APIgroups,13realbrowserqueuegroups,5camera cases+3negative controls, realReact/IDBUItests pass. Jony-led/Steve-co-ledUX accepts; independent combined engineeringGO conditionalbuild.
 - [x] Frozen-source build passes TypeScript/all89 static pages; eight source hashes unchanged. Independent combined engineeringGO build condition satisfied.
-- [ ] Publish device-save/recovery release, verify exact deployment and live auth/dashboard/four-client checks. Native background uploads separate.
+- [x] Device-save/recovery live95ffa26 after old-tab compatibility fix. Vercel7AN7qxszC7oHVjzxsWjqxoBiJ1hR READY/exactSHA;57groups/independent review/TypeScript/hostedbuildpass; dashboard/Photos/context200, anon401, wrong-account409, four clients/HiramGallery200.
+- [ ] Physical iPhone newcapture/local-save/close/reopen/automatic-upload/video-playback test. Browser/profile-local queue, no native-background guarantee; original video failure still not certified fixed.
 - [ ] Investigate actual iPhone video failure after Retry: signing/preflight200, no completedPUT/newMP4 in inspected window. Do not assume network-only cause or call physical acceptance passed.
 - [ ] Review/approve temporary sanitized iPhone upload diagnostics (size, stage, timing, HTTP/fetch/timeout only; no video/tokens/private content). Proposal only; not part of compact UI release.
 

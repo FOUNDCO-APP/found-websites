@@ -1,5 +1,12 @@
 ## November 21, 2026 - Device Save And Automatic Upload Approved
 
+Compatibility detail: new device-queue clients always send expected account and
+company; server rejects explicit mismatches before storage and authenticates every
+request. Already-open87c clients lack the account field, so absence remains legacy-
+compatible rather than rejecting their uploads. Stable-ID company binding stays
+mandatory. Actual old-helper tests protect this contract. Do not confuse optional
+legacy metadata with authorization: current server identity/company grants access.
+
 After visible Jony-led/Steve-co-led product review and independent engineering
 recommendation, Shawn approved verified device storage for photos/videos with
 automatic foreground upload/reopening recovery, account isolation and storage-full

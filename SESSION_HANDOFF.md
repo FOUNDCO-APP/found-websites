@@ -1,24 +1,39 @@
 # SESSION_HANDOFF.md - Current Truth
 
-## November 21, 2026 - Device Saving And Automatic Recovery Approved
+## November 21, 2026 - Device Saving And Automatic Recovery Live
+
+Final compatible source95ffa26bff9b4351bfdca3f108d6f543dc0d4d29 is live.
+Vercel dpl_7AN7qxszC7oHVjzxsWjqxoBiJ1hR READY/exact SHA verified. Live login,
+authorized dashboard/Photos and upload-context read200; anonymous PhotosGET/POST401;
+wrong supplied account409 before storage; four client Home pages and HiramGallery
+200. Context Cache-Control no-store verified. All production validation read-only;
+no customer media upload, message, billing/storage setting or schema change.
+Local full build93 passed TypeScript/all89 pages; final95 narrow compatibility
+guard correction passes57 groups, independent review, TypeScript no-emit and hosted
+production build. UI/core code unchanged by that correction. UI/UX review accepts.
+
+Remaining physical iPhone test: new capture -> verify Saved on this device -> close/
+reopen Found in the same browser/profile -> reconnect -> automatic upload -> verify
+photo and video playback in Photos. Real Safari video transport remains unverified;
+this release must not be reported as proving the original failed video is fixed.
 
 Release93cfa07ebe7c932704d487b73755a22f330b3fa8 reached Vercel READY
 dpl_4hTYh9ATL2LGYDUxnSdo4quEhePt during final compatibility inspection. Parent
 found mandatory expected_account_id on all stable-ID mutations rejects already-open
-87c/a69 clients, which send company binding but no account field. Correcting forward
-now: remove only the missing-account requirement; still authenticate/authorize each
+87c/a69 clients, which send company binding but no account field. Corrected forward
+in95: remove only the missing-account requirement; still authenticate/authorize each
 request and reject any supplied mismatching account before storage. New queue
 always supplies its bound account. Company binding remains mandatory for stable-ID
 mutations. No rollback/IndexedDB clearing: preserve pending originals. Backend
-worker adds actual old-helper regression; final engineering review/live checks
-pending compatibility release. Earlier53 groups did not cover old stable-ID clients.
+worker added actual old-helper regression; independent review and live checks pass
+for compatibility release95. Earlier53 groups did not cover old stable-ID clients.
 Compatibility correction now has57 passing helper/API groups: actual87c helper
 photo/video calls and lost-response recovery pass; in-memory negative controls
 prove the removed missing-account guard broke both. Wrong supplied account still
 rejected. Parent fixed only that guard and explanatory comments; no new type/API
-shape changes. Independent compatibility review and final hosted build pending.
+shape changes. Independent compatibility review and final hosted build pass.
 
-Combined implementation complete, pending production publication. Actual Jony-led/
+Combined implementation complete and published. Actual Jony-led/
 Steve-co-led UI reviewer01a1fcf9-fdf5-7430-9a42-834d9a803efb inspected current
 image-backed previews and accepts UI/UX, including specific auth/size/business
 errors without pointless Retry. Independent engineer01a1fd01-2a44-7450-b5ba-
@@ -30,7 +45,7 @@ with synthetic transport. UI320/390px image-backed previews visually inspected.
 Physical Safari/iPhone transfer/playback is not certified by these tests.
 Frozen-source production build now passed (TypeScript/all89 static pages, exit0);
 eight changed/new application file hashes verified unchanged through build.
-Publication/live checks pending. Rollback must preserve IndexedDB data: old builds
+Publication/live checks pass above. Rollback must preserve IndexedDB data: old builds
 without queue support cannot display/drain pending captures. Prefer fix-forward;
 never clear browser data to roll back. Reinstall a compatible queue build to resume.
 

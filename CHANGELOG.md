@@ -1,4 +1,4 @@
-## November 21, 2026 - Device Saving And Automatic Recovery Prepared
+## November 21, 2026 - Device Saving And Automatic Recovery Released
 
 - Shawn approved local photo/video storage, automatic foreground/reopening upload,
   account isolation, storage-full handling and the compact camera status correction.
@@ -8,7 +8,13 @@
   size/business failures. Local original deleted only after cloud confirmation.
 - Real browser persistence/reload/isolation/quota/cross-tab tests and helper/API/
   capture regressions pass; final visual and independent engineering review accept.
-  Production publication pending. No native-background or physical-video claim.
+  Released93cfa07, then95ffa26 compatibility correction for older open stable-ID
+  clients without account metadata. Explicit foreign-account rejection preserved.
+- Final57helper/APIgroups,13realbrowserqueuegroups,5camera cases+3negative controls,
+  UI tests, visual/independent reviews, TypeScript and production build checks pass.
+  Vercel7AN7qxszC7oHVjzxsWjqxoBiJ1hR READY/exactSHA. Live dashboard/context/Photos
+  200, anonymous401, wrong-account409, four Home pages/HiramGallery200. Physical
+  iPhone and original video failure acceptance still open; no background guarantee.
 
 ## November 21, 2026 - Approved Shared Camera Recovery Released
 
