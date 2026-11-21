@@ -6,8 +6,9 @@ November21 latest: approved shared weak-signal camera recovery implemented and
 independently reviewed.25backend groups,5camera scenarios+3negative controls,
 React/Chromium UI, Pro regressions and production build pass. Retained-session
 Retry, initial company binding, honest photo/video status and separate permission
-errors; no migration, media rewrite or billing change. Publishing/live checks
-pending; physical iPhone acceptance still open. Read latest SESSION_HANDOFF.
+errors; no migration, media rewrite or billing change. Live87c46b6, Vercel READY
+exact SHA, dashboard/auth/four-client checks pass. Physical iPhone weak-signal
+acceptance still open. Read latest SESSION_HANDOFF.
 
 November21 follow-up: first camera video filename repair live through e14cb03.
 Independent engineering source/test signoff, persistence regressions, production

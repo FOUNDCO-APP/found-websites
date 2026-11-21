@@ -1,4 +1,4 @@
-## November 21, 2026 - Approved Shared Camera Recovery Prepared
+## November 21, 2026 - Approved Shared Camera Recovery Released
 
 - Retain camera originals in open session; duplicate-safe manual Retry reconciles
   saved rows/storage before resending. Existing UUID PK, no database migration.
@@ -8,7 +8,10 @@
 - Protect recorder finalization and unsaved close/delete/annotation behavior.
 - 25local PostgreSQL/mocked-provider recovery groups,5actual camera persistence
   cases+3negative controls, React/Chromium UI/bounds, Pro regressions and production
-  build pass. Independent engineering approval; release/live checks pending.
+  build pass. Independent engineering approval. Released87c46b6 with Vercel
+  D69dLCfoUkE3hRcfNJgJYW8EFWqy READY/exact SHA. Dashboard and Photos authorized
+  reads200, anonymous PhotosGET/POST401, four Home pages and HiramGallery200.
+  Physical iPhone weak-signal/playback acceptance remains open.
 
 ## November 21, 2026 - Physical Upload Test Network Failure
 

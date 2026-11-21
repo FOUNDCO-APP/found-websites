@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Current Truth
 
-## November 21, 2026 - Approved Weak-Signal Repair Ready For Release
+## November 21, 2026 - Approved Weak-Signal Repair Live
 
 Implemented approved shared camera scope. Helper retains immutable session
 metadata/stable UUID, reconciles before retries, keeps signed-video path/stage,
@@ -34,11 +34,18 @@ checks pass. Independent engineer01a1fd01-2a44-7450-b5ba-e2dd58cebba2 approved
 conditional on build; build condition satisfied. UI/backend owners completed work.
 
 No customer uploads/messages, billing changes, storage/schema changes or old-file
-rewrites made during testing. Release push/live verification pending below.
+rewrites made during testing. Released source87c46b63d4daedb66891e27ae7a05922e28cdd85
+pushed to GitHub main. Vercel dpl_D69dLCfoUkE3hRcfNJgJYW8EFWqy READY and exact
+commit SHA verified. Live login200, authorized admin-view dashboard/Photos GET200,
+anonymous Photos GET/POST401, four client Home pages200 and Hiram Gallery200.
+Authorized verification was read-only; no captures uploaded as customer tests.
 Physical iPhone weak-signal capture/upload/reopen/playback remains unverified.
 Durable offline/reload recovery, background iPhone upload and resumable transfers
 are separate work. Rollback: revert this application's repair commit; no schema
 rollback needed and existing correctly named media remains readable.
+For next physical test: load the new version before a fresh capture; keep camera
+open while uploading, retry an unconfirmed capture when signal improves, then
+reopen Photos and verify video playback. Do not refresh while holding unsaved work.
 
 ## November 21, 2026 - Weak-Signal Camera Recovery Proposal
 

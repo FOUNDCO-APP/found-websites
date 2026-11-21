@@ -4,11 +4,11 @@
 
 - [x] Shawn approves visible two-reviewer weak-signal camera proposal.
 - [x] Implement/test retained-session captures, duplicate-safe retry/reconciliation, initial company binding, stalled-request handling and accurate photo/video/permission wording.25backend groups,5camera scenarios+3negative controls, browser UI and production build pass; independent review approved.
-- [ ] Publish approved weak-signal camera repair and verify deployment SHA, auth boundary, dashboard and four live clients.
+- [x] Published87c46b6; VercelD69dLCfoUkE3hRcfNJgJYW8EFWqy READY exact SHA. Login/admin-view dashboard/Photos200, anonymous PhotosGET/POST401, four clients/HiramGallery200.
 - [ ] Physical iPhone weak-signal retry/upload/playback check after release. Durable offline/background recovery is separate.
 
 - [ ] Repeat Audio Pro iPhone video/photo test on reliable WiFi: first attempt failed with Network error - Load failed; physical acceptance remains open.
-- [ ] Team-scope upload wait/progress/recovery and accurate error guidance (network vs camera permission, video vs photo labels); no implementation yet.
+- [x] Team-scoped upload wait/recovery and accurate error guidance implemented/reviewed/released above; durable offline recovery remains separate.
 
 - [x] Confirm audited checkout0aee66f matches GitHub main; clean working tree at start.
 - [x] Three independent camera/design/native reviews visible to Shawn; current source findings recorded in handoff.
