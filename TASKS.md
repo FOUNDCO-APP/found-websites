@@ -2,6 +2,9 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
+- [ ] Repeat Audio Pro iPhone video/photo test on reliable WiFi: first attempt failed with Network error - Load failed; physical acceptance remains open.
+- [ ] Team-scope upload wait/progress/recovery and accurate error guidance (network vs camera permission, video vs photo labels); no implementation yet.
+
 - [x] Confirm audited checkout0aee66f matches GitHub main; clean working tree at start.
 - [x] Three independent camera/design/native reviews visible to Shawn; current source findings recorded in handoff.
 - [x] Existing92 Pro-choice checks and7 journey groups pass on synthetic data.

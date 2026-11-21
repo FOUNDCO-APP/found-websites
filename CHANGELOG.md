@@ -1,3 +1,12 @@
+## November 21, 2026 - Physical Upload Test Network Failure
+
+- Shawn's Audio Pro iPhone video/photo test waited then showed Network error - Load failed.
+- Read-only metadata/log checks confirmed MP4 signing/preflight succeeded; no new
+  stored media/photo rows at inspection. No exact network cause established.
+- Recorded incorrect camera-permission guidance and generic photo banner for
+  video as proposed follow-ups. Physical upload/playback acceptance still pending
+  reliable-WiFi retest; no additional source/provider changes.
+
 ## November 21, 2026 - First Camera Video Repair Approved
 
 - Corrected actual recorded-video upload filename to video-id.mp4/webm, matching MIME.

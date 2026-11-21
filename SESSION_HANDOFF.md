@@ -1,5 +1,27 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Audio Pro iPhone Upload Test Failed Over Network
+
+Shawn recorded an11-12sec clip in Audio Pro on iPhone; video and then regular photo
+waited. Follow-up screenshot shows Upload failed / Network error - Load failed.
+User identifies network as the issue. This confirms a failed network request, not
+a successful physical recording/upload/playback test or exact network root cause.
+
+Read-only investigation: correct MP4 upload URL prepared (storage signing POST200,
+preflight OPTIONS200), no completed PUT visible in inspected15:40-15:48UTC logs.
+Audio Pro had zero new storage objects and zero new photo rows after15:30UTC at
+inspection. Auth calls200; health advisor empty. No media contents inspected and
+no live writes. Specialist reviewed source, no speculative transport fix applied.
+
+Outstanding usability defects exposed: banner says Uploading photo for video;
+upload requests have no explicit bounded wait; shared banner can remain pending
+when one operation hangs. Camera overlay misleadingly tells user to grant camera
+permissions for an upload/network error, with broken arrow encoding. These need
+visible team scoping before implementation, separate from the shipped filename fix.
+
+User next check on reliable WiFi: short video and still upload, reopen Photos and
+confirm video playback. Until then physical-device acceptance remains open.
+
 ## November 21, 2026 - Approved Camera Video Filename Repair
 
 Shawn approved the bounded first repair and requested team review/approval and
