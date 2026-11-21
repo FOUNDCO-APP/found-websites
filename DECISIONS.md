@@ -1,3 +1,15 @@
+## November 21, 2026 - Shared Weak-Signal Camera Repair Approved
+
+After two independent AI engineering/design reviews visible in chat, Shawn
+approved accurate photo/video status, separated permission errors, patient slow
+uploads with bounded stalled-request handling, and retained-session duplicate-safe
+Retry. All industries/plans share the repair. Use existing company_photos UUID
+primary key for idempotency, never overwrite on collision, bind captures to their
+authorized company before their first request and reconcile uncertain saves.
+Preserve original capture bytes/MIME/album while camera remains open. Warn before
+closing; no claim of durable offline storage, reload recovery or iPhone background
+uploads. No billing, gallery publication or existing media rewrite in this scope.
+
 ## November 21, 2026 - First Camera Repair Approved
 
 Shawn approved the independently reviewed recorded-video filename correction and

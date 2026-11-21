@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react"
 import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
-import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { createDashboardUploadSession } from "@/lib/uploadDashboardMedia"
 import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
@@ -15,7 +15,7 @@ const RATIOS = [
   { label: "1:1", value: "1:1" as AspectRatio, w: 1, h: 1 },
 ]
 
-type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string }
+type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean }
 
 // Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
@@ -43,6 +43,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   pendingAlbumId?: string | null
 }) {
   const uploadStatus    = useUploadStatus()
+  const retained = useRef(new Map<string, { blob: Blob; session: ReturnType<typeof createDashboardUploadSession>; running: boolean }>())
+  const mounted = useRef(true)
+  const encoding = useRef(0)
+  const captureUrls = useRef(new Set<string>())
+  const onUploadedRef = useRef(onUploaded)
+  onUploadedRef.current = onUploaded
+  const capturesRef = useRef<Capture[]>([])
+  const closeDialog = useRef<HTMLDialogElement>(null)
+  const [closeNotice, setCloseNotice] = useState<string | null>(null)
   const videoRef        = useRef<HTMLVideoElement>(null)
   const canvasRef       = useRef<HTMLCanvasElement>(null)
   const streamRef       = useRef<MediaStream | null>(null)
@@ -68,6 +77,69 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const [shutterFlash, setFlash]  = useState(false)
   const [ready, setReady]         = useState(false)
   const [error, setError]         = useState<string | null>(null)
+
+  useEffect(() => {
+    if (closeNotice) closeDialog.current?.showModal()
+  }, [closeNotice])
+
+  capturesRef.current = captures
+  useEffect(() => {
+    mounted.current = true
+    const warn = (event: BeforeUnloadEvent) => {
+      if (retained.current.size || encoding.current || recorderRef.current?.state === "recording") {
+        event.preventDefault()
+        event.returnValue = ""
+      }
+    }
+    window.addEventListener("beforeunload", warn)
+    return () => {
+      mounted.current = false
+      window.removeEventListener("beforeunload", warn)
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop()
+      for (const id of retained.current.keys()) uploadStatus.detachOperation(id)
+      retained.current.clear()
+      for (const url of captureUrls.current) URL.revokeObjectURL(url)
+      captureUrls.current.clear()
+    }
+  }, [uploadStatus.detachOperation])
+
+  async function runCapture(id: string) {
+    const entry = retained.current.get(id)
+    if (!entry || entry.running || !mounted.current) return
+    entry.running = true
+    setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: true, uploadError: false } : c))
+    const finish = uploadStatus.beginOperation({ id, kind: entry.blob.type.startsWith("video/") ? "video" : "photo", onRetry: () => { void runCapture(id) }, onReview: () => {
+      const index = capturesRef.current.findIndex(c => c.id === id)
+      if (index >= 0) setReviewIndex(index)
+    } })
+    let photo: UploadedPhoto
+    try {
+      photo = await entry.session.run()
+    } catch {
+      entry.running = false
+      finish(false)
+      if (mounted.current) setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: false, uploadError: true } : c))
+      return
+    }
+    // A confirmed upload must never be rerun, including through an old banner callback.
+    retained.current.delete(id)
+    finish(true)
+    uploadStatus.detachOperation(id)
+    if (!mounted.current) return
+    setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: false, uploadError: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+    onUploadedRef.current(photo)
+  }
+
+  function retainCapture(blob: Blob, fileName: string) {
+    if (!mounted.current) return
+    const id = crypto.randomUUID()
+    const previewUrl = URL.createObjectURL(blob)
+    captureUrls.current.add(previewUrl)
+    retained.current.set(id, { blob, session: createDashboardUploadSession(blob, { fileName, albumId: pendingAlbumId ?? null, companyId: uploadStatus.companyId ?? undefined }), running: false })
+    setCaptures(previous => [{ id, previewUrl, uploading: true, isVideo: blob.type.startsWith("video/") }, ...previous])
+    void runCapture(id)
+  }
 
   // Start / restart camera stream
   useEffect(() => {
@@ -100,8 +172,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       } catch {
         try {
           stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false })
-        } catch {
-          if (alive) setError(blockedCameraMessage())
+        } catch (cameraError) {
+          if (alive) setError(cameraError instanceof DOMException && cameraError.name === "NotAllowedError" ? blockedCameraMessage() : "Camera couldn’t start. Try opening the camera again.")
           return
         }
       }
@@ -113,10 +185,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       // Safety net for a documented WebKit quirk: getUserMedia can resolve
       // with a stream that never actually produces a frame when permission
       // is in a stale/blocked state, without ever rejecting the promise.
-      // If onLoadedMetadata hasn't fired shortly after, treat it as blocked.
+      // A missing frame is not evidence that camera permission was denied.
       frameTimeout = setTimeout(() => {
         if (alive && !videoRef.current?.videoWidth) {
-          setError(blockedCameraMessage())
+          setError("Camera hasn’t started. Try opening the camera again.")
           streamRef.current?.getTracks().forEach(t => t.stop())
           streamRef.current = null
         }
@@ -184,29 +256,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     const { sx, sy, sw, sh } = getCrop(video.videoWidth, video.videoHeight, currentR.w, currentR.h, zoom)
     canvas.width = sw; canvas.height = sh
     canvas.getContext("2d")!.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh)
-    canvas.toBlob(async blob => {
-      if (!blob) return
-      const previewUrl = URL.createObjectURL(blob)
-      const id = `${Date.now()}`
-      setCaptures(prev => [{ id, previewUrl, uploading: true }, ...prev])
-      const form = new FormData()
-      form.append("file", blob, `photo-${id}.jpg`)
-      if (pendingAlbumId) form.append("album_id", pendingAlbumId)
-      uploadStatus.start(1)
-      try {
-        const photo = await uploadDashboardMedia(blob, { fileName: `photo-${id}.jpg`, albumId: pendingAlbumId ?? null })
-        onUploaded(photo)
-        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
-        uploadStatus.complete(true)
-      } catch (uploadError) {
-        setError(uploadError instanceof Error ? uploadError.message : "Photo upload failed")
-        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-        uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
-      }
+    encoding.current++
+    canvas.toBlob(blob => {
+      encoding.current--
+      if (blob) retainCapture(blob, `photo-${crypto.randomUUID()}.jpg`)
+      else if (mounted.current) setCloseNotice("Photo couldn’t be captured. Please try again.")
     }, "image/jpeg", 0.92)
   }
 
   function startRecording() {
+    if (encoding.current > 0 || recorderRef.current?.state === "recording") return
     const stream = streamRef.current
     if (!stream) return
     chunksRef.current = []
@@ -215,7 +274,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       : "video/webm"
     const mr = new MediaRecorder(stream, { mimeType })
     mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-    mr.onstop = () => uploadVideo(mimeType)
+    mr.onstop = () => { uploadVideo(mimeType); encoding.current = Math.max(0, encoding.current - 1) }
     recorderRef.current = mr
     mr.start(250)
     setRecording(true)
@@ -224,60 +283,35 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   }
 
   function stopRecording() {
+    if (recorderRef.current?.state !== "recording") return
+    encoding.current++
     recorderRef.current?.stop()
     if (timerRef.current) clearInterval(timerRef.current)
     setRecording(false)
   }
 
-  async function uploadVideo(mimeType: string) {
+  function uploadVideo(mimeType: string) {
     const ext = mimeType.includes("mp4") ? "mp4" : "webm"
     const blob = new Blob(chunksRef.current, { type: mimeType })
-    const previewUrl = URL.createObjectURL(blob)
-    const id = `${Date.now()}`
-    setCaptures(prev => [{ id, previewUrl, uploading: true, isVideo: true }, ...prev])
-    const form = new FormData()
-    form.append("file", blob, `video-${id}.${ext}`)
-    if (pendingAlbumId) form.append("album_id", pendingAlbumId)
-    uploadStatus.start(1)
-    try {
-      const photo = await uploadDashboardMedia(blob, { fileName: `video-${id}.${ext}`, albumId: pendingAlbumId ?? null })
-      onUploaded(photo)
-      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
-      uploadStatus.complete(true)
-    } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Video upload failed")
-      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-      uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
-    }
+    retainCapture(blob, `video-${crypto.randomUUID()}.${ext}`)
+    chunksRef.current = []
   }
 
   async function handleAnnotationSave(blob: Blob) {
+    const capture = reviewIndex === null ? undefined : captures[reviewIndex]
+    if (!capture?.photoId || retained.current.has(capture.id)) return
     setAnnotating(false)
-    const previewUrl = URL.createObjectURL(blob)
-    const id = `${Date.now()}`
-    setCaptures(prev => [{ id, previewUrl, uploading: true }, ...prev])
+    retainCapture(blob, `annotated-${crypto.randomUUID()}.jpg`)
     setReviewIndex(0)
-    const form = new FormData()
-    form.append("file", blob, `annotated-${id}.jpg`)
-    if (pendingAlbumId) form.append("album_id", pendingAlbumId)
-    uploadStatus.start(1)
-    try {
-      const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
-      onUploaded(photo)
-      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
-      uploadStatus.complete(true)
-    } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Annotated photo upload failed")
-      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-      uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
-    }
   }
 
   async function deleteCapture(capture: Capture) {
+    if (!capture.photoId || retained.current.has(capture.id)) return
     setCaptures(prev => prev.filter(c => c.id !== capture.id))
     setReviewIndex(null)
     setConfirmDelete(false)
     URL.revokeObjectURL(capture.previewUrl)
+    captureUrls.current.delete(capture.previewUrl)
     if (capture.photoId && capture.storagePath) {
       await fetch("/api/photos", {
         method: "DELETE",
@@ -294,7 +328,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   }
 
   function handleClose() {
-    if (recording) stopRecording()
+    if (recorderRef.current?.state === "recording") {
+      stopRecording()
+      setCloseNotice("Recording stopped. Keep this camera open until the video is added.")
+      return
+    }
+    if (retained.current.size || encoding.current) {
+      setCloseNotice("Some captures haven’t been confirmed as added. Their originals are available only while this camera stays open. Retry the uploads before closing; refreshing or closing Found can lose them.")
+      return
+    }
     streamRef.current?.getTracks().forEach(t => t.stop())
     streamRef.current = null
     onClose()
@@ -359,10 +401,9 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
       {/* Error */}
       {error && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div role="alert" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", color: "white", padding: "0 32px" }}>
             <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{error}</p>
-            <p style={{ fontSize: 13, opacity: 0.5 }}>Go to Settings â†’ Browser â†’ Camera and allow access.</p>
           </div>
         </div>
       )}
@@ -374,7 +415,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         padding: "max(env(safe-area-inset-top, 0px), 20px) 18px 16px",
       }}>
         {/* Close */}
-        <button onClick={handleClose} style={{ width: 42, height: 42, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button aria-label="Close camera" onClick={handleClose} style={{ width: 42, height: 42, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -446,6 +487,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       }}>
         {/* Last capture thumbnail â€” tap to review */}
         <button
+          aria-label="Review captures"
           onClick={() => captures.length > 0 ? setReviewIndex(0) : undefined}
           style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
         >
@@ -473,6 +515,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
         {/* Shutter / Record */}
         <button
+          aria-label={mode === "photo" ? "Take photo" : recording ? "Stop recording" : "Record video"}
           onClick={handleShutter}
           disabled={!ready}
           style={{
@@ -535,14 +578,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               </button>
 
               <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
-                {captures.length === 1 ? "1 photo" : `${captures.length} photos`}
+                {captures.length === 1 ? (cap.isVideo ? "1 video" : "1 photo") : `${captures.length} items`}
               </span>
 
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {/* Annotate */}
                 {!cap.isVideo && (
                   <button
-                    onClick={() => setAnnotating(true)}
+                    disabled={!cap.photoId || cap.uploading}
+                    onClick={() => { if (cap.photoId && !retained.current.has(cap.id)) setAnnotating(true) }}
                     style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -554,7 +598,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
                 {/* Delete */}
                 <button
-                  onClick={() => setConfirmDelete(true)}
+                  disabled={!cap.photoId || cap.uploading}
+                  onClick={() => { if (cap.photoId && !retained.current.has(cap.id)) setConfirmDelete(true) }}
                   style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -566,6 +611,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
             </div>
 
             {/* â”€â”€ Main preview â”€â”€ */}
+            {!cap.photoId && <div style={{ padding: "10px 16px", color: "white" }}>
+              <p role="status" style={{ margin: "0 0 8px", fontSize: "0.9375rem", lineHeight: 1.45 }}>{cap.uploading ? `Uploading ${cap.isVideo ? "video" : "photo"}… Keep Found open.` : "Upload not confirmed. Original available only while this camera stays open."}</p>
+              {cap.uploadError && <button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12, background: "#202622", color: "white", border: "1px solid #56605a" }} onClick={() => { void runCapture(cap.id) }}>Retry {cap.isVideo ? "video" : "photo"}</button>}
+            </div>}
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 16px", overflow: "hidden", minHeight: 0 }}>
               <div style={{ width: "100%", height: "100%", borderRadius: 20, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {cap.isVideo ? (
@@ -598,6 +647,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                   return (
                     <button
                       key={c.id}
+                      aria-label={`Review ${c.isVideo ? "video" : "photo"} ${i + 1}`}
                       onClick={() => { setReviewIndex(i); setConfirmDelete(false) }}
                       style={{ flexShrink: 0, padding: 0, background: "none", border: "none", cursor: "pointer", position: "relative" }}
                     >
@@ -650,7 +700,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
                   <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
-                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading - it will be discarded."}
+                    This will permanently remove it from your account.
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button
@@ -673,6 +723,21 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         )
       })()}
 
+      {closeNotice && <dialog ref={closeDialog} onCancel={() => setCloseNotice(null)} aria-labelledby="camera-close-title" aria-describedby="camera-close-description" style={{ padding: 0, border: "1px solid #56605a", borderRadius: 20, maxWidth: "min(92vw, 420px)", color: "white", background: "#161b18" }}>
+        <div style={{ background: "#161b18", color: "white", padding: 24, borderRadius: 20, maxWidth: 420 }}>
+          <h2 id="camera-close-title" style={{ fontSize: "1.125rem" }}>Uploads not finished</h2>
+          <p id="camera-close-description" style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>{closeNotice}</p>
+          <button autoFocus style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => { setCloseNotice(null); const index = captures.findIndex(c => !c.photoId); if (index >= 0) setReviewIndex(index) }}>Keep camera open</button>
+          {!encoding.current && recorderRef.current?.state !== "recording" && retained.current.size > 0 && [...retained.current.values()].every(entry => !entry.running) && <><p style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>Closing loses the originals kept in this camera. An unconfirmed upload may already be in Photos; check there before uploading it again.</p><button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => {
+            if (encoding.current || recorderRef.current?.state === "recording" || [...retained.current.values()].some(entry => entry.running)) return
+            mounted.current = false
+            for (const id of retained.current.keys()) uploadStatus.detachOperation(id)
+            retained.current.clear()
+            streamRef.current?.getTracks().forEach(track => track.stop())
+            onClose()
+          }}>Close anyway</button></>}
+        </div>
+      </dialog>}
       <style>{`
         @keyframes cam-spin  { to { transform: rotate(360deg); } }
         @keyframes rec-blink { 0%,100% { opacity:1; } 50% { opacity:0.15; } }

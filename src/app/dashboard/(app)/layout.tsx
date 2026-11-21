@@ -90,7 +90,7 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
   const effectiveAddons = getEffectiveAddons(company?.plan, paidAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])
 
   return (
-    <UploadStatusProvider>
+    <UploadStatusProvider key={company?.id ?? "none"} companyId={company?.id ?? null}>
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
       <CustomerActivityTracker disabled={viewingAsAdmin || !user || !company} />
 

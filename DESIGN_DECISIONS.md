@@ -1,3 +1,15 @@
+## November 21, 2026 - Honest Camera Upload Recovery
+
+Shawn approved the visible engineering and Jony/Angela AI-review direction:
+explicit Uploading photo/video titles, completed-item counts rather than false
+byte progress, a patient Still uploading / Keep Found open notice, and per-capture
+Retry. Permission guidance belongs only to actual camera denial. Do not show raw
+provider errors or diagnose weak signal solely from elapsed time. A missing save
+confirmation is uncertain, not proof the capture never saved. Keep the original
+while the camera remains open, prevent overlapping retries, and require a clear
+warning before closing failed captures. Existing Found type/palette and readable
+mobile controls apply. Durable offline/background upload is separate work.
+
 ## October 28, 2026 - Shared Inbox And Manual Compose Extension
 
 Actual independent Jony/Steve review: From selects a sender identity, not another

@@ -1,5 +1,71 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Approved Weak-Signal Repair Ready For Release
+
+Implemented approved shared camera scope. Helper retains immutable session
+metadata/stable UUID, reconciles before retries, keeps signed-video path/stage,
+shares overlapping run promises and binds to server-authorized company before
+the first request. Photos API reuses existing id PK, verifies company/album and
+canonical owned storage path/URL, fails closed on inspection error, never upserts,
+and recovers storage-only or committed-row saves after lost responses. No migration.
+Signed PUT uses the installed SDK's FormData wire contract directly so requests
+can be aborted. Control/body deadline60sec; transfer deadline10min. These are total
+limits, not transfer-progress/inactivity timers. No automatic retry or resumable
+chunking is promised. Legacy multipart/signed callers remain supported.
+
+Camera retains original Blob/session until confirmed save, prevents overlapping
+Retry, separates upload errors from camera startup/permission errors, protects
+recorder finalization, blocks delete/annotation until saved and warns on close/
+beforeunload. Failed settled captures can be deliberately closed with loss warning;
+unknown saves may already exist in Photos. Provider tracks per-operation results,
+photo/video titles, completed-item counts (no false byte bar), slow notice after
+15sec, and retry/review/hide controls. Company-keyed provider clears stale tenant UI.
+
+Evidence: parent and independent reviewer ran25 recovery groups against real local
+PGlite PostgreSQL PK plus mocked storage/HTTP;5 actual camera handler/helper/API
+persistence scenarios and3 old-source negative controls passed. Real React/Chromium
+UI fixture passes retry overlap, mixed legacy/tracked results, slow guidance,
+permission separation, close/unload, recorder finalization and320/390px banner
+bounds. Media is synthetic: screenshot previews are blank, not real hardware.
+Initial browser harness errors (native window.closed name collision and readiness
+timing) corrected; final test and application hashes verified unchanged. Production
+build passed TypeScript/all89 static pages, exit0. Existing Pro7journey/92choice
+checks pass. Independent engineer01a1fd01-2a44-7450-b5ba-e2dd58cebba2 approved
+conditional on build; build condition satisfied. UI/backend owners completed work.
+
+No customer uploads/messages, billing changes, storage/schema changes or old-file
+rewrites made during testing. Release push/live verification pending below.
+Physical iPhone weak-signal capture/upload/reopen/playback remains unverified.
+Durable offline/reload recovery, background iPhone upload and resumable transfers
+are separate work. Rollback: revert this application's repair commit; no schema
+rollback needed and existing correctly named media remains readable.
+
+## November 21, 2026 - Weak-Signal Camera Recovery Proposal
+
+Shawn approved the shared camera repair in the queued question reply. Implementation
+is now authorized within the scope below; production acceptance still requires
+tests, independent review and release verification. Existing company_photos id
+primary key verified read-only in production; stable upload identity can use this
+constraint without schema migration. No production data written in verification.
+
+Shawn requests better low-signal uploads across client work locations, correct
+photo/video loading titles and accurate error wording. Two separate AI reviewers
+returned engineering (01a1fcf9-fbed-7300-8fd9-6b9cfc056b45) and design/customer
+experience (01a1fcf9-fdf5-7430-9a42-834d9a803efb) recommendations, shown in chat.
+Role lenses are not extra independent participants. Engineering favors neutral
+upload titles; design favors explicit photo/video names. Proposed explicit names.
+
+Proposed scope awaiting Shawn approval: retain immutable captures in the open
+camera session; truthful slow-upload notice; bounded/abortable stalled requests;
+per-company stable upload identity and reconciliation before retry to prevent
+duplicates, including uncertain photo responses and signed-video completion;
+manual Retry with overlap prevention; separate upload vs permission errors.
+Do not label elapsed time alone as weak signal. Do not claim saved until confirmed.
+Durable offline storage, reload survival and background iPhone upload are separate.
+Implementation underway after approval; no schema change planned.
+Acceptance must cover slow success, interruption, response lost after save,
+duplicate retry taps, mixed batches, MIME/album preservation and close limitations.
+
 ## November 21, 2026 - Audio Pro iPhone Upload Test Failed Over Network
 
 Shawn recorded an11-12sec clip in Audio Pro on iPhone; video and then regular photo

@@ -1,4 +1,4 @@
-﻿import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { mediaKindFromUrl } from "@/lib/mediaKind"
@@ -48,86 +48,134 @@ export async function GET() {
   return NextResponse.json({ photos })
 }
 
+const UPLOAD_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const UPLOAD_ERROR = "We couldn't confirm your upload saved. Check your connection and try again."
+
 export async function POST(req: Request) {
-  const identity = await resolveDashboardIdentity()
-  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(identity.userId, identity.userEmail)
-  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-
-  const admin = createAdminClient()
-  const contentType = req.headers.get("content-type") ?? ""
-
-  if (contentType.includes("application/json")) {
-    const body = await req.json()
-    const albumId = body.album_id || null
-
-    if (body.intent === "signed-upload") {
-      const ext = safeExtension(body.file_name, body.content_type)
-      const path = `${company.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-      const { data, error } = await admin.storage.from(BUCKET).createSignedUploadUrl(path)
-      if (error || !data) return NextResponse.json({ error: error?.message ?? "Could not prepare upload" }, { status: 500 })
-      const { data: { publicUrl } } = admin.storage.from(BUCKET).getPublicUrl(path)
-      return NextResponse.json({ bucket: BUCKET, path, token: data.token, publicUrl, album_id: albumId })
+  try {
+    const identity = await resolveDashboardIdentity()
+    if (!identity) return NextResponse.json({ error: "Please sign in to upload." }, { status: 401 })
+    const company = await getCompany(identity.userId, identity.userEmail)
+    if (!company) return NextResponse.json({ error: "This upload couldn't start." }, { status: 404 })
+    const admin = createAdminClient()
+    const bucket = admin.storage.from(BUCKET)
+    const json = (req.headers.get("content-type") ?? "").includes("application/json")
+    const body = json ? await req.json() : null
+    const form = json ? null : await req.formData()
+    const expectedCompany = json ? body.expected_company_id : form?.get("expected_company_id")
+    if (expectedCompany != null && expectedCompany !== company.id) {
+      return NextResponse.json({ error: "Your business changed. Return to the original business to retry." }, { status: 409 })
     }
-
-    if (body.storage_path && body.url) {
-      try { await assertStockPhotoAlbum(admin, company.id, body.url, albumId) }
-      catch (error) {
-        return NextResponse.json({ error: error instanceof Error ? error.message : "Could not verify this photo." }, { status: error instanceof StockPhotoPlacementError ? 403 : 500 })
+    const rawId = json ? body.upload_id : form?.get("upload_id")
+    if (rawId != null && (typeof rawId !== "string" || !UPLOAD_UUID.test(rawId))) {
+      return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+    }
+    const uploadId = typeof rawId === "string" ? rawId.toLowerCase() : null
+    if (uploadId && body?.intent !== "reconcile-upload" && expectedCompany !== company.id) {
+      return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 409 })
+    }
+    const albumId = (json ? body.album_id : form?.get("album_id")) || null
+    if (albumId) {
+      const { data, error } = await admin.from("photo_albums").select("id")
+        .eq("id", albumId).eq("company_id", company.id).maybeSingle()
+      if (error || !data) return NextResponse.json({ error: "This album is unavailable." }, { status: 400 })
+    }
+    // Never upsert an ID: a global PK collision must not update/disclose another tenant.
+    const existing = async () => {
+      const { data, error } = await admin.from("company_photos").select("*")
+        .eq("id", uploadId!).eq("company_id", company.id).maybeSingle()
+      if (error) throw new Error(UPLOAD_ERROR)
+      return data
+    }
+    if (uploadId) {
+      const photo = await existing()
+      if (photo) return NextResponse.json({ company_id: company.id, photo: photoPayload(photo) })
+    }
+    const file = form?.get("file") as File | null
+    const name = json ? body.file_name : file?.name
+    const mime = json ? (body.content_type || body.mime_type) : file?.type
+    const ext = safeExtension(name, mime)
+    if (uploadId && !["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "avif", "mp4", "webm", "mov", "m4v", "ogg"].includes(ext)) {
+      return NextResponse.json({ error: "This file type isn't supported." }, { status: 400 })
+    }
+    const path = uploadId ? `${company.id}/${uploadId}.${ext}`
+      : `${company.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const publicUrlFor = (value: string) => bucket.getPublicUrl(value).data.publicUrl
+    // Exact metadata lookup only. Storage errors are not evidence of absence.
+    const stored = async (value: string) => {
+      const filename = value.slice(company.id.length + 1)
+      const { data, error } = await bucket.list(company.id, { search: filename, limit: 100 })
+      if (error) throw new Error(UPLOAD_ERROR)
+      return (data ?? []).some(object => object.name === filename && !!object.id)
+    }
+    const save = async (storagePath: string, url: string, mimeType?: string) => {
+      const { data, error } = await admin.from("company_photos")
+        .insert({ ...(uploadId ? { id: uploadId } : {}), company_id: company.id,
+          storage_path: storagePath, url, album_id: albumId }).select().single()
+      if (error) {
+        if (uploadId && error.code === "23505") {
+          const photo = await existing()
+          if (photo) return NextResponse.json({ photo: photoPayload(photo, mimeType) })
+        }
+        throw new Error(UPLOAD_ERROR)
       }
-      const { data, error } = await admin
-        .from("company_photos")
-        .insert({ company_id: company.id, storage_path: body.storage_path, url: body.url, album_id: albumId })
-        .select()
-        .single()
-
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      await recordCustomerActivity({
-        eventType: "photo_uploaded",
-        pathname: "/dashboard/photos",
-        metadata: { photo_id: data.id, album_id: albumId, upload_mode: "signed" },
-      })
-      return NextResponse.json({ photo: photoPayload(data, body.mime_type) })
+      try {
+        await recordCustomerActivity({ eventType: "photo_uploaded", pathname: "/dashboard/photos",
+          metadata: { photo_id: data.id, album_id: albumId, upload_mode: json ? "signed" : "form" } })
+      } catch { /* A saved capture remains saved if activity tracking fails. */ }
+      return NextResponse.json({ photo: photoPayload(data, mimeType) })
     }
-
-    return NextResponse.json({ error: "Invalid media upload request" }, { status: 400 })
+    if (json) {
+      if (body.intent === "reconcile-upload") {
+        if (!uploadId) return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+        const uploaded = await stored(path)
+        return NextResponse.json({ company_id: company.id, uploaded, path, publicUrl: publicUrlFor(path) })
+      }
+      if (body.intent === "signed-upload") {
+        if (uploadId && await stored(path)) {
+          return NextResponse.json({ uploaded: true, path, publicUrl: publicUrlFor(path) })
+        }
+        const { data, error } = await bucket.createSignedUploadUrl(path)
+        if (error || !data) throw new Error(UPLOAD_ERROR)
+        return NextResponse.json({ bucket: BUCKET, path, token: data.token, signedUrl: data.signedUrl,
+          publicUrl: publicUrlFor(path), album_id: albumId })
+      }
+      if (body.storage_path && body.url) {
+        if (uploadId) {
+          if (body.storage_path !== path || body.url !== publicUrlFor(path)) {
+            return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 400 })
+          }
+          if (!await stored(path)) return NextResponse.json({ error: UPLOAD_ERROR }, { status: 409 })
+          return await save(path, publicUrlFor(path), mime)
+        }
+        // Separate legacy completion contract; retain stock publication checks.
+        const legacyPath = String(body.storage_path)
+        const prefix = `${company.id}/`
+        const filename = legacyPath.slice(prefix.length)
+        if (!legacyPath.startsWith(prefix) || !/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(filename)
+          || body.url !== publicUrlFor(legacyPath) || !await stored(legacyPath)) {
+          return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 400 })
+        }
+        await assertStockPhotoAlbum(admin, company.id, body.url, albumId)
+        return await save(legacyPath, publicUrlFor(legacyPath), body.mime_type)
+      }
+      return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+    }
+    if (!file || typeof file.arrayBuffer !== "function") {
+      return NextResponse.json({ error: "Choose a file to upload." }, { status: 400 })
+    }
+    if (!uploadId || !await stored(path)) {
+      const { error } = await bucket.upload(path, await file.arrayBuffer(), { contentType: file.type, upsert: false })
+      if (error) {
+        // Another request may have won storage. Verify; never overwrite.
+        if (!uploadId || !await stored(path)) throw new Error(UPLOAD_ERROR)
+      }
+    }
+    return await save(path, publicUrlFor(path), file.type)
+  } catch {
+    return NextResponse.json({ error: UPLOAD_ERROR }, { status: 500 })
   }
-
-  const formData = await req.formData()
-  const file = formData.get("file") as File | null
-  const albumId = (formData.get("album_id") as string | null) || null
-  if (!file) return NextResponse.json({ error: "No file" }, { status: 400 })
-
-  const ext = safeExtension(file.name, file.type)
-  const path = `${company.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-
-  const arrayBuffer = await file.arrayBuffer()
-  const { error: uploadError } = await admin.storage
-    .from(BUCKET)
-    .upload(path, arrayBuffer, { contentType: file.type, upsert: false })
-
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 })
-
-  const { data: { publicUrl } } = admin.storage
-    .from(BUCKET)
-    .getPublicUrl(path)
-
-  const { data, error } = await admin
-    .from("company_photos")
-    .insert({ company_id: company.id, storage_path: path, url: publicUrl, album_id: albumId })
-    .select()
-    .single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  const payload = photoPayload(data, file.type)
-  await recordCustomerActivity({
-    eventType: "photo_uploaded",
-    pathname: "/dashboard/photos",
-    metadata: { photo_id: data.id, album_id: albumId, upload_mode: "form", media_type: payload.media_type },
-  })
-  return NextResponse.json({ photo: payload })
 }
-
 export async function PATCH(req: Request) {
   const identity = await resolveDashboardIdentity()
   if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

@@ -1,3 +1,15 @@
+## November 21, 2026 - Approved Shared Camera Recovery Prepared
+
+- Retain camera originals in open session; duplicate-safe manual Retry reconciles
+  saved rows/storage before resending. Existing UUID PK, no database migration.
+- Bind first request to active company; reject tenant switches and foreign paths.
+- Abortable bounded upload requests, accurate photo/video status, patient slow
+  notice and separate permission guidance. No false byte progress or offline claim.
+- Protect recorder finalization and unsaved close/delete/annotation behavior.
+- 25local PostgreSQL/mocked-provider recovery groups,5actual camera persistence
+  cases+3negative controls, React/Chromium UI/bounds, Pro regressions and production
+  build pass. Independent engineering approval; release/live checks pending.
+
 ## November 21, 2026 - Physical Upload Test Network Failure
 
 - Shawn's Audio Pro iPhone video/photo test waited then showed Network error - Load failed.
