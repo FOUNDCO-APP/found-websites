@@ -1,3 +1,19 @@
+## November 21, 2026 - Measured Media And Resumable Transfer (Approved)
+
+Shawn approved preparing explicit video settings and resumable uploads alongside
+the camera layout refinement. Starting field profile: ideal1080p/30fps, requested
+5Mbps video/128kbps audio; browsers may differ. Retain sanitized local measurements,
+actual recorder/chunk MIME, high-detail still ideals and existing original files.
+Unknown nonempty recordings retain raw device bytes rather than guessing a format.
+Queue videos and photos >=4MiB use direct signed TUS; small photos/legacy callers
+retain compatible paths. 4MiB avoids Vercel multipart overhead below4.5MB.
+Use pinned tus-js-client4.3.1, 6MiB chunks, no upsert, bounded outer retries, scoped
+credential-free resume metadata, fresh capabilities and cloud confirmation before
+local cleanup. Correct signed endpoint is /storage/v1/upload/resumable/sign, per
+official signed example; unsigned endpoint failed actual storage verification.
+No new service, schema migration, billing or paid settings change. Prepare/test
+and show final independent results before publishing; physical iPhone remains open.
+
 ## November 21, 2026 - Device Save And Automatic Upload Approved
 
 Compatibility detail: new device-queue clients always send expected account and

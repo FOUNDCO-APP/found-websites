@@ -1,5 +1,6 @@
 import { isVideoMedia } from "@/lib/mediaKind"
 import { createClient } from "@/lib/supabase/client"
+import { uploadResumableMedia, ResumableMediaUploadError, type ResumableMediaResumeInfo } from "@/lib/resumableMediaUpload"
 
 export async function ensureFreshSession() {
   try { await createClient().auth.getSession() } catch { /* Individual uploads report failure. */ }
@@ -14,7 +15,12 @@ export type DashboardMediaUpload = {
 
 export type DashboardUploadOptions = {
   fileName?: string; albumId?: string | null; endpoint?: string; uploadId?: string; companyId?: string; accountId?: string
+  resumable?: boolean
+  previousResumeInfo?: ResumableMediaResumeInfo | null
+  onResumeInfo?: (info: ResumableMediaResumeInfo | null) => Promise<void> | void
+  onProgress?: (progress: MediaUploadProgress) => void
 }
+export type MediaUploadProgress = { bytesUploaded: number; bytesTotal: number; stage: "transferring" | "finalizing" }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const CONTROL_MS = 60_000
 const TRANSFER_MS = 10 * 60_000
@@ -46,6 +52,7 @@ export class DashboardUploadError extends Error {
 type UploadResponse = {
   company_id?: string; account_id?: string; photo?: DashboardMediaUpload; uploaded?: boolean
   path?: string; publicUrl?: string; signedUrl?: string; Key?: string
+  resumableEndpoint?: string; token?: string; bucket?: string
 }
 const invalidResponse = () => new DashboardUploadError("unknown")
 function httpError(status: number, code: unknown, retryAfter: string | null) {
@@ -75,13 +82,17 @@ function photoResult(value: unknown): DashboardMediaUpload {
 
 // The deadline includes reading the response body. Abort the underlying request,
 // rather than merely racing a promise and leaving a transfer running unnoticed.
-async function request(url: string, init: RequestInit, milliseconds: number) {
+async function request(url: string, init: RequestInit, milliseconds: number, signal?: AbortSignal) {
+  if (signal?.aborted) throw new DashboardUploadError("connection")
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), milliseconds)
+  let timedOut = false
+  const abort = () => controller.abort()
+  signal?.addEventListener("abort", abort, { once: true })
+  const timer = setTimeout(() => { timedOut = true; controller.abort() }, milliseconds)
   try {
     const response = await fetch(url, { ...init, signal: controller.signal })
     const text = await response.text()
-    if (controller.signal.aborted) throw new DashboardUploadError("timeout")
+    if (controller.signal.aborted) throw new DashboardUploadError(timedOut ? "timeout" : "connection")
     let data: unknown
     try { data = JSON.parse(text) } catch { /* Non-JSON errors still have an HTTP status. */ }
     const object = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : null
@@ -90,8 +101,8 @@ async function request(url: string, init: RequestInit, milliseconds: number) {
     return object as UploadResponse
   } catch (error) {
     if (error instanceof DashboardUploadError) throw error
-    throw new DashboardUploadError(controller.signal.aborted ? "timeout" : "connection")
-  } finally { clearTimeout(timer) }
+    throw new DashboardUploadError(timedOut ? "timeout" : "connection")
+  } finally { clearTimeout(timer); signal?.removeEventListener("abort", abort) }
 }
 
 export async function readDashboardUploadContext(endpoint = "/api/photos"): Promise<{ companyId: string; accountId: string }> {
@@ -109,6 +120,7 @@ export function createDashboardUploadSession(file: File | Blob, supplied: Dashbo
     uploadId: supplied.uploadId ?? crypto.randomUUID(),
     companyId: supplied.companyId,
     accountId: supplied.accountId,
+    resumable: supplied.resumable === true,
   })
   if (!UUID.test(options.uploadId)) throw new DashboardUploadError("validation")
   const mimeType = file.type || "application/octet-stream"
@@ -119,13 +131,21 @@ export function createDashboardUploadSession(file: File | Blob, supplied: Dashbo
   let companyId: string | undefined = options.companyId
   let accountId: string | undefined = options.accountId
   let active: Promise<DashboardMediaUpload> | undefined
-  const json = (body: object) => request(options.endpoint, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, ...(companyId ? { expected_company_id: companyId } : {}),
-      ...(accountId ? { expected_account_id: accountId } : {}) }),
-  }, CONTROL_MS)
+  let resumeInfo = supplied.previousResumeInfo
+  const cancellation = new AbortController()
+  const json = async (body: object) => {
+    if (cancellation.signal.aborted) throw new DashboardUploadError("connection")
+    const result = await request(options.endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, ...(companyId ? { expected_company_id: companyId } : {}),
+        ...(accountId ? { expected_account_id: accountId } : {}) }),
+    }, CONTROL_MS, cancellation.signal)
+    if (cancellation.signal.aborted) throw new DashboardUploadError("connection")
+    return result
+  }
   async function finish() {
     if (!transfer) throw invalidResponse()
+    supplied.onProgress?.({ bytesUploaded: file.size, bytesTotal: file.size, stage: "finalizing" })
     const result = await json({ ...metadata, storage_path: transfer.path, url: transfer.publicUrl, mime_type: mimeType })
     return verifiedPhoto(result.photo)
   }
@@ -150,19 +170,22 @@ export function createDashboardUploadSession(file: File | Blob, supplied: Dashbo
       transfer = { path: status.path, publicUrl: status.publicUrl, uploaded: true }
       return finish()
     }
-    if (!isVideoMedia(options.fileName, mimeType)) {
+    // Leave room for multipart overhead beneath Vercel's 4.5 MB body limit.
+    // TUS chunks go directly to storage; its 6 MiB chunk size is not a minimum.
+    const useResumable = options.resumable && (isVideoMedia(options.fileName, mimeType) || file.size >= 4 * 1024 * 1024)
+    if (!isVideoMedia(options.fileName, mimeType) && !useResumable) {
       const form = new FormData()
       form.append("file", file, options.fileName)
       form.append("upload_id", options.uploadId)
       form.append("expected_company_id", companyId!)
       form.append("expected_account_id", accountId!)
       if (options.albumId) form.append("album_id", options.albumId)
-      const result = await request(options.endpoint, { method: "POST", body: form }, TRANSFER_MS)
+      const result = await request(options.endpoint, { method: "POST", body: form }, TRANSFER_MS, cancellation.signal)
       return verifiedPhoto(result.photo)
     }
     if (!transfer?.uploaded) {
       // Refresh an expired capability on manual retry, retaining the same path.
-      const intent = await json({ ...metadata, intent: "signed-upload" })
+      const intent = await json({ ...metadata, intent: useResumable ? "resumable-upload" : "signed-upload" })
       if (intent.photo) return verifiedPhoto(intent.photo)
       if (intent.uploaded !== undefined && typeof intent.uploaded !== "boolean") throw invalidResponse()
       if (typeof intent.path !== "string" || !intent.path || typeof intent.publicUrl !== "string" || !intent.publicUrl
@@ -170,19 +193,50 @@ export function createDashboardUploadSession(file: File | Blob, supplied: Dashbo
       if (transfer && transfer.path !== intent.path) throw invalidResponse()
       transfer = { path: intent.path, publicUrl: intent.publicUrl, signedUrl: intent.signedUrl, uploaded: intent.uploaded }
       if (!transfer.uploaded) {
-        // The installed SDK drops AbortSignal for uploadToSignedUrl. Use its
-        // signed PUT/FormData contract directly; no browser auth lock is needed.
-        const body = new FormData()
-        body.append("cacheControl", "3600")
-        body.append("", file)
-        const uploaded = await request(transfer.signedUrl!, { method: "PUT", headers: { "x-upsert": "false" }, body }, TRANSFER_MS)
-        if (typeof uploaded.Key !== "string" || !uploaded.Key) throw invalidResponse()
-        transfer.uploaded = true
+        if (useResumable) {
+          if (typeof intent.resumableEndpoint !== "string" || typeof intent.token !== "string" || intent.bucket !== "company-assets") throw invalidResponse()
+          try {
+            await uploadResumableMedia(file, {
+              endpoint: intent.resumableEndpoint, objectPath: transfer.path, bucket: intent.bucket,
+              token: intent.token, uploadId: options.uploadId, accountId: accountId!, companyId: companyId!,
+              apiKey: typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) : undefined,
+              previousResumeInfo: resumeInfo,
+              signal: cancellation.signal,
+              onResumeInfo: async info => { await supplied.onResumeInfo?.(info); resumeInfo = info },
+              onProgress: (bytesUploaded, bytesTotal) => supplied.onProgress?.({ bytesUploaded, bytesTotal, stage: "transferring" }),
+            })
+          } catch (error) {
+            if (!(error instanceof ResumableMediaUploadError)) throw invalidResponse()
+            if (["expired", "invalid_resume"].includes(error.code)) {
+              resumeInfo = null
+              await supplied.onResumeInfo?.(null)
+              throw new DashboardUploadError("transient")
+            }
+            if (error.code === "auth") throw new DashboardUploadError("auth")
+            if (error.code === "too_large") throw new DashboardUploadError("size")
+            if (error.code === "timeout") throw new DashboardUploadError("timeout")
+            if (error.code === "network" || error.code === "aborted") throw new DashboardUploadError("connection")
+            // A completed transfer can lose its final response or race an old
+            // tab. Reconcile on the next bounded queue attempt before new bytes.
+            if (error.code === "conflict" || error.retryable) throw new DashboardUploadError("transient")
+            throw new DashboardUploadError("validation")
+          }
+          transfer.uploaded = true
+        } else {
+          // Preserve the signed PUT contract for existing library callers.
+          const body = new FormData()
+          body.append("cacheControl", "3600")
+          body.append("", file)
+          const uploaded = await request(transfer.signedUrl!, { method: "PUT", headers: { "x-upsert": "false" }, body }, TRANSFER_MS, cancellation.signal)
+          if (typeof uploaded.Key !== "string" || !uploaded.Key) throw invalidResponse()
+          transfer.uploaded = true
+        }
       }
     }
     return finish()
   }
   return Object.freeze({ uploadId: options.uploadId, options,
+    cancel() { cancellation.abort() },
     run(): Promise<DashboardMediaUpload> {
       if (active) return active
       active = attempt().catch(error => {

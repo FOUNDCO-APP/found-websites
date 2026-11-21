@@ -2,6 +2,11 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November21 latest approval: prepare Jony-led/Steve-co-led camera/review layout and
+measured video/resumable upload upgrade. Preserve durable originals, account
+separation, old-tab compatibility and high-detail stills. Independent final review
+precedes publishing; no new paid service. See SESSION_HANDOFF/TASKS.
+
 November21 current: approved camera device saving/automatic foreground and reopen
 recovery plus compact UI are live95ffa26 (Vercel READY/exactSHA).57helper/APIgroups
 including actual old-tab clients,13realChromiumIDBqueuegroups,5camera cases+3negative

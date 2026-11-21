@@ -10,13 +10,16 @@ const { chromium } = require(process.env.FOUND_PLAYWRIGHT_MODULE || 'playwright'
 const code = ts.transpileModule(fs.readFileSync('src/lib/deviceUploadQueue.ts','utf8'), { compilerOptions: {
   module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,
 } }).outputText
-const script = `window.calls=[];window.mode='success';window.visibility='visible';window.connected=!location.search.includes('offline');
+const script = `window.calls=[];window.attemptOptions=[];window.cancelCalls=0;window.capturePuts=0;window.mode='success';window.visibility='visible';window.connected=!location.search.includes('offline');
+const originalPut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='captures')window.capturePuts++;return originalPut.apply(this,args)};
 Object.defineProperty(navigator,'onLine',{get:()=>window.connected});Object.defineProperty(document,'visibilityState',{get:()=>window.visibility});
 window.scope={accountId:new URLSearchParams(location.search).get('account')||'account-a',companyId:'company-a'};window.context={...window.scope};window.contextCalls=0;
 if(location.search.includes('fallback'))Object.defineProperty(navigator,'locks',{value:undefined});
-const helper={readDashboardUploadContext:async()=>{window.contextCalls++;if(window.mode==='hold-context')await new Promise(resolve=>window.releaseContext=resolve);if(window.mode==='context-failure')throw Object.assign(Error('SAFE context unavailable'),{retryable:true});return {...window.context}},createDashboardUploadSession:(blob,options)=>({run:async()=>{
+const helper={readDashboardUploadContext:async()=>{window.contextCalls++;if(window.mode==='hold-context')await new Promise(resolve=>window.releaseContext=resolve);if(window.mode==='context-failure')throw Object.assign(Error('SAFE context unavailable'),{retryable:true});return {...window.context}},createDashboardUploadSession:(blob,options)=>({cancel(){window.cancelCalls++;if(window.mode==='cancel-hold')window.rejectTransfer?.(Object.assign(Error('SAFE cancelled'),{category:'connection',retryable:true}))},run:async()=>{
+window.attemptOptions.push(options);
 window.calls.push({id:options.uploadId,size:blob.size,type:blob.type});
 if(window.mode==='hold')await new Promise(resolve=>window.release=resolve);
+if(window.mode==='cancel-hold')await new Promise((resolve,reject)=>{window.release=resolve;window.rejectTransfer=reject});
 if(window.mode==='permanent')throw Object.assign(Error('SAFE size error'),{category:'size',retryable:false});
 if(window.mode==='auth')throw Object.assign(Error('SAFE sign in again'),{category:'auth',retryable:false});
 if(window.mode==='connection')throw Object.assign(Error('SAFE connection error'),{category:'connection',retryable:true});
@@ -189,6 +192,86 @@ try{
     assert.equal(await f.page.evaluate(()=>rows.length),0);assert.equal(await f.page.evaluate(()=>calls.length),0)
     assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),1)
     await f.done();console.log('PASS delayed context response cannot reauthorize after sign-out')
+  }
+  assert.equal(groups,13,'Preserve all existing queue groups')
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='hold';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>attemptOptions.length===1)
+    const expected=await f.page.evaluate(async()=>{
+      const o=attemptOptions[0];if(!o.resumable)throw Error('Queue did not opt in');
+      const info={version:1,url:'https://fixture.storage.supabase.co/storage/v1/upload/resumable/session',createdAt:Date.now(),endpoint:'https://fixture.storage.supabase.co/storage/v1/upload/resumable',objectPath:scope.companyId+'/'+o.uploadId+'.mp4',bucket:'company-assets',uploadId:o.uploadId,accountId:scope.accountId,companyId:scope.companyId,fileSize:4,contentType:'video/mp4'};
+      await o.onResumeInfo(info);return info
+    })
+    assert.deepEqual(await f.page.evaluate(async()=>(await diskRows())[0].resumeInfo),expected)
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready&&rows.length===1)
+    await f.page.evaluate(()=>{mode='hold';online(true)})
+    await f.page.waitForFunction(()=>attemptOptions.length===1)
+    assert.deepEqual(await f.page.evaluate(()=>attemptOptions[0].previousResumeInfo),expected)
+    assert.deepEqual(await f.page.evaluate(async()=>[...new Uint8Array(await (await diskRows())[0].blob.arrayBuffer())]),[9,8,7,6])
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    await f.done();console.log('PASS resume metadata survives reload and is supplied to fresh attempt')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='hold';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>attemptOptions.length===1)
+    const result=await f.page.evaluate(async()=>{
+      const before=capturePuts;
+      for(let i=0;i<100;i++)attemptOptions[0].onProgress({bytesUploaded:i,bytesTotal:100,stage:'transferring'});
+      attemptOptions[0].onProgress({bytesUploaded:100,bytesTotal:100,stage:'finalizing'});
+      return {before,after:capturePuts,progress:rows[0].uploadProgress,disk:(await diskRows())[0].uploadProgress}
+    })
+    assert.equal(result.after,result.before);assert.equal(result.disk,undefined)
+    assert.deepEqual(result.progress,{bytesUploaded:100,bytesTotal:100,stage:'finalizing'})
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(await f.page.evaluate(()=>rows[0].uploadProgress),undefined)
+    await f.done();console.log('PASS byte progress stays transient without IndexedDB Blob rewrites')
+  }
+  {
+    const f=await fixture('?offline&fallback');await f.page.clock.install()
+    await f.page.evaluate(async()=>{mode='connection';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>rows[0]?.state==='waiting'&&rows[0]?.attempts===1)
+    await f.page.evaluate(()=>{mode='hold'})
+    await f.page.clock.fastForward(7000);await f.page.waitForFunction(()=>attemptOptions.length===2)
+    await f.page.evaluate(async()=>{await attemptOptions[1].onResumeInfo({version:1,url:'new-resume'});await attemptOptions[1].onResumeInfo(null)})
+    const disk=await f.page.evaluate(async()=>{const r=(await diskRows())[0];return {attempts:r.attempts,state:r.state,resume:r.resumeInfo,lease:!!r.leaseOwner}})
+    assert.deepEqual(disk,{attempts:2,state:'uploading',resume:null,lease:true})
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    await f.done();console.log('PASS current attempt resume callbacks preserve retry counter and fallback lease')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='cancel-hold';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>attemptOptions.length===1&&typeof rejectTransfer==='function')
+    await f.page.evaluate(()=>dispatchEvent(new Event('found:signing-out')))
+    await f.page.waitForFunction(async()=>(await diskRows())[0]?.state==='waiting')
+    assert.equal(await f.page.evaluate(()=>cancelCalls),1)
+    const result=await f.page.evaluate(async()=>{
+      const before=capturePuts;
+      attemptOptions[0].onProgress({bytesUploaded:3,bytesTotal:4,stage:'transferring'});
+      let rejected=false;try{await attemptOptions[0].onResumeInfo({version:1,url:'late'})}catch{rejected=true}
+      return {before,after:capturePuts,rejected,visible:rows.length,disk:(await diskRows()).length}
+    })
+    assert.equal(result.before,result.after);assert.equal(result.rejected,true)
+    assert.equal(result.visible,0);assert.equal(result.disk,1)
+    assert.equal(await f.page.evaluate(()=>calls.length),1)
+    await f.done();console.log('PASS sign-out cancels active session and late callbacks cannot resurrect captures')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='cancel-hold';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>attemptOptions.length===1&&typeof rejectTransfer==='function')
+    await f.page.evaluate(()=>stop())
+    await f.page.waitForFunction(async()=>(await diskRows())[0]?.state==='waiting')
+    assert.equal(await f.page.evaluate(()=>cancelCalls),1)
+    const result=await f.page.evaluate(async()=>{
+      const before=capturePuts;
+      attemptOptions[0].onProgress({bytesUploaded:4,bytesTotal:4,stage:'finalizing'});
+      let rejected=false;try{await attemptOptions[0].onResumeInfo({version:1,url:'late-stop'})}catch{rejected=true}
+      const disk=(await diskRows())[0];online(false);online(true);
+      return {before,after:capturePuts,rejected,progress:queue.getSnapshot()[0]?.uploadProgress,bytes:[...new Uint8Array(await disk.blob.arrayBuffer())],state:disk.state}
+    })
+    assert.equal(result.before,result.after);assert.equal(result.rejected,true)
+    assert.equal(result.progress,undefined);assert.deepEqual(result.bytes,[9,8,7,6]);assert.equal(result.state,'waiting')
+    assert.equal(await f.page.evaluate(()=>calls.length),1)
+    await f.done();console.log('PASS last queue consumer stop cancels transfer and preserves originals without late progress')
   }
   console.log(`Passed ${groups} durable queue groups using real browser storage; cloud is synthetic.`)
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

@@ -1,4 +1,5 @@
-import { createDashboardUploadSession, readDashboardUploadContext, type DashboardMediaUpload } from "@/lib/uploadDashboardMedia"
+import { createDashboardUploadSession, readDashboardUploadContext, type DashboardMediaUpload, type MediaUploadProgress } from "@/lib/uploadDashboardMedia"
+import type { ResumableMediaResumeInfo } from "@/lib/resumableMediaUpload"
 
 export type DeviceScope = { accountId: string; companyId: string; endpoint?: string }
 export type DeviceCapture = {
@@ -8,6 +9,8 @@ export type DeviceCapture = {
   photo?: DashboardMediaUpload; error?: string; errorCategory?: string
   attempts: number; firstAttemptAt: number | null; nextAttemptAt: number
   leaseOwner?: string; leaseUntil?: number
+  resumeInfo?: ResumableMediaResumeInfo | null
+  uploadProgress?: MediaUploadProgress
 }
 
 const DATABASE = "found-device-captures-v1"
@@ -183,6 +186,7 @@ export function getDeviceUploadQueue(scope: DeviceScope): DeviceUploadQueue {
 
 function createQueue(scope: DeviceScope) {
   const cache = new Map<string, DeviceCapture>()
+  const progress = new Map<string, MediaUploadProgress>()
   const listeners = new Set<(rows: DeviceCapture[]) => void>()
   const sessions = new Map<string, ReturnType<typeof createDashboardUploadSession>>()
   const owner = crypto.randomUUID()
@@ -193,7 +197,7 @@ function createQueue(scope: DeviceScope) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let channel: BroadcastChannel | undefined
   const eligible = () => starts > 0 && !signedOut && !contextBlocked && navigator.onLine !== false && document.visibilityState !== "hidden"
-  const snapshot = () => authorized ? [...cache.values()].sort((a, b) => b.createdAt - a.createdAt) : []
+  const snapshot = () => authorized ? [...cache.values()].map(row => ({ ...row, uploadProgress: progress.get(row.id) })).sort((a, b) => b.createdAt - a.createdAt) : []
   const emit = () => { const rows = snapshot(); for (const listener of listeners) listener(rows) }
   const broadcast = () => channel?.postMessage({ scope: scopeKey(scope) })
   const clearTimer = () => { if (timer) clearTimeout(timer); timer = undefined }
@@ -232,17 +236,30 @@ function createQueue(scope: DeviceScope) {
       await update({ ...row, state: "waiting", attempts: 0, firstAttemptAt: null, nextAttemptAt: now + CYCLE_MS })
       return
     }
-    let session = sessions.get(row.id)
-    if (!session) {
-      session = createDashboardUploadSession(row.blob, { uploadId: row.id, accountId: scope.accountId,
-        companyId: scope.companyId, endpoint: scope.endpoint, fileName: row.fileName, albumId: row.albumId })
-      sessions.set(row.id, session)
-    }
     row = { ...row, state: "uploading", attempts: row.attempts + 1, firstAttemptAt: row.firstAttemptAt ?? now, error: undefined }
     await update(row)
     if (!eligible() || generation !== attemptGeneration) return
+    let lastProgress = 0
+    const session = createDashboardUploadSession(row.blob, { uploadId: row.id, accountId: scope.accountId,
+      companyId: scope.companyId, endpoint: scope.endpoint, fileName: row.fileName, albumId: row.albumId,
+      resumable: true, previousResumeInfo: row.resumeInfo,
+      onResumeInfo: async info => {
+        // Only persist a new resume identity, never a token or every byte event.
+        // This closure belongs to this attempt and its durable lease.
+        if (signedOut || generation !== attemptGeneration) throw new DeviceStorageError()
+        row = { ...row, resumeInfo: info }
+        await update(row, false)
+      },
+      onProgress: value => {
+        if (signedOut || generation !== attemptGeneration || cache.get(row.id)?.state !== "uploading") return
+        progress.set(row.id, value)
+        if (value.stage === "finalizing" || Date.now() - lastProgress >= 250) { lastProgress = Date.now(); emit() }
+      },
+    })
+    sessions.set(row.id, session)
     try {
       const photo = await session.run()
+      progress.delete(row.id)
       // Cloud confirmation precedes local deletion. A failed deletion leaves a
       // reconcilable durable record, never a second cloud upload identity.
       let cleaned = true
@@ -253,6 +270,7 @@ function createQueue(scope: DeviceScope) {
       cache.set(row.id, { ...row, state: "uploaded", photo, localSaved: !cleaned, error: undefined, leaseOwner: undefined, leaseUntil: undefined })
       sessions.delete(row.id); emit(); broadcast()
     } catch (caught) {
+      progress.delete(row.id)
       const failure = caught as { retryable?: boolean; category?: string; retryAfterMs?: number }
       const retryable = failure?.retryable === true
       const backoff = RETRY_MS[Math.min(row.attempts - 1, RETRY_MS.length - 1)]
@@ -331,7 +349,11 @@ function createQueue(scope: DeviceScope) {
   }
   const wake = () => { if (eligible()) schedule() }
   const pause = () => { clearTimer() }
-  const signingOut = () => { signedOut = true; authorized = false; generation++; pause(); emit() }
+  const signingOut = () => {
+    signedOut = true; authorized = false; generation++; pause()
+    for (const session of sessions.values()) session.cancel?.()
+    progress.clear(); emit()
+  }
   return {
     get ready() { return ready }, get error() { return error }, getSnapshot: snapshot,
     subscribe(listener: (rows: DeviceCapture[]) => void) { listeners.add(listener); listener(snapshot()); return () => { listeners.delete(listener) } },
@@ -356,6 +378,8 @@ function createQueue(scope: DeviceScope) {
         if (stopped) return; stopped = true; starts--
         if (starts) return
         generation++; pause(); channel?.close(); channel = undefined
+        for (const session of sessions.values()) session.cancel?.()
+        progress.clear()
         window.removeEventListener("online", wake); window.removeEventListener("offline", pause)
         document.removeEventListener("visibilitychange", wake); window.removeEventListener("found:signing-out", signingOut)
       }

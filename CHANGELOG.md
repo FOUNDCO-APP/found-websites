@@ -1,3 +1,16 @@
+## November 21, 2026 - Camera/Resumable Upgrade In Preparation
+
+- Approved dock/Format layout and measured video/resumable pipeline implemented;
+  not published. Durable originals, account separation and legacy callers retained.
+- Real Chromium-to-Supabase8MiB transfer and interrupted-after6MiB/fresh-token/HEAD
+  resume passed; downloaded SHA-256/size matched and exact synthetic object cleanup
+  confirmed through isolated metadata. No customer rows/files/settings changed.
+- Local mock/HTTP/browser tests and final review/build results in SESSION_HANDOFF.
+- Final production build passed TypeScript/all89pages;84helper/APIgroups,
+  18browserqueuegroups, UI/safearea and Chrome synthetic recording pass. Actual
+  reviewers accept their scopes; prepared release awaits publication approval.
+- Physical iPhone weak-signal video playback/reopening acceptance remains open.
+
 ## November 21, 2026 - Device Saving And Automatic Recovery Released
 
 - Shawn approved local photo/video storage, automatic foreground/reopening upload,

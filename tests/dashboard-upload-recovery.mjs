@@ -24,6 +24,20 @@ let transfers = 0, posts = 0, signs = 0, failureLists = false
 const objects = new Map(), calls = [], timers = new Map()
 let timerId = 0, testCount = 0
 let releaseReconcile
+let signingUrl, resumableBehavior
+const resumableCalls = []
+class ResumableMediaUploadError extends Error {
+  constructor(code, status = null) { super('PRIVATE transport'); this.code = code; this.status = status }
+  get retryable() { return ['network', 'timeout', 'expired', 'invalid_resume'].includes(this.code) }
+}
+const resumableModule = {
+  ResumableMediaUploadError,
+  async uploadResumableMedia(file, options) {
+    resumableCalls.push({ file, options })
+    assert.ok(resumableBehavior, 'Standard clients must never invoke TUS')
+    return resumableBehavior(file, options)
+  },
+}
 const uuid = () => webcrypto.randomUUID()
 const plain = value => JSON.parse(JSON.stringify(value))
 function load(path, dependencies, extra = {}, source = fs.readFileSync(path, 'utf8')) {
@@ -73,7 +87,7 @@ const bucket = {
   },
   async createSignedUploadUrl(path) {
     signs++
-    return { data: { path, token: 'local', signedUrl: `https://storage.invalid/upload/${path}?token=local` }, error: null }
+    return { data: { path, token: 'local', signedUrl: signingUrl ?? `https://storage.invalid/upload/${path}?token=local` }, error: null }
   },
   async upload(path, buffer, options) {
     transfers++
@@ -104,7 +118,7 @@ async function network(url, options) {
   const metadata = typeof options.body === 'string' ? JSON.parse(options.body) : null
   if (metadata?.intent === 'reconcile-upload' && mode === 'fail-first-reconcile') throw Error('PRIVATE network')
   if (metadata?.intent === 'reconcile-upload' && mode === 'delay-first-reconcile') await new Promise(resolve => { releaseReconcile = resolve })
-  const hang = mode === 'hang-control' || (mode === 'hang-transfer' && options.method === 'PUT')
+  const hang = mode === 'hang-control' || (mode === 'hang-transfer' && options.method === 'PUT') || (mode === 'hang-multipart' && options.body instanceof FormData)
   if (hang) return new Promise((_, reject) => options.signal.addEventListener('abort', () => reject(Error('abort')), { once: true }))
   if (mode === 'hang-body') return { ok: true, text: () => new Promise((_, reject) => {
     if (options.signal.aborted) reject(Error('abort'))
@@ -129,6 +143,7 @@ async function network(url, options) {
   return response
 }
 const { createDashboardUploadSession, uploadDashboardMedia, DashboardUploadError, readDashboardUploadContext } = load('src/lib/uploadDashboardMedia.ts', {
+  '@/lib/resumableMediaUpload': resumableModule,
   '@/lib/mediaKind': media, '@/lib/supabase/client': { createClient() { throw Error('Unexpected browser auth/client') } },
 }, { fetch: network })
 const bytes = Uint8Array.from([0, 255, 12, 128, 42])
@@ -144,6 +159,7 @@ async function reset() {
   mode = undefined; lost = false; transfers = 0; signs = 0; posts = 0
   objects.clear(); calls.length = 0; timers.clear()
   releaseReconcile = undefined
+  signingUrl = undefined; resumableBehavior = undefined; resumableCalls.length = 0
 }
 async function test(name, fn) { await reset(); await fn(); assert.equal(timers.size, 0); testCount++; console.log('PASS ' + name) }
 async function rejectsSafe(action) { await assert.rejects(action, error => {
@@ -435,5 +451,198 @@ try {
       assert.equal(transfers, 0); assert.equal((await rows()).length, 0)
     } finally { route = fixedRoute }
   })
-  console.log(`Passed ${testCount} upload recovery groups; real local PostgreSQL PK, no live I/O.`)
+  assert.equal(testCount, 57, 'Keep all historical standard-contract groups')
+  for (const [stage, type] of [['hang-control', 'video/mp4'], ['hang-body', 'video/mp4'], ['hang-multipart', 'image/jpeg'], ['hang-transfer', 'video/mp4']]) {
+    await test(`explicit cancellation aborts ${stage} as connection rather than timeout`, async () => {
+      mode = stage
+      const s = session(type), pending = s.run()
+      const rejected = expectCategory(() => pending, 'connection', true)
+      const reached = () => calls.some(call => stage === 'hang-multipart' ? call.options.body instanceof FormData : stage === 'hang-transfer' ? call.options.method === 'PUT' : true)
+      for (let i = 0; i < 200 && !reached(); i++) await new Promise(resolve => setImmediate(resolve))
+      assert.ok(reached(), 'Expected request must be active before cancel')
+      s.cancel()
+      await rejected
+      assert.equal(calls.at(-1).options.signal.aborted, true)
+      assert.equal((await rows()).length, 0); assert.equal(transfers, 0)
+      const before = calls.length
+      await expectCategory(() => s.run(), 'connection', true)
+      assert.equal(calls.length, before, 'Cancelled session cannot start another request')
+    })
+  }
+  const resumableSigningUrl = 'https://testref.supabase.co/storage/v1/object/upload/sign/company-assets/fixture?token=local'
+  const resumableSession = options => session('video/mp4', { resumable: true, companyId: A, accountId: 'user', ...options })
+  const postIntent = details => route.POST(new Request('https://app.invalid/api/photos', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intent: 'resumable-upload', upload_id: uuid(), file_name: 'video.mp4', content_type: 'video/mp4', expected_company_id: A, expected_account_id: 'user', ...details }),
+  }))
+  await test('resumable intent requires stable ID/account/company before signing', async () => {
+    for (const details of [{ upload_id: undefined }, { expected_account_id: undefined }, { expected_account_id: 'other' }, { expected_company_id: undefined }, { expected_company_id: B }, { upload_id: 'invalid' }]) {
+      const response = await postIntent(details)
+      assert.ok([400, 409].includes(response.status)); assert.equal(signs, 0)
+      assert.equal(transfers, 0); assert.equal((await rows()).length, 0)
+    }
+  })
+  await test('resumable intent returns direct endpoint and preserves signed fields without caching', async () => {
+    signingUrl = resumableSigningUrl
+    const response = await postIntent({})
+    assert.equal(response.status, 200); assert.equal(response.headers.get('Cache-Control'), 'no-store')
+    const result = await response.json()
+    assert.equal(result.resumableEndpoint, 'https://testref.storage.supabase.co/storage/v1/upload/resumable/sign')
+    assert.equal(result.bucket, 'company-assets'); assert.equal(result.token, 'local')
+    assert.equal(result.signedUrl, signingUrl); assert.ok(result.path.startsWith(A + '/'))
+    assert.equal(result.publicUrl, bucket.getPublicUrl(result.path).data.publicUrl)
+  })
+  await test('resumable account guard precedes storage and existing-row shortcut', async () => {
+    const photo = await session('image/jpeg', { companyId: A, accountId: 'user' }).run()
+    storageCalls = 0
+    const response = await postIntent({ upload_id: photo.id, expected_account_id: undefined })
+    assert.equal(response.status, 400)
+    const result = await response.json()
+    assert.equal(result.code, 'INVALID_UPLOAD'); assert.equal(result.photo, undefined)
+    assert.equal(storageCalls, 0); assert.equal((await rows()).length, 1)
+  })
+  await test('resumable signing rejects non-Supabase and insecure destinations', async () => {
+    for (const url of ['http://testref.supabase.co/upload', 'https://testref.supabase.co.attacker.invalid/upload', 'https://storage.invalid/upload']) {
+      signingUrl = url
+      const response = await postIntent({})
+      assert.equal(response.status, 400); assert.equal((await response.json()).code, 'INVALID_UPLOAD')
+    }
+    assert.equal(transfers, 0)
+  })
+  await test('negative control unsigned TUS endpoint fails exact signed transport contract', async () => {
+    signingUrl = resumableSigningUrl
+    const path = 'src/app/dashboard/api/photos/route.ts'
+    const source = fs.readFileSync(path, 'utf8')
+    const anchor = '/storage/v1/upload/resumable/sign`'
+    assert.ok(source.includes(anchor), 'Negative control must mutate the actual signed endpoint')
+    const fixedRoute = route
+    route = load(path, routeDependencies, {}, source.replace(anchor, '/storage/v1/upload/resumable`'))
+    let rejectedUnsigned = false
+    resumableBehavior = async (file, options) => {
+      rejectedUnsigned = options.endpoint === 'https://testref.storage.supabase.co/storage/v1/upload/resumable'
+      assert.equal(options.endpoint, 'https://testref.storage.supabase.co/storage/v1/upload/resumable/sign')
+      throw Error('Unreachable after unsigned endpoint contract failure')
+    }
+    try {
+      await expectCategory(() => resumableSession().run(), 'unknown', false)
+      assert.equal(rejectedUnsigned, true)
+      assert.equal((await rows()).length, 0); assert.equal(transfers, 0)
+    } finally { route = fixedRoute }
+  })
+  await test('opt-in helper forwards scoped resume info and progress, finalizes only after transfer', async () => {
+    signingUrl = resumableSigningUrl
+    const progress = [], savedInfo = [], previous = { version: 1, url: 'fixture-resume' }
+    resumableBehavior = async (file, options) => {
+      assert.equal(options.previousResumeInfo, previous)
+      assert.equal(options.accountId, 'user'); assert.equal(options.companyId, A)
+      assert.equal(options.bucket, 'company-assets'); assert.equal(options.token, 'local')
+      assert.equal(options.endpoint, 'https://testref.storage.supabase.co/storage/v1/upload/resumable/sign')
+      assert.equal(options.objectPath, `${A}/${options.uploadId}.mp4`)
+      const info = { ...previous, objectPath: options.objectPath }
+      await options.onResumeInfo(info)
+      options.onProgress(2, file.size); options.onProgress(file.size, file.size)
+      assert.equal((await rows()).length, 0, '100% bytes must not establish a cloud row')
+      assert.ok(progress.every(p => p.stage === 'transferring'))
+      objects.set(options.objectPath, { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type })
+    }
+    const s = resumableSession({ previousResumeInfo: previous, onResumeInfo: info => savedInfo.push(info), onProgress: p => progress.push(plain(p)) })
+    const photo = await s.run()
+    assert.equal(photo.id, s.uploadId); assert.equal((await rows()).length, 1)
+    assert.equal(resumableCalls.length, 1); assert.equal(transfers, 0)
+    assert.deepEqual(progress.map(p => p.stage), ['transferring', 'transferring', 'finalizing'])
+    assert.equal(progress[0].bytesUploaded, 2); assert.equal(progress[2].bytesTotal, bytes.length)
+    assert.equal(savedInfo.length, 1)
+    assert.equal(calls.some(c => c.options.method === 'PUT'), false)
+  })
+  for (const code of ['expired', 'invalid_resume']) await test(`resumable ${code} clears metadata then retries same identity`, async () => {
+    signingUrl = resumableSigningUrl
+    const cleared = [], previous = { version: 1, url: 'stale' }
+    resumableBehavior = async () => { throw new ResumableMediaUploadError(code) }
+    const s = resumableSession({ previousResumeInfo: previous, onResumeInfo: info => cleared.push(info) })
+    await expectCategory(() => s.run(), 'transient', true)
+    assert.deepEqual(cleared, [null]); assert.equal((await rows()).length, 0)
+    resumableBehavior = async (file, options) => {
+      assert.equal(options.previousResumeInfo, null)
+      assert.equal(options.uploadId, s.uploadId)
+      objects.set(options.objectPath, { bytes, type: file.type })
+    }
+    assert.equal((await s.run()).id, s.uploadId); assert.equal((await rows()).length, 1)
+  })
+  for (const [code, category, retryable] of [['auth', 'auth', false], ['too_large', 'size', false], ['timeout', 'timeout', true], ['network', 'connection', true], ['aborted', 'connection', true], ['conflict', 'transient', true], ['invalid_destination', 'validation', false]]) {
+    await test(`resumable error mapping ${code}`, async () => {
+      signingUrl = resumableSigningUrl
+      resumableBehavior = async () => { throw new ResumableMediaUploadError(code) }
+      await expectCategory(() => resumableSession().run(), category, retryable)
+      assert.equal((await rows()).length, 0)
+    })
+  }
+  await test('resumable lost completion response reconciles without retransferring', async () => {
+    signingUrl = resumableSigningUrl; mode = 'lost-save'
+    resumableBehavior = async (file, options) => { objects.set(options.objectPath, { bytes, type: file.type }) }
+    const s = resumableSession()
+    await expectCategory(() => s.run(), 'connection', true)
+    assert.equal((await rows()).length, 1)
+    mode = undefined
+    assert.equal((await s.run()).id, s.uploadId)
+    assert.equal(resumableCalls.length, 1); assert.equal((await rows()).length, 1)
+  })
+  for (const changed of ['account', 'company']) await test(`resumable retry rejects changed ${changed} before transport`, async () => {
+    signingUrl = resumableSigningUrl
+    resumableBehavior = async () => { throw new ResumableMediaUploadError('network') }
+    const s = resumableSession()
+    await expectCategory(() => s.run(), 'connection', true)
+    if (changed === 'account') account = 'other'; else company = B
+    await expectCategory(() => s.run(), changed === 'account' ? 'auth' : 'business', false)
+    assert.equal(resumableCalls.length, 1); assert.equal((await rows()).length, 0)
+  })
+  await test('small photo opt-in retains multipart standard transport', async () => {
+    const photo = await session('image/jpeg', { resumable: true, companyId: A, accountId: 'user' }).run()
+    assert.ok(photo.id); assert.equal(resumableCalls.length, 0); assert.equal(transfers, 1)
+  })
+  await test('photo at six MiB opts into resumable while preserving exact Blob metadata', async () => {
+    signingUrl = resumableSigningUrl
+    const file = new Blob([new Uint8Array(6 * 1024 * 1024)], { type: 'image/jpeg' })
+    resumableBehavior = async (actual, options) => {
+      assert.equal(actual, file); assert.equal(actual.size, 6 * 1024 * 1024)
+      assert.equal(actual.type, 'image/jpeg'); assert.ok(options.objectPath.endsWith('.jpg'))
+      objects.set(options.objectPath, { bytes: new Uint8Array(await actual.arrayBuffer()), type: actual.type })
+    }
+    const s = createDashboardUploadSession(file, { fileName: 'large.jpg', companyId: A, accountId: 'user', resumable: true })
+    assert.equal((await s.run()).id, s.uploadId)
+    assert.equal(resumableCalls.length, 1); assert.equal(transfers, 0)
+  })
+  for (const size of [4 * 1024 * 1024 - 1, 4 * 1024 * 1024]) await test(`photo boundary ${size} bytes preserves original and selects correct transport`, async () => {
+    signingUrl = resumableSigningUrl
+    const original = Uint8Array.from({ length: size }, (_, index) => index % 251)
+    const file = new Blob([original], { type: 'image/jpeg' })
+    resumableBehavior = async (actual, options) => {
+      assert.equal(actual, file, 'TUS receives original Blob, without re-encoding')
+      assert.equal(options.endpoint, 'https://testref.storage.supabase.co/storage/v1/upload/resumable/sign')
+      objects.set(options.objectPath, { bytes: new Uint8Array(await actual.arrayBuffer()), type: actual.type })
+    }
+    const s = createDashboardUploadSession(file, { fileName: 'boundary.jpg', companyId: A, accountId: 'user', resumable: true })
+    const photo = await s.run()
+    assert.equal(photo.id, s.uploadId)
+    const direct = size >= 4 * 1024 * 1024
+    assert.equal(resumableCalls.length, direct ? 1 : 0)
+    assert.equal(transfers, direct ? 0 : 1)
+    assert.equal(calls.filter(call => call.options.body instanceof FormData).length, direct ? 0 : 1)
+    const stored = objects.get(photo.storage_path)
+    assert.equal(stored.type, file.type); assert.deepEqual(stored.bytes, original)
+    assert.deepEqual(new Uint8Array(await file.arrayBuffer()), original)
+  })
+  await test('lost resumable acknowledgment reconciles stored bytes before another transfer', async () => {
+    signingUrl = resumableSigningUrl
+    resumableBehavior = async (file, options) => {
+      objects.set(options.objectPath, { bytes, type: file.type })
+      throw new ResumableMediaUploadError('network')
+    }
+    const s = resumableSession()
+    await expectCategory(() => s.run(), 'connection', true)
+    assert.equal((await rows()).length, 0)
+    assert.equal((await s.run()).id, s.uploadId)
+    assert.equal(resumableCalls.length, 1); assert.equal(signs, 1)
+    assert.equal((await rows()).length, 1)
+  })
+  console.log(`Passed ${testCount} upload recovery groups; real local PostgreSQL PK, mocked resumable/standard transports, no live I/O.`)
 } finally { await db.close() }

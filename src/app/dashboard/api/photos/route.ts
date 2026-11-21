@@ -97,6 +97,9 @@ export async function POST(req: Request) {
     if (uploadId && body?.intent !== "reconcile-upload" && expectedCompany !== company.id) {
       return NextResponse.json({ code: "BUSINESS_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
     }
+    if (body?.intent === "resumable-upload" && (!uploadId || expectedAccount !== accountId)) {
+      throw new UploadFailure("INVALID_UPLOAD", 400)
+    }
     // Older open tabs send stable IDs/company binding but no account field.
     // Authenticate every request above; enforce account binding whenever sent.
     // New device-queue clients always send it, including their first request.
@@ -160,15 +163,26 @@ export async function POST(req: Request) {
         const uploaded = await stored(path)
         return NextResponse.json({ company_id: company.id, account_id: accountId, uploaded, path, publicUrl: publicUrlFor(path) })
       }
-      if (body.intent === "signed-upload") {
+      if (body.intent === "signed-upload" || body.intent === "resumable-upload") {
+        // Keep the historical signed PUT contract intact for already-open tabs.
+        // New resumable clients must bind both the capture and its account.
         if (uploadId && await stored(path)) {
           return NextResponse.json({ uploaded: true, path, publicUrl: publicUrlFor(path) })
         }
         const { data, error } = await bucket.createSignedUploadUrl(path)
         if (error) throw uploadFailure(error)
         if (!data) throw new UploadFailure("TRANSIENT", 503)
+        let resumableEndpoint: string | undefined
+        if (body.intent === "resumable-upload") {
+          const url = new URL(data.signedUrl)
+          if (url.protocol !== "https:" || !/^[a-z0-9]+\.supabase\.co$/.test(url.hostname)) {
+            throw new UploadFailure("INVALID_UPLOAD", 400)
+          }
+          resumableEndpoint = `https://${url.hostname.replace(".supabase.co", ".storage.supabase.co")}/storage/v1/upload/resumable/sign`
+        }
         return NextResponse.json({ bucket: BUCKET, path, token: data.token, signedUrl: data.signedUrl,
-          publicUrl: publicUrlFor(path), album_id: albumId })
+          ...(resumableEndpoint ? { resumableEndpoint } : {}),
+          publicUrl: publicUrlFor(path), album_id: albumId }, { headers: { "Cache-Control": "no-store" } })
       }
       if (body.storage_path && body.url) {
         if (uploadId) {

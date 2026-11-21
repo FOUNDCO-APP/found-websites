@@ -2,11 +2,17 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
-- [ ] Approve fresh Jony-led/Steve-co-led camera/review layout proposal: reserved status above raised shutter controls, clear hierarchy, optional Format consolidation, responsive safe areas/tap targets; preserve queue behavior.
-- [ ] Approve measured video/media pipeline plan: qualify explicit recording profile, resumable transfers/byte progress, real browser-to-Supabase and device detail-quality tests. Current10secvideo cause still unproven; no speculative compression fix or paid upgrade.
+- [x] Approve fresh Jony-led/Steve-co-led camera/review layout proposal: reserved status above raised shutter controls, clear hierarchy, optional Format consolidation, responsive safe areas/tap targets; preserve queue behavior.
+- [x] Approve measured video/media pipeline plan: qualify explicit recording profile, resumable transfers/byte progress, real browser-to-Supabase and device detail-quality tests. Current10secvideo cause still unproven; no speculative compression fix or paid upgrade.
+- [x] Implement approved layout and resumable media upgrade; UI/engineering reviews and production build pass. Publication remains separate.
+- [x] Implement scoped layout/Format, explicit best-effort recording profile and direct signed TUS with durable resume/transient progress; old tabs and originals protected.
+- [x] Real browser-to-Supabase8MiB upload/interruption/fresh-token resume/hash/exact cleanup confirmed; no client records/media/settings touched.
+- [x] Final build/evidence and actual role reviews completed;84helper/APIgroups,18queuegroups, HTTP/real-storage/recording/UI tests pass. Sole copy correction verified in emitted bundle.
+- [ ] Shawn final release approval, push, exact Vercel READY/SHA and live auth/four-client checks. Physical iPhone save/reopen/video/playback remains open.
+- [ ] Separate pre-store triage of14pre-existing npm audit findings(6moderate/6high/2critical); new19upload dependencies had no reported advisories in current audit.
 
 - [x] Jony-led/Steve-co-led visible review; Shawn approves compact camera status correction without Hide/Dismiss/action stack.
-- [ ] Implement/visually review/test/publish compact camera status correction; preserve retained captures and duplicate-safe retry. Video transport failure remains separate/open.
+- [x] Implement/visually review/test/publish compact camera status correction with95ffa26; preserve retained captures and duplicate-safe retry. New dock/video transport qualification tracked above.
 - [x] Jony-led/Steve-co-led visible review; Shawn approves device saving and automatic foreground/reopening recovery.
 - [x] Combined compact UI + verified durable queue implemented;53helper/APIgroups,13realbrowserqueuegroups,5camera cases+3negative controls, realReact/IDBUItests pass. Jony-led/Steve-co-ledUX accepts; independent combined engineeringGO conditionalbuild.
 - [x] Frozen-source build passes TypeScript/all89 static pages; eight source hashes unchanged. Independent combined engineeringGO build condition satisfied.

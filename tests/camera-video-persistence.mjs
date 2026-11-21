@@ -83,6 +83,10 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     '@/lib/stockPhotoPublication': { assertStockPhotoAlbum: async () => {}, assertStockPhotoPatch: async () => {} },
   })
   const helper = load(read('src/lib/uploadDashboardMedia.ts'), {
+    '@/lib/resumableMediaUpload': {
+      ResumableMediaUploadError: class extends Error {},
+      uploadResumableMedia() { throw Error('Standard camera persistence fixture must retain synthetic PUT transport') },
+    },
     '@/lib/mediaKind': media, '@/lib/supabase/client': { createClient: () => client },
   }, { fetch: async (url, options) => {
     if (url.startsWith('https://fixture.invalid/upload/')) {
@@ -121,7 +125,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     canvasRef: { current: { getContext: () => ({ drawImage() {} }), toBlob(callback, type) {
       assert.equal(type, 'image/jpeg'); context.photoCompletion = callback(blob)
     } } },
-    ready: true, setFlash() {}, setTimeout() {}, currentR: { w: 1, h: 1 }, zoom: 1,
+    ready: true, profileAvailable: { current: true }, setFlash() {}, setTimeout() {}, currentR: { w: 1, h: 1 }, zoom: 1,
     getCrop: () => ({ sx: 0, sy: 0, sw: 100, sh: 100 }),
   }
   vm.createContext(context)

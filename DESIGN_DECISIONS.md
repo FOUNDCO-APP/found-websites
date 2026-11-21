@@ -1,3 +1,17 @@
+## November 21, 2026 - Camera Dock And Optional Format (Approved)
+
+Shawn approved the visible Jony-led/Steve-co-led review direction. Preserve the
+familiar camera, rebuild its layout: reserved centered status ABOVE the shutter,
+separate mode/zoom/shutter rows, safe-area-aware portrait/landscape layout, 44px
+targets, enlarged text, and an optional Format popover preserving photo defaults.
+Review keeps status outside the image and a clear return/filmstrip/delete flow.
+The tradeoff is less preview area, accepted for readable unobstructed controls.
+Video shows the full recorded track, not the still crop or CSS-only zoom. Photo
+ratios remain private to Photo; Video exposes orientation without false crop options.
+Progress is transferred bytes, followed by Finishing upload until row confirmation.
+No Hide/Dismiss panel, routine recovery decisions, or invented bad-signal diagnosis.
+Independent final reviews and physical iPhone acceptance are tracked in handoff.
+
 ## November 21, 2026 - Capture First, Found Handles Saving
 
 Shawn approved the Jony-led/Steve-co-led device-first automatic flow. Distinguish

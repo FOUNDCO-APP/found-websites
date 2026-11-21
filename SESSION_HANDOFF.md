@@ -2,11 +2,79 @@
 
 ## November 21, 2026 - Fresh Camera Layout And Media Pipeline Review
 
+Approved implementation now prepared, not published. Latest application live is
+still95ffa26. Parent owns API/helper/queue integration; design worker Bohr
+01a20020-bfe9-70f2-9c49-01a576d7ec03 owns layout/Format; transport author Herschel
+01a20020-c302-7032-851d-5a57a47bca84 owns TUS; independent engineering reviewer
+Einstein01a20020-c163-7592-8cfd-7ae292c33229 reviewed API/helper/queue and wrote
+regressions; profile helper author/reviewer Bernoulli01a20022-0015-70d1-9fc3-
+60bc033cf648 independently reviewed parent recorder integration. These are AI
+roles, not the real Apple people; transport/UI author reviews are identified as such.
+
+Final preparation gates pass: production build exit0, TypeScript/all89staticpages.
+All9source/package hashes match the build-start snapshot except one CameraSheet
+copy correction removing an early Saved claim. Inverse replacement reproduces
+the original hash; emitted bundle contains corrected wording and no premature
+wording. No redundant second build needed for that verified sole text change.
+Final engineering84groups/18queuegroups and recorder reviewer give conditional
+GO, build condition now satisfied. UI reviewer reran full suite, including44px
+sideinsets normal/150% text, visually inspected fixed landscape; no blockers.
+Parent viewed clean390video and844largeinset images. Still not physical acceptance.
+No push/publication performed. Next: Shawn reviews concrete prepared release and
+authorizes production publication, then exact SHA/READY/auth/four-client checks.
+
+Prepared behavior: safe dock/status above shutter, optional Format,44px targets,
+portrait/landscape/enlarged-text and simulated44pxsideinsets. Video shows full track
+with no CSS-only zoom or misleading photo crop; photo ratio/defaults restored.
+Requested video1080p30/5Mbps+128kbpsaudio is best effort, not a guaranteed bitrate,
+frame rate or compression result. Local whitelisted details captured before stop.
+Serialized profile/zoom/torch transitions prevent stale state; final chunks retained.
+Unknown nonempty MIME retains raw .bin original with attention; no premature saved
+claim, invented MIME, or dropped bytes. Microphone-on-photo-open/silent fallback is
+existing behavior explicitly tested, not redesigned in this scope.
+
+Queue videos/photos>=4MiB use direct signed TUS endpoint
+/storage/v1/upload/resumable/sign with public API key + scoped x-signature; never
+service role in browser.6MiB chunks,180sec inactivity/10min overall, no internal
+retry/fallback session creation. Fresh credentials per bounded queue attempt;
+credential-free resume URL metadata durable, byte progress transient/throttled.
+Finishing upload precedes validated row; only then remove local bytes. Cancel on
+signout/final consumer stop; preserve originals and old-tab/legacy paths. No schema,
+paid/provider setting, client content, billing, message or release changed.
+
+Evidence so far:84helper/APIgroups and18realChromiumIDBqueuegroups;5actual capture
+paths+3negative controls; HTTP TUS interrupted/lost-response/auth/expiry tests;
+React/IDB UI responsive/format/progress/finalization/sideinset tests. All pass in
+worker/parent runs. Engineering recommends GO conditional frozen-source build;
+UI safearea blocker fixed and reviewed, profile review closing after copy correction.
+Parent real-browser storage test transferred8MiB, interrupted after6MiBacknowledged,
+fresh-token HEAD resume with one creation POST, SHA-256/size equality, exact cleanup
+confirmed by isolated metadata. Earlier unsigned endpoint400AccessDenied exposed
+and corrected via official signed-Uppy example; initial delete check hit cached
+download, authoritative metadata confirmed absence. No client DB rows/files used.
+Source guard preventing implicit POST after failed resumeHEAD added afterward;
+local actualHTTP regression covers positive resume and auth/expiry/server failures.
+
+Real Chrome synthetic camera recording/playback/photo restoration passed: reported
+track1080x1920/20fps, requested/reported5Mbps+128kbpsaudio, actualMP4VP9/Opus,
+157007byte~2secBlob in parent run, decoded1216x2160, late frame readable; photo
+ideals4096x3072 restore actual3840x2160. Synthetic static scene is NOT a field clip
+compression benchmark or physical iPhone qualification. Safari save/reopen/upload/
+playback remains open. Native background remains separate. Production build final
+evidence/publication decision pending below; no claim this is already live.
+
+Pinned tus-js-client4.3.1 and lockfile:19added dependencies, no reported advisories
+in added nodes. npm audit14pre-existing findings(6moderate/6high/2critical) need
+separate triage before store submission; no broad dependency upgrade performed.
+Official signed example verified:
+https://github.com/supabase/supabase/blob/master/examples/storage/resumable-upload-signed-uppy/index.html
+
 Shawn reports photo uploads working pretty well;10sec video remains uploading.
 Screenshot10:47 shows status crowded below record button. He requests fresh Jony-
 led/Steve-co-led review of entire camera/capture-review experience (his "catalog"
 interpreted from screenshot, not storefront catalog), plus CompanyCam comparison.
-Review/proposal only; no new application changes or production settings changed.
+Shawn approved both directions and instructed the team to continue. Implementation
+is in progress; no production settings or release changed.
 
 Independent Jony reviewer01a1fcf9-fdf5-7430-9a42-834d9a803efb recommends rebuilding
 layout structure, preserving familiar camera and tested recovery logic. Steve
@@ -22,7 +90,8 @@ tradeoff less preview space is justified while preview remains dominant. Keep
 video pipeline as separate engineering qualification scope. Both actual reviews
 and engineering findings shown in chat; two approval questions queued for Shawn:
 camera/review redesign and measured video/resumable/progress upgrade. Neither
-implementation is approved yet. No new app code edited in this review.
+implementation was approved during that review; Shawn subsequently approved both
+for preparation. Independent final review and concrete results precede publishing.
 
 Engineering reviewer01a1fcf9-fbed-7300-8fd9-6b9cfc056b45 confirms source gaps:
 shared4096x3072idealstream, MediaRecorder MIME only/no bitrate or frame-rate target,
@@ -32,7 +101,8 @@ dimensions/bitrate/Blob size and this pending clip's failing stage remain unknow
 Proposed qualify1080p30fps4-6Mbps video/96-128kbpsaudio as a starting field profile,
 preserve high-detail stills/existing originals, resumable TUS + real byte progress,
 retain stable IDs/auth isolation/queue and real browser-to-storage acceptance.
-No automatic quality downgrade, dependency install or transport change approved.
+Now approved: qualify explicit video settings and scoped resumable transport with
+a pinned official client. Preserve originals and still-photo detail; no paid setup.
 
 Primary research: CompanyCam official help documents native-app offline queue
 automatic upload, quality settings,4K video and2GB/4GB limits byplan; does not reveal

@@ -2,7 +2,9 @@
 
 import React, { useRef, useState, useEffect } from "react"
 import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
+import CameraFormatControl from "@/components/dashboard/CameraFormatControl"
 import type { DeviceCapture } from "@/lib/deviceUploadQueue"
+import { createCameraProfileGuard, createProfiledRecorder, recordingMime, recordingMeasurement } from "@/lib/cameraRecordingProfile"
 import { useUploadStatus, getUploadAttentionLabel, getQueueErrorLabel } from "@/components/dashboard/UploadStatusProvider"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
@@ -15,7 +17,9 @@ const RATIOS = [
   { label: "1:1", value: "1:1" as AspectRatio, w: 1, h: 1 },
 ]
 
-type Capture = { id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
+type UploadProgress = NonNullable<DeviceCapture["uploadProgress"]>
+
+type Capture = { uploadProgress?: UploadProgress; id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
 
 // Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
@@ -51,6 +55,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const retrying = useRef(new Set<string>())
   const mounted = useRef(true)
   const encoding = useRef(0)
+  const profileGuard = useRef(createCameraProfileGuard())
+  const profileAvailable = useRef(false)
+  const [profileBusy, setProfileBusy] = useState(false)
+  const recordingDetails = useRef<ReturnType<typeof recordingMeasurement> | null>(null)
   const captureUrls = useRef(new Set<string>())
   const onUploadedRef = useRef(onUploaded)
   onUploadedRef.current = onUploaded
@@ -101,7 +109,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (capture.photoId) return "Uploaded"
     if (capture.state === "saving") return "Saving…"
     if (capture.state === "save_failed") return "Couldn’t save. Keep Found open."
-    if (capture.uploading) return `Uploading ${capture.isVideo ? "video" : "photo"}…`
+    if (capture.uploading) {
+      const progress = capture.uploadProgress
+      if (progress?.stage === "finalizing") return "Finishing upload…"
+      const percent = progress && Number.isFinite(progress.bytesUploaded) && Number.isFinite(progress.bytesTotal) && progress.bytesTotal > 0
+        ? Math.min(100, Math.max(0, Math.floor(progress.bytesUploaded / progress.bytesTotal * 100))) : null
+      return percent === null ? `Uploading ${capture.isVideo ? "video" : "photo"}…` : `Uploading ${capture.isVideo ? "video" : "photo"} · ${percent}%`
+    }
     if (capture.state === "needs_attention") return ["auth", "size", "business"].includes(capture.errorCategory ?? "") ? getUploadAttentionLabel(capture.errorCategory) : queueNotice ?? getUploadAttentionLabel(capture.errorCategory)
     return queueNotice ?? (capture.localSaved ? "Saved on this device" : "Saving…")
   }
@@ -138,7 +152,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (!previous && row.state === "uploaded") return
     const previewUrl = previous?.previewUrl ?? URL.createObjectURL(row.blob)
     captureUrls.current.add(previewUrl)
-    const capture: Capture = { id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
+    const capture: Capture = { uploadProgress: row.uploadProgress, id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/") || row.fileName.startsWith("video-"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
     if (!row.localSaved && row.state !== "uploaded" && !unsaved.current.has(row.id)) {
       unsaved.current.set(row.id, { blob: row.blob, fileName: row.fileName, albumId: row.albumId, saving: false })
     }
@@ -203,12 +217,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     const previewUrl = URL.createObjectURL(blob)
     captureUrls.current.add(previewUrl)
     unsaved.current.set(id, { blob, fileName, albumId: pendingAlbumId ?? null, saving: false })
-    updateCaptures(list => [{ id, previewUrl, fileName, albumId: pendingAlbumId ?? null, state: "saving", localSaved: false, uploading: false, isVideo: blob.type.startsWith("video/") }, ...list])
+    updateCaptures(list => [{ id, previewUrl, fileName, albumId: pendingAlbumId ?? null, state: "saving", localSaved: false, uploading: false, isVideo: blob.type.startsWith("video/") || fileName.startsWith("video-") }, ...list])
     void saveOnDevice(id)
   }
 
   // Start / restart camera stream
   useEffect(() => {
+    profileGuard.current.invalidate()
+    profileAvailable.current = false
     let alive = true
     let frameTimeout: ReturnType<typeof setTimeout> | null = null
     ;(async () => {
@@ -272,26 +288,47 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     }
   }, [facing])
 
+  // Keep capture blocked while the browser changes the sensor profile. Stills
+  // regain their original detail ideals when returning from Video to Photo.
+  useEffect(() => {
+    const track = streamRef.current?.getVideoTracks()[0]
+    if (!ready || !track) return
+    let active = true
+    profileAvailable.current = false
+    setProfileBusy(true)
+    void profileGuard.current.request(track, mode, portrait, () => active && mounted.current && streamRef.current?.getVideoTracks()[0] === track)
+      .then(result => {
+        if (result.isCurrent()) { profileAvailable.current = true; setProfileBusy(false); setZoom(1); setTorchOn(false); hwZoomRef.current = false }
+      })
+    return () => { active = false; profileGuard.current.invalidate(); profileAvailable.current = false }
+  }, [ready, mode, portrait, facing])
+
+  function changeMode(next: CameraMode) {
+    if (recording || encoding.current || next === mode) return
+    profileGuard.current.invalidate(); profileAvailable.current = false; setProfileBusy(true); setMode(next)
+  }
+
   async function applyZoom(level: ZoomLevel) {
-    setZoom(level)
+    if (profileBusy || recording || encoding.current || !profileAvailable.current) return
     const track = streamRef.current?.getVideoTracks()[0]
     if (!track) return
-    try {
-      await track.applyConstraints({ advanced: [{ zoom: level } as MediaTrackConstraintSet] })
-      hwZoomRef.current = true
-    } catch {
-      hwZoomRef.current = false
-    }
+    profileAvailable.current = false; setProfileBusy(true)
+    const result = await profileGuard.current.request(track, mode, portrait, () => mounted.current && streamRef.current?.getVideoTracks()[0] === track, { zoom: level, ...(torchOk ? { torch: torchOn } : {}) } as MediaTrackConstraintSet)
+    if (!result.isCurrent()) return
+    hwZoomRef.current = result.status === "applied"
+    setZoom(result.status === "applied" || mode === "photo" ? level : 1)
+    profileAvailable.current = true; setProfileBusy(false)
   }
 
   async function toggleTorch() {
     const track = streamRef.current?.getVideoTracks()[0]
-    if (!track || !torchOk) return
+    if (!track || !torchOk || profileBusy || !profileAvailable.current || recording || encoding.current) return
     const next = !torchOn
-    try {
-      await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] })
-      setTorchOn(next)
-    } catch {}
+    profileAvailable.current = false; setProfileBusy(true)
+    const result = await profileGuard.current.request(track, mode, portrait, () => mounted.current && streamRef.current?.getVideoTracks()[0] === track, { torch: next, ...(hwZoomRef.current ? { zoom } : {}) } as MediaTrackConstraintSet)
+    if (!result.isCurrent()) return
+    if (result.status === "applied") setTorchOn(next)
+    profileAvailable.current = true; setProfileBusy(false)
   }
 
   // Compute canvas crop: zoom region first, then aspect ratio crop within it
@@ -314,7 +351,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   }
 
   async function shoot() {
-    if (!videoRef.current || !canvasRef.current || !ready) return
+    if (!videoRef.current || !canvasRef.current || !ready || !profileAvailable.current || encoding.current) return
     setFlash(true)
     setTimeout(() => setFlash(false), 120)
     const video = videoRef.current
@@ -331,18 +368,39 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   }
 
   function startRecording() {
-    if (encoding.current > 0 || recorderRef.current?.state === "recording") return
+    if (!profileAvailable.current || encoding.current > 0 || recorderRef.current?.state === "recording") return
     const stream = streamRef.current
     if (!stream) return
-    chunksRef.current = []
-    const mimeType = MediaRecorder.isTypeSupported("video/mp4") ? "video/mp4"
-      : MediaRecorder.isTypeSupported("video/webm;codecs=h264") ? "video/webm;codecs=h264"
-      : "video/webm"
-    const mr = new MediaRecorder(stream, { mimeType })
-    mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-    mr.onstop = () => { uploadVideo(mimeType); encoding.current = Math.max(0, encoding.current - 1) }
+    let mr: MediaRecorder
+    try { mr = createProfiledRecorder(stream) }
+    catch { setCloseNotice("Video couldn’t start. Try opening the camera again."); return }
+    const chunks: Blob[] = []
+    const initialDetails = recordingMeasurement(mr, stream.getVideoTracks()[0])
+    recordingDetails.current = initialDetails
+    mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
+    mr.onstop = () => {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+      if (mounted.current) setRecording(false)
+      try {
+        const mimeType = recordingMime(mr, chunks)
+        chunksRef.current = chunks
+        if (chunks.length) {
+          const blob = new Blob(chunks, { type: mimeType })
+          recordingDetails.current = { ...initialDetails, blobBytes: blob.size, blobMime: mimeType || null }
+          if (mimeType) uploadVideo(mimeType)
+          else {
+            // Keep the original bytes even when a browser reports an unknown
+            // container. Do not invent a MIME/extension or discard a recording.
+            retainCapture(blob, `video-${crypto.randomUUID()}.bin`)
+            chunksRef.current = []
+            setCloseNotice("Video format needs attention. Keep Found open while saving.")
+          }
+        } else setCloseNotice("Video couldn’t be saved. Please record it again.")
+      } finally { encoding.current = Math.max(0, encoding.current - 1) }
+    }
     recorderRef.current = mr
-    mr.start(250)
+    try { mr.start(250) }
+    catch { recorderRef.current = null; setCloseNotice("Video couldn’t start. Try opening the camera again."); return }
     setRecording(true)
     setRecSecs(0)
     timerRef.current = setInterval(() => setRecSecs(s => s + 1), 1000)
@@ -388,6 +446,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   }
 
   function handleShutter() {
+    if (!recording && !profileAvailable.current) return
     if (mode === "photo") shoot()
     else if (recording) stopRecording()
     else startRecording()
@@ -403,6 +462,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       setCloseNotice("Some captures haven’t been saved on this device. Keep this camera open while saving. Closing now can lose their originals.")
       return
     }
+    profileGuard.current.invalidate(); profileAvailable.current = false
     streamRef.current?.getTracks().forEach(t => t.stop())
     streamRef.current = null
     onClose()
@@ -419,14 +479,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
   const baseR    = RATIOS.find(r => r.value === ratio)!
   const currentR = (portrait && ratio !== "1:1") ? { ...baseR, w: baseR.h, h: baseR.w } : baseR
-  const cssZoom  = !hwZoomRef.current && zoom > 1 ? zoom : 1
+  const cssZoom  = mode === "photo" && !hwZoomRef.current && zoom > 1 ? zoom : 1
 
   function fmtTime(s: number) {
     return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "#000", overflow: "hidden", userSelect: "none" }}>
+    <div className="found-camera" style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "#000", overflow: "hidden", userSelect: "none" }}>
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
       {/* Video */}
@@ -434,7 +494,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         ref={videoRef} autoPlay playsInline muted
         onLoadedMetadata={() => setReady(true)}
         style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: mode === "video" ? "contain" : "cover",
           transform: cssZoom > 1 ? `scale(${cssZoom})` : undefined,
           transformOrigin: "center center",
           transition: "transform 0.2s ease",
@@ -442,7 +502,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       />
 
       {/* Crop overlay */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", inset: 0, zIndex: 5, pointerEvents: "none", display: mode === "video" ? "none" : "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
           width: currentR.w > currentR.h ? "100%" : `calc(100vh * ${currentR.w / currentR.h})`,
           aspectRatio: `${currentR.w} / ${currentR.h}`,
@@ -469,13 +529,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       {error && (
         <div role="alert" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", color: "white", padding: "0 32px" }}>
-            <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{error}</p>
+            <p style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: 8 }}>{error}</p>
           </div>
         </div>
       )}
 
       {/* â”€â”€ Top bar â”€â”€ */}
-      <div style={{
+      <div className="camera-topbar" style={{
         position: "absolute", top: 0, left: 0, right: 0, zIndex: 30,
         display: "flex", alignItems: "flex-start", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top, 0px), 20px) 18px 16px",
@@ -492,29 +552,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           {recording ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 100, padding: "6px 16px" }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", animation: "rec-blink 1s ease-in-out infinite" }} />
-              <span style={{ fontSize: 14, fontWeight: 700, color: "white", fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>{fmtTime(recSecs)}</span>
+              <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "white", fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>{fmtTime(recSecs)}</span>
             </div>
           ) : (
-            <>
-              <div style={{ display: "flex", gap: 2, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderRadius: 100, padding: "3px 4px" }}>
-                {RATIOS.map(r => (
-                  <button key={r.value} onClick={() => setRatio(r.value)} style={{ padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, letterSpacing: "0.02em", backgroundColor: ratio === r.value ? "white" : "transparent", color: ratio === r.value ? "#000" : "rgba(255,255,255,0.55)", transition: "all 0.15s ease" }}>{r.label}</button>
-                ))}
-              </div>
-              {ratio !== "1:1" && (
-                <button onClick={() => setPortrait(p => !p)} style={{ display: "flex", alignItems: "center", gap: 5, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderRadius: 100, padding: "4px 12px", border: "none", cursor: "pointer" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: portrait ? "rotate(0deg)" : "rotate(90deg)", transition: "transform 0.2s ease" }}>
-                    <rect x="5" y="2" width="14" height="20" rx="2"/>
-                  </svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "0.04em" }}>{portrait ? "Portrait" : "Landscape"}</span>
-                </button>
-              )}
-            </>
+            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} disabled={recording || profileBusy || encoding.current > 0} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; setProfileBusy(true); setPortrait(next) }} />
           )}
         </div>
 
         {/* Flash */}
-        <button onClick={toggleTorch} disabled={!torchOk} style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, backgroundColor: torchOn ? "rgba(255,215,0,0.3)" : "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "none", cursor: torchOk ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", opacity: torchOk ? 1 : 0 }}>
+        <button aria-label="Toggle flashlight" aria-pressed={torchOn} onClick={toggleTorch} disabled={!torchOk || profileBusy} style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, backgroundColor: torchOn ? "rgba(255,215,0,0.3)" : "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "none", cursor: torchOk ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", opacity: torchOk ? 1 : 0 }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill={torchOn ? "#FFD700" : "none"} stroke={torchOn ? "#FFD700" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
@@ -522,7 +568,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       </div>
 
       {/* â”€â”€ Zoom + mode (above bottom controls) â”€â”€ */}
-      <div style={{
+      <div className="camera-dock">
+      <div className="camera-mode-row" style={{
         position: "absolute", bottom: `calc(max(env(safe-area-inset-bottom, 0px), 40px) + 112px)`,
         left: 0, right: 0, zIndex: 30,
         display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -531,7 +578,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         {!recording && (
           <div style={{ display: "flex", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
             {([1, 2, 3] as ZoomLevel[]).map(z => (
-              <button key={z} onClick={() => applyZoom(z)} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}x</button>
+              <button key={z} aria-pressed={zoom === z} onClick={() => applyZoom(z)} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}x</button>
             ))}
           </div>
         )}
@@ -539,13 +586,19 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         {/* Photo / Video mode */}
         <div style={{ display: "flex", gap: 2, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
           {(["photo", "video"] as CameraMode[]).map(m => (
-            <button key={m} onClick={() => { if (!recording) setMode(m) }} style={{ padding: "5px 22px", borderRadius: 100, border: "none", cursor: recording ? "default" : "pointer", fontSize: 12, fontWeight: 700, textTransform: "capitalize", letterSpacing: "0.04em", backgroundColor: mode === m ? "white" : "transparent", color: mode === m ? "#000" : "rgba(255,255,255,0.5)", transition: "all 0.15s ease" }}>{m}</button>
+            <button key={m} aria-pressed={mode === m} disabled={recording} onClick={() => changeMode(m)} style={{ padding: "5px 22px", borderRadius: 100, border: "none", cursor: recording ? "default" : "pointer", fontSize: "0.75rem", fontWeight: 700, textTransform: "capitalize", letterSpacing: "0.04em", backgroundColor: mode === m ? "white" : "transparent", color: mode === m ? "#000" : "rgba(255,255,255,0.5)", transition: "all 0.15s ease" }}>{m}</button>
           ))}
         </div>
       </div>
 
       {/* â”€â”€ Bottom bar â”€â”€ */}
-      <div style={{
+      {/* Status reserves its own row, independent of thumbnail and shutter. */}
+      <div className="camera-status-slot" data-camera-status-slot>
+        {captures.length > 0 && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
+          {pendingCaptures.length > 0 && spinner}<span>{localSummary}</span>
+        </div>}
+      </div>
+      <div className="camera-shutter-row" style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 30,
         padding: `24px 36px max(env(safe-area-inset-bottom, 0px), 40px)`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -573,23 +626,20 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                   <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.25)", borderTopColor: "white", animation: "cam-spin 0.8s linear infinite" }} />
                 </div>
               )}
-              {(captures[0].uploadError || captures[0].state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, borderRadius: "50%", background: "#c69262", color: "#111", fontSize: 12, fontWeight: 800, width: 18, height: 18, display: "grid", placeItems: "center" }}>!</span>}
-              {captures.length > 1 && <div style={{ position: "absolute", bottom: 2, right: 4, fontSize: 10, fontWeight: 800, color: "white", textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}>{captures.length}</div>}
+              {(captures[0].uploadError || captures[0].state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, borderRadius: "50%", background: "#c69262", color: "#111", fontSize: "0.75rem", fontWeight: 800, width: 18, height: 18, display: "grid", placeItems: "center" }}>!</span>}
+              {captures.length > 1 && <div style={{ position: "absolute", bottom: 2, right: 4, fontSize: "0.625rem", fontWeight: 800, color: "white", textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}>{captures.length}</div>}
             </div>
           ) : (
             <div style={{ width: 58, height: 58, borderRadius: 12, border: "2px solid rgba(255,255,255,0.15)" }} />
           )}
         </button>
 
-        {captures.length > 0 && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", top: "calc(100% + 6px)", left: -12, width: "max-content", maxWidth: "calc(100vw - 48px)", display: "flex", gap: 6, alignItems: "center", color: "#eee", background: "rgba(22,25,23,0.88)", padding: "4px 8px", borderRadius: 8, fontSize: "0.8125rem", lineHeight: 1.4 }}>
-          {pendingCaptures.length > 0 && spinner}<span>{localSummary}</span>
-        </div>}
         </div>
         {/* Shutter / Record */}
         <button
           aria-label={mode === "photo" ? "Take photo" : recording ? "Stop recording" : "Record video"}
           onClick={handleShutter}
-          disabled={!ready}
+          disabled={!ready || (!recording && profileBusy)}
           style={{
             width: 78, height: 78, borderRadius: "50%",
             border: `4px solid ${mode === "video" ? (recording ? "#FF3B30" : "rgba(255,50,50,0.7)") : "rgba(255,255,255,0.9)"}`,
@@ -614,7 +664,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
         {/* Flip â€” disabled while recording */}
         <button
-          onClick={() => { if (!recording) setFacing(f => f === "environment" ? "user" : "environment") }}
+          aria-label="Switch camera" disabled={recording || profileBusy}
+          onClick={() => { if (!recording && !profileBusy && !encoding.current) { profileGuard.current.invalidate(); profileAvailable.current = false; setFacing(f => f === "environment" ? "user" : "environment") } }}
           style={{ width: 58, height: 58, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.14)", border: "none", cursor: recording ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: recording ? 0.3 : 1, transition: "opacity 0.2s" }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -625,10 +676,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       </div>
 
       {/* â”€â”€ Review overlay â”€â”€ */}
+      </div>
+
       {reviewIndex !== null && captures[reviewIndex] && (() => {
         const cap = captures[reviewIndex]
         return (
-          <div style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#0A0C0B", display: "flex", flexDirection: "column" }}>
+          <div className="camera-review" style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#0A0C0B", display: "flex", flexDirection: "column" }}>
 
             {/* â”€â”€ Top bar â€” solid, always visible â”€â”€ */}
             <div style={{
@@ -646,10 +699,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
                   <polyline points="15 18 9 12 15 6"/>
                 </svg>
-                <span style={{ fontSize: 16, fontWeight: 600, color: "white" }}>Camera</span>
+                <span style={{ fontSize: "1rem", fontWeight: 600, color: "white" }}>Camera</span>
               </button>
 
-              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+              <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
                 {captures.length === 1 ? (cap.isVideo ? "1 video" : "1 photo") : `${captures.length} items`}
               </span>
 
@@ -665,7 +718,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                     </svg>
-                    <span className="camera-review-action-label" style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Annotate</span>
+                    <span className="camera-review-action-label" style={{ fontSize: "0.875rem", fontWeight: 700, color: "white" }}>Annotate</span>
                   </button>
                 )}
 
@@ -679,20 +732,20 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
                   </svg>
-                  <span className="camera-review-action-label" style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
+                  <span className="camera-review-action-label" style={{ fontSize: "0.875rem", fontWeight: 700, color: "#FF3B30" }}>Delete</span>
                 </button>
               </div>
             </div>
 
             {/* â”€â”€ Main preview â”€â”€ */}
-            <div data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
+            <div className="camera-review-status" data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
               <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9375rem", lineHeight: 1.45, minWidth: 0 }}>
                 {(cap.uploading || cap.state === "saving") && spinner}<span>{captureLabel(cap)}</span>
               </span>
               {(cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 16px", overflow: "hidden", minHeight: 0 }}>
-              <div style={{ width: "100%", height: "100%", borderRadius: 20, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="camera-review-preview" data-camera-review-preview style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, overflow: "hidden", minHeight: 120 }}>
+              <div style={{ width: "100%", height: "100%", borderRadius: 0, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {cap.isVideo ? (
                   <video
                     src={cap.previewUrl}
@@ -742,7 +795,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={c.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         )}
-                        {(c.uploadError || c.state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 4, top: 4, borderRadius: "50%", background: "#c69262", color: "#111", width: 18, height: 18, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 800 }}>!</span>}
+                        {(c.uploadError || c.state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 4, top: 4, borderRadius: "50%", background: "#c69262", color: "#111", width: 18, height: 18, display: "grid", placeItems: "center", fontSize: "0.75rem", fontWeight: 800 }}>!</span>}
                         {c.uploading && (
                           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10 }}>
                             <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "white", animation: "cam-spin 0.8s linear infinite" }} />
@@ -773,22 +826,22 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                 padding: `0 16px max(env(safe-area-inset-bottom, 0px), 32px)`,
               }}>
                 <div style={{ width: "100%", backgroundColor: "#1C1F1E", borderRadius: 24, padding: "28px 24px 24px", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 600, color: "white", textAlign: "center" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: "1.125rem", fontWeight: 600, color: "white", textAlign: "center" }}>
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
-                  <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
+                  <p style={{ margin: "0 0 28px", fontSize: "0.875rem", color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
                     This will permanently remove it from your account.
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => deleteCapture(cap)}
-                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "none", backgroundColor: "#FF3B30", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "none", backgroundColor: "#FF3B30", color: "white", fontSize: "0.9375rem", fontWeight: 700, cursor: "pointer" }}
                     >
                       Delete
                     </button>
@@ -815,6 +868,28 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         </div>
       </dialog>}
       <style>{`
+
+        .found-camera { display: grid; grid-template-rows: auto minmax(80px, 1fr) auto; overflow-y: auto !important; }
+        .found-camera button { min-width: 44px; min-height: 44px; }
+        .found-camera button:focus-visible { outline: 2px solid #32D074; outline-offset: 3px; }
+        .camera-topbar { position: relative !important; grid-row: 1; gap: 8px; padding: max(env(safe-area-inset-top, 0px), 12px) max(env(safe-area-inset-right, 0px), 16px) 12px max(env(safe-area-inset-left, 0px), 16px) !important; }
+        .camera-topbar > div { min-width: 0; }
+        .camera-topbar > div > div { flex-wrap: wrap; justify-content: center; }
+        .camera-dock { grid-row: 3; z-index: 30; display: flex; flex-direction: column; gap: 12px; padding: 12px max(env(safe-area-inset-right, 0px), 24px) max(calc(env(safe-area-inset-bottom, 0px) + 16px), 28px) max(env(safe-area-inset-left, 0px), 24px); background: linear-gradient(transparent, #000d 30%); }
+        .camera-mode-row { position: relative !important; bottom: auto !important; gap: 8px !important; }
+        .camera-status-slot { min-height: 44px; display: grid; align-items: center; text-align: center; overflow-wrap: anywhere; }
+        .camera-shutter-row { position: relative !important; padding: 0 !important; background: none !important; gap: 16px; }
+        .camera-review { overflow-y: auto; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+        .camera-review > div:first-child { flex-wrap: wrap; gap: 8px; padding: max(env(safe-area-inset-top, 0px), 8px) 12px 8px !important; }
+        .camera-review-status { flex-wrap: wrap; justify-content: center !important; padding: 8px 16px !important; text-align: center; }
+        .camera-review .picker-scroll { padding: 10px 16px !important; }
+        @media (orientation: landscape) and (min-width: 600px) {
+          .found-camera { grid-template-columns: minmax(0, 1fr) minmax(calc(max(226px, 14rem) + max(env(safe-area-inset-left, 0px), 24px) + max(env(safe-area-inset-right, 0px), 24px)), 34%); grid-template-rows: auto minmax(80px, 1fr); }
+          .camera-topbar { grid-column: 1; }
+          .camera-dock { grid-column: 2; grid-row: 1 / 3; justify-content: center; gap: 8px; padding-top: max(env(safe-area-inset-top, 0px), 12px); background: #000b; }
+          .camera-review .picker-scroll button > div { width: 48px !important; height: 48px !important; }
+          .camera-review > div:has(> .picker-scroll) { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px) !important; }
+        }
         .camera-upload-spinner { display: inline-block; flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ffffff40; border-top-color: #ddd; animation: cam-spin 1s linear infinite; }
         @media (prefers-reduced-motion: reduce) { .camera-upload-spinner { animation: none; } }
         @media (max-width: 360px) { .camera-review-action-label { display: none; } }
