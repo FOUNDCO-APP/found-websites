@@ -6,7 +6,9 @@
 - [x] Three independent camera/design/native reviews visible to Shawn; current source findings recorded in handoff.
 - [x] Existing92 Pro-choice checks and7 journey groups pass on synthetic data.
 - [x] Shawn approves first bounded camera filename repair; one-line patch and independent engineering source signoff.
-- [ ] Finish actual video/photo/annotation persistence regressions, production build, release and live checks.
+- [x] Five actual handler/helper/API persistence scenarios and three old-source negative controls pass; independent test review accepted.
+- [x] Build/TypeScript/all89 pages passed; e14cb03 live READY with exact SHA, dashboard200/auth401 and four client sites200.
+- [ ] Sunday physical iPhone: record/upload/reopen/playback, plus still photo and annotation; older wrongly named media remains separate.
 - [ ] Review microphone timing and denial outcome, recorder session/stop/close cleanup.
 - [ ] Shared accessibility preview and all3 plan journeys, including visibility/discovery mismatch.
 - [ ] Account deletion and privacy/storage/AI data-flow review.

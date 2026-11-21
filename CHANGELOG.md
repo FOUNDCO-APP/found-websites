@@ -4,7 +4,9 @@
 - Independent engineering source/test review accepted conditional on build pass.
   Five handler/helper/API scenarios pass and three old-source variants fail in
   memory; no live I/O. Production build/TypeScript/all89 pages passed, exit0.
-  Publication and live checks pending.
+  e14cb03 pushed; Vercel8vKTsxB9oYThxJ7AdWaEYYR1Q9Nu SUCCESS/READY exact SHA.
+  Live login200, anonymous photo API401, all four client Home pages200.
+  Physical-device recording/playback remains pending; no live uploads during QA.
 - Older incorrectly named media requires separate assessment; no data migration.
 
 ## November 21, 2026 - Shared Store Readiness Review And Documentation

@@ -18,7 +18,13 @@ Negative controls fail at filename assertion before persisted misclassification;
 positive cases exercise fresh GET without stored MIME. Synthetic bytes/mocked
 browser/storage do not certify real recording, codecs or physical playback.
 Final production build passed (TypeScript, all89 static pages, exit0) with source
-unchanged during verification. Publication and live checks pending.
+unchanged during verification. Source e14cb03128487c7167121aa428a8359ea6b3ceee
+pushed, Vercel8vKTsxB9oYThxJ7AdWaEYYR1Q9Nu SUCCESS; API confirms READY and exact
+commit SHA. Live dashboard/login200, anonymous/api/photos401, and four existing
+client Home pages200. No real camera upload or existing customer file changed in
+verification. Tests are synthetic; physical recording/codecs/playback remain for
+Sunday Mac/iPhone session. User check: record short video, wait for upload, close
+and reopen Photos, confirm video/playback, then check a still and annotation.
 Microphone timing, lifecycle, native packaging and old media fixes are separate.
 
 ## November 21, 2026 - Apple-Led Shared Store Readiness Review
