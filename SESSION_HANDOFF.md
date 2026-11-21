@@ -1,5 +1,52 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Fresh Camera Layout And Media Pipeline Review
+
+Shawn reports photo uploads working pretty well;10sec video remains uploading.
+Screenshot10:47 shows status crowded below record button. He requests fresh Jony-
+led/Steve-co-led review of entire camera/capture-review experience (his "catalog"
+interpreted from screenshot, not storefront catalog), plus CompanyCam comparison.
+Review/proposal only; no new application changes or production settings changed.
+
+Independent Jony reviewer01a1fcf9-fdf5-7430-9a42-834d9a803efb recommends rebuilding
+layout structure, preserving familiar camera and tested recovery logic. Steve
+co-lead01a1fcf9-fa60-7041-864e-4616f7d45c1f recommends refine rather than start
+over; do not hide failures/shrink targets for appearance. Jony reconciles: reserved
+centered status above shutter, mode/record separation, optional combined Format
+control preserving defaults, consistent type/44px targets, all safe-area edges,
+landscape/enlarged-text reflow, image-dominant review. Tradeoff less preview space.
+Source confirms status absolutely attached below58pxthumb within78pxshutterrow;
+reserved in-flow status area needed, not just another fixed-position nudge.
+Steve co-lead subsequently reviewed Jony's returned proposal and accepts it;
+tradeoff less preview space is justified while preview remains dominant. Keep
+video pipeline as separate engineering qualification scope. Both actual reviews
+and engineering findings shown in chat; two approval questions queued for Shawn:
+camera/review redesign and measured video/resumable/progress upgrade. Neither
+implementation is approved yet. No new app code edited in this review.
+
+Engineering reviewer01a1fcf9-fbed-7300-8fd9-6b9cfc056b45 confirms source gaps:
+shared4096x3072idealstream, MediaRecorder MIME only/no bitrate or frame-rate target,
+photo JPEG0.92 without separate output cap, whole-Blob videoPUT no partial resume.
+Browser already encodes/compresses: do not say video is uncompressed. Actual device
+dimensions/bitrate/Blob size and this pending clip's failing stage remain unknown.
+Proposed qualify1080p30fps4-6Mbps video/96-128kbpsaudio as a starting field profile,
+preserve high-detail stills/existing originals, resumable TUS + real byte progress,
+retain stable IDs/auth isolation/queue and real browser-to-storage acceptance.
+No automatic quality downgrade, dependency install or transport change approved.
+
+Primary research: CompanyCam official help documents native-app offline queue
+automatic upload, quality settings,4K video and2GB/4GB limits byplan; does not reveal
+internal video compression bitrate/protocol. Supabase official resumable docs
+recommend TUS for unstable networks/files>6MB/progress, direct storagehostname,
+signed tokens via x-signature, expiring resumable sessions. Found currently50MiB
+global limit verified earlier; no paid upgrade authorized. DirectoryCompanyCam
+lookup returnednoresult; official docs used. Record evidence URLs in existing logs:
+https://help.companycam.com/en/articles/6828443-using-offline-mode
+https://help.companycam.com/en/articles/6828402-recording-video-in-companycam
+https://help.companycam.com/en/articles/16598192-adjusting-camera-settings-in-the-mobile-app
+https://supabase.com/docs/guides/storage/uploads/resumable-uploads
+https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder
+
 ## November 21, 2026 - Device Saving And Automatic Recovery Live
 
 Final compatible source95ffa26bff9b4351bfdca3f108d6f543dc0d4d29 is live.

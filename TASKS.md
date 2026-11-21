@@ -2,6 +2,9 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
+- [ ] Approve fresh Jony-led/Steve-co-led camera/review layout proposal: reserved status above raised shutter controls, clear hierarchy, optional Format consolidation, responsive safe areas/tap targets; preserve queue behavior.
+- [ ] Approve measured video/media pipeline plan: qualify explicit recording profile, resumable transfers/byte progress, real browser-to-Supabase and device detail-quality tests. Current10secvideo cause still unproven; no speculative compression fix or paid upgrade.
+
 - [x] Jony-led/Steve-co-led visible review; Shawn approves compact camera status correction without Hide/Dismiss/action stack.
 - [ ] Implement/visually review/test/publish compact camera status correction; preserve retained captures and duplicate-safe retry. Video transport failure remains separate/open.
 - [x] Jony-led/Steve-co-led visible review; Shawn approves device saving and automatic foreground/reopening recovery.
