@@ -2,6 +2,16 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+Latest November21: Apple-led shared store-readiness review completed against
+0aee66f (GitHub main verified). All three plans and the existing product belong
+in version1; web and in-app subscription channels approved in principle. Android
+preparation runs alongside Apple. D-U-N-S is queued per Shawn; Mac available
+Sunday night Nov22. Three independent specialist reviewers ran. First proposed
+implementation is the narrowly scoped video filename fix; pending Shawn approval.
+Detailed findings, evidence, matrix and next steps are in SESSION_HANDOFF/TASKS.
+No application code, native package installation, store submission or paid setup
+performed in this readiness review.
+
 Latest November20: Shawn confirms Namecheap/Spark working and approved retiring
 Found's general inbox/composer/alerts. Admin email stays focused on clients and
 automated delivery history. Cleanup live through f37a17c, Vercel SUCCESS and admin/

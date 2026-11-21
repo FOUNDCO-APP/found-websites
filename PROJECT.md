@@ -4,7 +4,8 @@
 
 Follow `BRIEF.md`, then the newest `SESSION_HANDOFF.md` entries before using
 historical build/launch claims below. The web product is live. App-store work is
-a later phase, not the current release goal. Main checkout is dirty/stale relative
+an active Apple-led preparation workstream as of Nov21; native builds remain
+unimplemented in this checkout. See current handoff for scope. Main checkout is dirty/stale relative
 to the verified release worktree; do not bulk deploy it.
 
 ---

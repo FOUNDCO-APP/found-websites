@@ -1,3 +1,13 @@
+## November 21, 2026 - Store Version1 Scope And Shared Preparation
+
+Shawn explicitly defined version1 as the full existing Found product including
+Starter, Pro and Business. Approved planning for website and in-app subscriptions,
+one Found account/subscription across platforms, with Apple leading and Android
+alongside. Shared readiness audit authorized; Mac available Sunday night Nov22.
+D-U-N-S queued per Shawn. Exact store prices/offers, billing-provider switching,
+deletion semantics and native production architecture are still proposals. No
+store submission, purchases or live billing alterations authorized by this audit.
+
 ## November 20, 2026 - Ordinary Mail In Namecheap/Spark; Admin For Clients
 
 Shawn confirmed Namecheap and Spark working, rejected general inbox/history in

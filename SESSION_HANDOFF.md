@@ -1,5 +1,105 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Apple-Led Shared Store Readiness Review
+
+Shawn approved moving forward with the shared readiness check, Apple as lead,
+and explicitly required documenting progress in the existing MD process. He is
+away for a wedding in Mexico; Mac access returns Sunday night Nov22. He confirms
+D-U-N-S request is queued. This is user-reported status, not a provider lookup.
+
+### Approved direction and boundaries
+
+- Version1 is the entire existing Found product, Starter/Pro/Business included.
+- Website subscriptions plus in-app purchases on iPhone are approved in principle;
+  Google Play preparation also requested. One Found account and subscription
+  should provide the appropriate access across platforms.
+- Exact store prices/offers, storefronts, provider switching, account-deletion
+  consequences and production native architecture remain open. Preserve current
+  customer plans and founding rates; no live billing modifications approved here.
+- No guarantee of approval. No submission-ready native binary or physical-device
+  result exists in this audit. Native code or a project elsewhere cannot be ruled
+  out beyond the scoped inventory described below.
+
+### Actual independent review and disagreement
+
+Three separate AI agents ran: Craig/Chris camera engineering
+01a1fcf9-fbed-7300-8fd9-6b9cfc056b45; Jony/Angela UI/UX
+01a1fcf9-fdf5-7430-9a42-834d9a803efb; Chris native architecture
+01a1fcf9-fa60-7041-864e-4616f7d45c1f. Each agent applied its assigned role lenses;
+those lenses are not additional independent participants. Their reports were
+visible in chat. Engineering recommends smallest isolated video fix first;
+design favors shared accessibility and plan journey clarity. Both remain on the
+plan, with the smaller repair proposed as the first implementation approval.
+
+### Confirmed source findings
+
+1. CameraSheet.tsx uploadVideo computes the correct video extension and builds
+   unused FormData, but actual uploadDashboardMedia call at line243 uses
+   annotated-${id}.jpg. Photos route safeExtension prefers filename over MIME;
+   MIME is echoed on completion but absent from persisted reads. Fresh GET can
+   classify the video as photo. Proposed first repair: change only that actual
+   call to video-${id}.${ext}; no schema/old-object repair in that scope.
+2. Camera mount requests audio:true in default photo mode. Permission timing,
+   denial outcome, recording errors, shared chunk races, stop/close/unmount
+   cleanup need a separately specified follow-up. Existing wrong-extension media
+   needs separate inventory/remediation; don't silently rewrite live files.
+3. No tracked Capacitor/iOS/Android native project in this worktree. Filename
+   inventory of original checkout also found none. Sibling repositories were not
+   recursively audited. Existing icons/PWA assets can be reused after conversion.
+   Found uses Next server routes/actions and cannot simply bundle .next as webDir.
+4. Dashboard viewport disables user scaling. Small/faint labels, navigation
+   current-page announcements, unnamed controls and modal focus behavior need
+   rendered/device accessibility review. Preserve the existing Pro chooser as
+   the starting point, rather than redesigning it from scratch.
+5. No user-facing account deletion action found matching privacy/page.tsx's
+   settings promise. Verify photo storage access and third-party/AI data flows
+   before privacy disclosures. No live storage permission test was run here.
+6. Plan copy describes four Pro categories while chooser offers five (cart and
+   ordering separate). Business/public-site visibility vs owner-tool discovery
+   deserves verification. Don't change entitlements based on copy alone.
+
+### Current package map from source (not a live checkout certification)
+
+| Plan | Shared baseline | Additional source behavior |
+|---|---|---|
+| Starter / found | Website, photo pipeline, incoming lead form/reply, custom domain support | Paid add-ons can grant matching tools |
+| Pro / found_pro | Starter baseline | Follow-up/tracking/contacts/worker uploads; one included tool plus any paid extras |
+| Business / found_business | Pro baseline | Five included tools: ordering, cart, estimates/payments, booking, email marketing; owner visibility still matters |
+
+Source featureAccess.ts and dashboard/entitlements.ts must be reconciled at real
+entry points before native billing. Marketing claims and tool gates are not
+proof every advertised feature is complete (review requests still marked coming
+soon in plan copy). Intro cutoff is Nov15 in introRate.ts, now expired; don't
+extend or reuse promo rates for store products without an explicit decision.
+
+### Checks completed and exact next approval
+
+Clean checkout0aee66f matches actual GitHub main. Existing synthetic checks pass:
+7 Pro journey groups and92 Pro included-choice checks (PGlite does not prove
+real multi-session scheduling). No customer writes, billing events or messages.
+
+Proposed first patch: correct recorded-video filename only. Regressions must
+exercise MP4/WebM actual upload helper and fresh GET type inference, preserve
+album/bytes/MIME, and prove photo/annotation JPEG filenames remain correct.
+Request Shawn's implementation approval after the visible findings; then prepare,
+review, test and publish through the existing release process. This audit itself
+changes only documentation.
+
+Next workstreams: camera permission/lifecycle proposal; shared accessibility
+preview; deletion/privacy design; platform billing and entitlement design; real
+reviewer fixture plan. Sunday Mac session should verify macOS/Xcode26+ readiness,
+signing and device access, then run an isolated feasibility build if approved.
+Capacitor server.url is a development experiment per its docs, not an adopted
+production distribution design. No Sunday delivery or approval date promised.
+
+Official references checked Nov21:
+- https://developer.apple.com/app-store/review/guidelines/ (2.1,3.1,4.2,5.1)
+- https://developer.apple.com/news/upcoming-requirements/ (Xcode26/iOS26 SDK)
+- https://capacitorjs.com/docs/config (development hosted URL limitation, as cited by specialist)
+
+Remaining: hello/support mailbox validation, four held education drafts, staged
+backups and historical security review remain open under their existing scope.
+
 ## November 20, 2026 - Approved Client-Only Admin Email Cleanup
 
 Shawn explicitly rejected keeping general inbox history visible and approved

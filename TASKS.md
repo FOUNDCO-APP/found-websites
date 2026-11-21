@@ -1,5 +1,19 @@
 # Found Task Board
 
+## November 21 - Apple-Led Shared Store Preparation
+
+- [x] Confirm audited checkout0aee66f matches GitHub main; clean working tree at start.
+- [x] Three independent camera/design/native reviews visible to Shawn; current source findings recorded in handoff.
+- [x] Existing92 Pro-choice checks and7 journey groups pass on synthetic data.
+- [ ] Shawn approves first bounded camera filename repair, then implement/review/regressions/release.
+- [ ] Review microphone timing and denial outcome, recorder session/stop/close cleanup.
+- [ ] Shared accessibility preview and all3 plan journeys, including visibility/discovery mismatch.
+- [ ] Account deletion and privacy/storage/AI data-flow review.
+- [ ] Native production architecture decision; Sunday Mac/Xcode/device feasibility session.
+- [ ] Apple/Google billing, cross-platform entitlement and duplicate purchase design; exact prices/offers remain open.
+- [ ] Reviewer accounts, screenshots, privacy forms, device testing and store submission after enrollment.
+- Apple leads. Android progresses alongside shared work. All existing product/plans remain version1 scope.
+
 ## November 20 - Client-Only Email Cleanup (Approved)
 
 - [x] Namecheap/Spark send and receive confirmed by Shawn.
