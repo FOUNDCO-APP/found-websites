@@ -50,53 +50,82 @@ export async function GET() {
 
 const UPLOAD_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const UPLOAD_ERROR = "We couldn't confirm your upload saved. Check your connection and try again."
+class UploadFailure extends Error {
+  constructor(readonly code: string, readonly status: number) { super(UPLOAD_ERROR) }
+}
+// Convert structured provider fields, never provider messages, into public codes.
+function uploadFailure(error: unknown): UploadFailure {
+  if (error instanceof UploadFailure) return error
+  const value = error && typeof error === "object" ? error as { code?: string; error?: string; status?: number; statusCode?: string | number } : {}
+  const code = value.code ?? value.error
+  const status = Number(value.statusCode ?? value.status)
+  if (status === 401 || status === 403 || code === "InvalidJWT" || code === "AccessDenied") return new UploadFailure("AUTH_REQUIRED", 403)
+  if (status === 413 || code === "EntityTooLarge") return new UploadFailure("UPLOAD_TOO_LARGE", 413)
+  if (code === "23505") return new UploadFailure("UPLOAD_ID_CONFLICT", 409)
+  if (["23503", "22P02", "InvalidRequest", "InvalidBucketName", "InvalidKey", "InvalidMimeType", "InvalidUploadId", "NoSuchBucket", "NoSuchKey"].includes(String(code))
+    || [400, 404, 409, 422].includes(status)) return new UploadFailure("INVALID_UPLOAD", 400)
+  return new UploadFailure("TRANSIENT", status === 429 ? 429 : status === 408 ? 408 : 503)
+}
 
 export async function POST(req: Request) {
   try {
     const identity = await resolveDashboardIdentity()
-    if (!identity) return NextResponse.json({ error: "Please sign in to upload." }, { status: 401 })
+    if (!identity) return NextResponse.json({ code: "AUTH_REQUIRED", error: "Please sign in to upload." }, { status: 401 })
+    const accountId = identity.isAdminView ? "found-admin" : identity.userId
     const company = await getCompany(identity.userId, identity.userEmail)
-    if (!company) return NextResponse.json({ error: "This upload couldn't start." }, { status: 404 })
-    const admin = createAdminClient()
-    const bucket = admin.storage.from(BUCKET)
+    if (!company) return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't start." }, { status: 404 })
     const json = (req.headers.get("content-type") ?? "").includes("application/json")
     const body = json ? await req.json() : null
     const form = json ? null : await req.formData()
+    if (json && (!body || typeof body !== "object" || Array.isArray(body))) throw new UploadFailure("INVALID_UPLOAD", 400)
+    const expectedAccount = json ? body.expected_account_id : form?.get("expected_account_id")
+    if (expectedAccount != null && expectedAccount !== accountId) {
+      return NextResponse.json({ code: "ACCOUNT_CHANGED", error: "Sign in to the original account to continue this upload." }, { status: 409 })
+    }
     const expectedCompany = json ? body.expected_company_id : form?.get("expected_company_id")
     if (expectedCompany != null && expectedCompany !== company.id) {
-      return NextResponse.json({ error: "Your business changed. Return to the original business to retry." }, { status: 409 })
+      return NextResponse.json({ code: "BUSINESS_CHANGED", error: "Your business changed. Return to the original business to retry." }, { status: 409 })
+    }
+    if (json && body.intent === "upload-context") {
+      return NextResponse.json({ company_id: company.id, account_id: accountId }, { headers: { "Cache-Control": "no-store" } })
     }
     const rawId = json ? body.upload_id : form?.get("upload_id")
     if (rawId != null && (typeof rawId !== "string" || !UPLOAD_UUID.test(rawId))) {
-      return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+      return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't start." }, { status: 400 })
     }
     const uploadId = typeof rawId === "string" ? rawId.toLowerCase() : null
     if (uploadId && body?.intent !== "reconcile-upload" && expectedCompany !== company.id) {
-      return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 409 })
+      return NextResponse.json({ code: "BUSINESS_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
     }
+    if (uploadId && body?.intent !== "reconcile-upload" && expectedAccount !== accountId) {
+      return NextResponse.json({ code: "ACCOUNT_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
+    }
+    const admin = createAdminClient()
+    const bucket = admin.storage.from(BUCKET)
     const albumId = (json ? body.album_id : form?.get("album_id")) || null
     if (albumId) {
       const { data, error } = await admin.from("photo_albums").select("id")
         .eq("id", albumId).eq("company_id", company.id).maybeSingle()
-      if (error || !data) return NextResponse.json({ error: "This album is unavailable." }, { status: 400 })
+      if (error) throw uploadFailure(error)
+      if (!data) return NextResponse.json({ code: "ALBUM_UNAVAILABLE", error: "This album is unavailable." }, { status: 400 })
     }
     // Never upsert an ID: a global PK collision must not update/disclose another tenant.
     const existing = async () => {
       const { data, error } = await admin.from("company_photos").select("*")
         .eq("id", uploadId!).eq("company_id", company.id).maybeSingle()
-      if (error) throw new Error(UPLOAD_ERROR)
+      if (error) throw uploadFailure(error)
       return data
     }
     if (uploadId) {
       const photo = await existing()
-      if (photo) return NextResponse.json({ company_id: company.id, photo: photoPayload(photo) })
+      if (photo) return NextResponse.json({ company_id: company.id, account_id: accountId, photo: photoPayload(photo) })
     }
     const file = form?.get("file") as File | null
     const name = json ? body.file_name : file?.name
     const mime = json ? (body.content_type || body.mime_type) : file?.type
     const ext = safeExtension(name, mime)
     if (uploadId && !["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "avif", "mp4", "webm", "mov", "m4v", "ogg"].includes(ext)) {
-      return NextResponse.json({ error: "This file type isn't supported." }, { status: 400 })
+      return NextResponse.json({ code: "UNSUPPORTED_FILE_TYPE", error: "This file type isn't supported." }, { status: 400 })
     }
     const path = uploadId ? `${company.id}/${uploadId}.${ext}`
       : `${company.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
@@ -105,7 +134,7 @@ export async function POST(req: Request) {
     const stored = async (value: string) => {
       const filename = value.slice(company.id.length + 1)
       const { data, error } = await bucket.list(company.id, { search: filename, limit: 100 })
-      if (error) throw new Error(UPLOAD_ERROR)
+      if (error) throw uploadFailure(error)
       return (data ?? []).some(object => object.name === filename && !!object.id)
     }
     const save = async (storagePath: string, url: string, mimeType?: string) => {
@@ -117,7 +146,7 @@ export async function POST(req: Request) {
           const photo = await existing()
           if (photo) return NextResponse.json({ photo: photoPayload(photo, mimeType) })
         }
-        throw new Error(UPLOAD_ERROR)
+        throw uploadFailure(error)
       }
       try {
         await recordCustomerActivity({ eventType: "photo_uploaded", pathname: "/dashboard/photos",
@@ -127,25 +156,26 @@ export async function POST(req: Request) {
     }
     if (json) {
       if (body.intent === "reconcile-upload") {
-        if (!uploadId) return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+        if (!uploadId) return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't start." }, { status: 400 })
         const uploaded = await stored(path)
-        return NextResponse.json({ company_id: company.id, uploaded, path, publicUrl: publicUrlFor(path) })
+        return NextResponse.json({ company_id: company.id, account_id: accountId, uploaded, path, publicUrl: publicUrlFor(path) })
       }
       if (body.intent === "signed-upload") {
         if (uploadId && await stored(path)) {
           return NextResponse.json({ uploaded: true, path, publicUrl: publicUrlFor(path) })
         }
         const { data, error } = await bucket.createSignedUploadUrl(path)
-        if (error || !data) throw new Error(UPLOAD_ERROR)
+        if (error) throw uploadFailure(error)
+        if (!data) throw new UploadFailure("TRANSIENT", 503)
         return NextResponse.json({ bucket: BUCKET, path, token: data.token, signedUrl: data.signedUrl,
           publicUrl: publicUrlFor(path), album_id: albumId })
       }
       if (body.storage_path && body.url) {
         if (uploadId) {
           if (body.storage_path !== path || body.url !== publicUrlFor(path)) {
-            return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 400 })
+            return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't be verified." }, { status: 400 })
           }
-          if (!await stored(path)) return NextResponse.json({ error: UPLOAD_ERROR }, { status: 409 })
+          if (!await stored(path)) return NextResponse.json({ code: "STORAGE_NOT_READY", error: UPLOAD_ERROR }, { status: 409 })
           return await save(path, publicUrlFor(path), mime)
         }
         // Separate legacy completion contract; retain stock publication checks.
@@ -154,26 +184,27 @@ export async function POST(req: Request) {
         const filename = legacyPath.slice(prefix.length)
         if (!legacyPath.startsWith(prefix) || !/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(filename)
           || body.url !== publicUrlFor(legacyPath) || !await stored(legacyPath)) {
-          return NextResponse.json({ error: "This upload couldn't be verified." }, { status: 400 })
+          return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't be verified." }, { status: 400 })
         }
         await assertStockPhotoAlbum(admin, company.id, body.url, albumId)
         return await save(legacyPath, publicUrlFor(legacyPath), body.mime_type)
       }
-      return NextResponse.json({ error: "This upload couldn't start." }, { status: 400 })
+      return NextResponse.json({ code: "INVALID_UPLOAD", error: "This upload couldn't start." }, { status: 400 })
     }
     if (!file || typeof file.arrayBuffer !== "function") {
-      return NextResponse.json({ error: "Choose a file to upload." }, { status: 400 })
+      return NextResponse.json({ code: "INVALID_UPLOAD", error: "Choose a file to upload." }, { status: 400 })
     }
     if (!uploadId || !await stored(path)) {
       const { error } = await bucket.upload(path, await file.arrayBuffer(), { contentType: file.type, upsert: false })
       if (error) {
         // Another request may have won storage. Verify; never overwrite.
-        if (!uploadId || !await stored(path)) throw new Error(UPLOAD_ERROR)
+        if (!uploadId || !await stored(path)) throw uploadFailure(error)
       }
     }
     return await save(path, publicUrlFor(path), file.type)
-  } catch {
-    return NextResponse.json({ error: UPLOAD_ERROR }, { status: 500 })
+  } catch (error) {
+    const failure = error instanceof SyntaxError ? new UploadFailure("INVALID_UPLOAD", 400) : uploadFailure(error)
+    return NextResponse.json({ code: failure.code, error: UPLOAD_ERROR }, { status: failure.status })
   }
 }
 export async function PATCH(req: Request) {

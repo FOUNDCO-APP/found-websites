@@ -1,9 +1,9 @@
-﻿"use client"
+"use client"
 
 import React, { useRef, useState, useEffect } from "react"
 import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
-import { createDashboardUploadSession } from "@/lib/uploadDashboardMedia"
-import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
+import type { DeviceCapture } from "@/lib/deviceUploadQueue"
+import { useUploadStatus, getUploadAttentionLabel, getQueueErrorLabel } from "@/components/dashboard/UploadStatusProvider"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
 type CameraMode = "photo" | "video"
@@ -15,7 +15,7 @@ const RATIOS = [
   { label: "1:1", value: "1:1" as AspectRatio, w: 1, h: 1 },
 ]
 
-type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean }
+type Capture = { id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
 
 // Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
@@ -43,7 +43,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   pendingAlbumId?: string | null
 }) {
   const uploadStatus    = useUploadStatus()
-  const retained = useRef(new Map<string, { blob: Blob; session: ReturnType<typeof createDashboardUploadSession>; running: boolean }>())
+  const unsaved = useRef(new Map<string, { blob: Blob; fileName: string; albumId: string | null; saving: boolean }>())
+  const queueRef = useRef(uploadStatus.deviceQueue)
+  queueRef.current = uploadStatus.deviceQueue
+  const notified = useRef(new Set<string>())
+  const createdHere = useRef(new Set<string>())
+  const retrying = useRef(new Set<string>())
   const mounted = useRef(true)
   const encoding = useRef(0)
   const captureUrls = useRef(new Set<string>())
@@ -82,11 +87,33 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (closeNotice) closeDialog.current?.showModal()
   }, [closeNotice])
 
-  capturesRef.current = captures
+  function updateCaptures(change: (previous: Capture[]) => Capture[]) {
+    const next = change(capturesRef.current)
+    capturesRef.current = next
+    setCaptures(next)
+  }
+  const pendingCaptures = captures.filter(c => c.uploading || c.state === "saving")
+  const attentionCaptures = captures.filter(c => c.uploadError || c.state === "save_failed")
+  const uploadedCaptures = captures.filter(c => c.photoId)
+  const deviceSavedCaptures = captures.filter(c => !c.photoId && c.localSaved && !c.uploading && c.state !== "needs_attention")
+  const queueNotice = getQueueErrorLabel(uploadStatus.queueError)
+  function captureLabel(capture: Capture): string {
+    if (capture.photoId) return "Uploaded"
+    if (capture.state === "saving") return "Saving…"
+    if (capture.state === "save_failed") return "Couldn’t save. Keep Found open."
+    if (capture.uploading) return `Uploading ${capture.isVideo ? "video" : "photo"}…`
+    if (capture.state === "needs_attention") return ["auth", "size", "business"].includes(capture.errorCategory ?? "") ? getUploadAttentionLabel(capture.errorCategory) : queueNotice ?? getUploadAttentionLabel(capture.errorCategory)
+    return queueNotice ?? (capture.localSaved ? "Saved on this device" : "Saving…")
+  }
+  const localSummary = captures.length === 1 ? captureLabel(captures[0])
+    : queueNotice ?? [pendingCaptures.length ? `${pendingCaptures.length} saving or uploading` : "", uploadedCaptures.length ? `${uploadedCaptures.length} uploaded` : "", deviceSavedCaptures.length ? `${deviceSavedCaptures.length} saved on this device` : "", attentionCaptures.length ? `${attentionCaptures.length} need attention` : ""].filter(Boolean).join(" · ")
+  const spinner = <span aria-hidden="true" className="camera-upload-spinner" />
+
+  useEffect(() => uploadStatus.registerCameraPresentation(), [uploadStatus.registerCameraPresentation])
   useEffect(() => {
     mounted.current = true
     const warn = (event: BeforeUnloadEvent) => {
-      if (retained.current.size || encoding.current || recorderRef.current?.state === "recording") {
+      if (unsaved.current.size || encoding.current || recorderRef.current?.state === "recording") {
         event.preventDefault()
         event.returnValue = ""
       }
@@ -97,48 +124,87 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       window.removeEventListener("beforeunload", warn)
       if (timerRef.current) clearInterval(timerRef.current)
       if (recorderRef.current?.state === "recording") recorderRef.current.stop()
-      for (const id of retained.current.keys()) uploadStatus.detachOperation(id)
-      retained.current.clear()
+      unsaved.current.clear()
+      queueRef.current?.releaseUploaded()
       for (const url of captureUrls.current) URL.revokeObjectURL(url)
       captureUrls.current.clear()
     }
-  }, [uploadStatus.detachOperation])
+  }, [])
 
-  async function runCapture(id: string) {
-    const entry = retained.current.get(id)
-    if (!entry || entry.running || !mounted.current) return
-    entry.running = true
-    setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: true, uploadError: false } : c))
-    const finish = uploadStatus.beginOperation({ id, kind: entry.blob.type.startsWith("video/") ? "video" : "photo", onRetry: () => { void runCapture(id) }, onReview: () => {
-      const index = capturesRef.current.findIndex(c => c.id === id)
-      if (index >= 0) setReviewIndex(index)
-    } })
-    let photo: UploadedPhoto
-    try {
-      photo = await entry.session.run()
-    } catch {
-      entry.running = false
-      finish(false)
-      if (mounted.current) setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: false, uploadError: true } : c))
+  function applyQueueRow(row: DeviceCapture) {
+    if (!mounted.current) return
+    const previous = capturesRef.current.find(c => c.id === row.id || c.fileName === row.fileName)
+    // Uploaded memory rows from an earlier camera opening are not new captures.
+    if (!previous && row.state === "uploaded") return
+    const previewUrl = previous?.previewUrl ?? URL.createObjectURL(row.blob)
+    captureUrls.current.add(previewUrl)
+    const capture: Capture = { id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
+    if (!row.localSaved && row.state !== "uploaded" && !unsaved.current.has(row.id)) {
+      unsaved.current.set(row.id, { blob: row.blob, fileName: row.fileName, albumId: row.albumId, saving: false })
+    }
+    if (row.localSaved || row.state === "uploaded") {
+      if (previous) unsaved.current.delete(previous.id)
+      unsaved.current.delete(row.id)
+    }
+    updateCaptures(list => previous ? list.map(c => c.id === previous.id ? capture : c) : [capture, ...list])
+    if (row.state === "uploaded" && row.photo && !notified.current.has(row.id)) {
+      notified.current.add(row.id)
+      if (createdHere.current.has(row.fileName)) onUploadedRef.current(row.photo)
+      else window.dispatchEvent(new CustomEvent("found:photo-uploaded", { detail: { photo: row.photo } }))
+    }
+  }
+  useEffect(() => {
+    for (const row of uploadStatus.queueRows) applyQueueRow(row)
+  }, [uploadStatus.queueRows])
+
+  async function saveOnDevice(id: string) {
+    const entry = unsaved.current.get(id)
+    const queue = queueRef.current
+    if (!entry || entry.saving || !mounted.current) return
+    if (!queue) {
+      if (!uploadStatus.accountId || !uploadStatus.companyId || uploadStatus.queueError) updateCaptures(list => list.map(c => c.id === id ? { ...c, state: "save_failed", uploading: false } : c))
       return
     }
-    // A confirmed upload must never be rerun, including through an old banner callback.
-    retained.current.delete(id)
-    finish(true)
-    uploadStatus.detachOperation(id)
-    if (!mounted.current) return
-    setCaptures(previous => previous.map(c => c.id === id ? { ...c, uploading: false, uploadError: false, photoId: photo.id, storagePath: photo.storage_path } : c))
-    onUploadedRef.current(photo)
+    if (!uploadStatus.queueReady && !uploadStatus.queueError) return
+    entry.saving = true
+    updateCaptures(list => list.map(c => c.id === id ? { ...c, state: "saving", uploading: false } : c))
+    try {
+      const row = await queue.enqueue(entry.blob, { id, fileName: entry.fileName, albumId: entry.albumId })
+      if (mounted.current) applyQueueRow(row)
+    } catch {
+      if (mounted.current) updateCaptures(list => list.map(c => c.id === id ? { ...c, state: "save_failed", uploading: false, localSaved: false } : c))
+    } finally {
+      entry.saving = false
+    }
+  }
+  useEffect(() => {
+    if (!uploadStatus.queueReady && !uploadStatus.queueError) return
+    for (const id of unsaved.current.keys()) {
+      if (capturesRef.current.find(c => c.id === id)?.state === "saving") void saveOnDevice(id)
+    }
+  }, [uploadStatus.queueReady, uploadStatus.queueError, uploadStatus.deviceQueue])
+
+  async function retryCapture(id: string) {
+    if (retrying.current.has(id)) return
+    const capture = capturesRef.current.find(c => c.id === id)
+    if (!capture || capture.photoId || capture.uploading || ["auth", "size", "business"].includes(capture.errorCategory ?? "")) return
+    retrying.current.add(id)
+    try {
+      if (capture.state === "save_failed") await saveOnDevice(id)
+      else if (capture.state === "needs_attention") await queueRef.current?.retry(id)
+    } catch { /* The queue reports safe attention state; never expose transport details. */ }
+    finally { retrying.current.delete(id) }
   }
 
   function retainCapture(blob: Blob, fileName: string) {
     if (!mounted.current) return
     const id = crypto.randomUUID()
+    createdHere.current.add(fileName)
     const previewUrl = URL.createObjectURL(blob)
     captureUrls.current.add(previewUrl)
-    retained.current.set(id, { blob, session: createDashboardUploadSession(blob, { fileName, albumId: pendingAlbumId ?? null, companyId: uploadStatus.companyId ?? undefined }), running: false })
-    setCaptures(previous => [{ id, previewUrl, uploading: true, isVideo: blob.type.startsWith("video/") }, ...previous])
-    void runCapture(id)
+    unsaved.current.set(id, { blob, fileName, albumId: pendingAlbumId ?? null, saving: false })
+    updateCaptures(list => [{ id, previewUrl, fileName, albumId: pendingAlbumId ?? null, state: "saving", localSaved: false, uploading: false, isVideo: blob.type.startsWith("video/") }, ...list])
+    void saveOnDevice(id)
   }
 
   // Start / restart camera stream
@@ -299,15 +365,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
   async function handleAnnotationSave(blob: Blob) {
     const capture = reviewIndex === null ? undefined : captures[reviewIndex]
-    if (!capture?.photoId || retained.current.has(capture.id)) return
+    if (!capture?.photoId || unsaved.current.has(capture.id)) return
     setAnnotating(false)
     retainCapture(blob, `annotated-${crypto.randomUUID()}.jpg`)
     setReviewIndex(0)
   }
 
   async function deleteCapture(capture: Capture) {
-    if (!capture.photoId || retained.current.has(capture.id)) return
-    setCaptures(prev => prev.filter(c => c.id !== capture.id))
+    if (!capture.photoId || unsaved.current.has(capture.id)) return
+    updateCaptures(prev => prev.filter(c => c.id !== capture.id))
     setReviewIndex(null)
     setConfirmDelete(false)
     URL.revokeObjectURL(capture.previewUrl)
@@ -330,11 +396,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   function handleClose() {
     if (recorderRef.current?.state === "recording") {
       stopRecording()
-      setCloseNotice("Recording stopped. Keep this camera open until the video is added.")
+      setCloseNotice("Recording stopped. Keep this camera open while saving on this device.")
       return
     }
-    if (retained.current.size || encoding.current) {
-      setCloseNotice("Some captures haven’t been confirmed as added. Their originals are available only while this camera stays open. Retry the uploads before closing; refreshing or closing Found can lose them.")
+    if (unsaved.current.size || encoding.current) {
+      setCloseNotice("Some captures haven’t been saved on this device. Keep this camera open while saving. Closing now can lose their originals.")
       return
     }
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -485,10 +551,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
       }}>
+        <div style={{ position: "relative", width: 58, height: 58, flexShrink: 0 }}>
         {/* Last capture thumbnail â€” tap to review */}
         <button
           aria-label="Review captures"
-          onClick={() => captures.length > 0 ? setReviewIndex(0) : undefined}
+          onClick={() => captures.length > 0 ? setReviewIndex(Math.max(0, captures.findIndex(c => c.uploadError || c.state === "save_failed"))) : undefined}
           style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
         >
           {captures[0] ? (
@@ -506,6 +573,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                   <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.25)", borderTopColor: "white", animation: "cam-spin 0.8s linear infinite" }} />
                 </div>
               )}
+              {(captures[0].uploadError || captures[0].state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, borderRadius: "50%", background: "#c69262", color: "#111", fontSize: 12, fontWeight: 800, width: 18, height: 18, display: "grid", placeItems: "center" }}>!</span>}
               {captures.length > 1 && <div style={{ position: "absolute", bottom: 2, right: 4, fontSize: 10, fontWeight: 800, color: "white", textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}>{captures.length}</div>}
             </div>
           ) : (
@@ -513,6 +581,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           )}
         </button>
 
+        {captures.length > 0 && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", top: "calc(100% + 6px)", left: -12, width: "max-content", maxWidth: "calc(100vw - 48px)", display: "flex", gap: 6, alignItems: "center", color: "#eee", background: "rgba(22,25,23,0.88)", padding: "4px 8px", borderRadius: 8, fontSize: "0.8125rem", lineHeight: 1.4 }}>
+          {pendingCaptures.length > 0 && spinner}<span>{localSummary}</span>
+        </div>}
+        </div>
         {/* Shutter / Record */}
         <button
           aria-label={mode === "photo" ? "Take photo" : recording ? "Stop recording" : "Record video"}
@@ -585,36 +657,40 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                 {/* Annotate */}
                 {!cap.isVideo && (
                   <button
-                    disabled={!cap.photoId || cap.uploading}
-                    onClick={() => { if (cap.photoId && !retained.current.has(cap.id)) setAnnotating(true) }}
+                    aria-label="Annotate"
+                  disabled={!cap.photoId || cap.uploading}
+                    onClick={() => { if (cap.photoId && !unsaved.current.has(cap.id)) setAnnotating(true) }}
                     style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                     </svg>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Annotate</span>
+                    <span className="camera-review-action-label" style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Annotate</span>
                   </button>
                 )}
 
                 {/* Delete */}
                 <button
+                  aria-label="Delete"
                   disabled={!cap.photoId || cap.uploading}
-                  onClick={() => { if (cap.photoId && !retained.current.has(cap.id)) setConfirmDelete(true) }}
+                  onClick={() => { if (cap.photoId && !unsaved.current.has(cap.id)) setConfirmDelete(true) }}
                   style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
                   </svg>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
+                  <span className="camera-review-action-label" style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
                 </button>
               </div>
             </div>
 
             {/* â”€â”€ Main preview â”€â”€ */}
-            {!cap.photoId && <div style={{ padding: "10px 16px", color: "white" }}>
-              <p role="status" style={{ margin: "0 0 8px", fontSize: "0.9375rem", lineHeight: 1.45 }}>{cap.uploading ? `Uploading ${cap.isVideo ? "video" : "photo"}… Keep Found open.` : "Upload not confirmed. Original available only while this camera stays open."}</p>
-              {cap.uploadError && <button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12, background: "#202622", color: "white", border: "1px solid #56605a" }} onClick={() => { void runCapture(cap.id) }}>Retry {cap.isVideo ? "video" : "photo"}</button>}
-            </div>}
+            <div data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
+              <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9375rem", lineHeight: 1.45, minWidth: 0 }}>
+                {(cap.uploading || cap.state === "saving") && spinner}<span>{captureLabel(cap)}</span>
+              </span>
+              {(cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
+            </div>
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 16px", overflow: "hidden", minHeight: 0 }}>
               <div style={{ width: "100%", height: "100%", borderRadius: 20, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {cap.isVideo ? (
@@ -666,6 +742,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={c.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         )}
+                        {(c.uploadError || c.state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 4, top: 4, borderRadius: "50%", background: "#c69262", color: "#111", width: 18, height: 18, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 800 }}>!</span>}
                         {c.uploading && (
                           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10 }}>
                             <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "white", animation: "cam-spin 0.8s linear infinite" }} />
@@ -727,18 +804,21 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         <div style={{ background: "#161b18", color: "white", padding: 24, borderRadius: 20, maxWidth: 420 }}>
           <h2 id="camera-close-title" style={{ fontSize: "1.125rem" }}>Uploads not finished</h2>
           <p id="camera-close-description" style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>{closeNotice}</p>
-          <button autoFocus style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => { setCloseNotice(null); const index = captures.findIndex(c => !c.photoId); if (index >= 0) setReviewIndex(index) }}>Keep camera open</button>
-          {!encoding.current && recorderRef.current?.state !== "recording" && retained.current.size > 0 && [...retained.current.values()].every(entry => !entry.running) && <><p style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>Closing loses the originals kept in this camera. An unconfirmed upload may already be in Photos; check there before uploading it again.</p><button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => {
-            if (encoding.current || recorderRef.current?.state === "recording" || [...retained.current.values()].some(entry => entry.running)) return
+          <button autoFocus style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => { setCloseNotice(null); const index = captures.findIndex(c => !c.photoId && !c.localSaved); if (index >= 0) setReviewIndex(index) }}>Keep camera open</button>
+          {!encoding.current && recorderRef.current?.state !== "recording" && unsaved.current.size > 0 && [...unsaved.current.values()].every(entry => !entry.saving) && <><p style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>Closing loses originals that couldn’t be saved on this device.</p><button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => {
+            if (encoding.current || recorderRef.current?.state === "recording" || [...unsaved.current.values()].some(entry => entry.saving)) return
             mounted.current = false
-            for (const id of retained.current.keys()) uploadStatus.detachOperation(id)
-            retained.current.clear()
+            unsaved.current.clear()
             streamRef.current?.getTracks().forEach(track => track.stop())
             onClose()
           }}>Close anyway</button></>}
         </div>
       </dialog>}
       <style>{`
+        .camera-upload-spinner { display: inline-block; flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ffffff40; border-top-color: #ddd; animation: cam-spin 1s linear infinite; }
+        @media (prefers-reduced-motion: reduce) { .camera-upload-spinner { animation: none; } }
+        @media (max-width: 360px) { .camera-review-action-label { display: none; } }
+
         @keyframes cam-spin  { to { transform: rotate(360deg); } }
         @keyframes rec-blink { 0%,100% { opacity:1; } 50% { opacity:0.15; } }
       `}</style>

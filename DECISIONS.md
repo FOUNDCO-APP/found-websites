@@ -1,3 +1,31 @@
+## November 21, 2026 - Device Save And Automatic Upload Approved
+
+After visible Jony-led/Steve-co-led product review and independent engineering
+recommendation, Shawn approved verified device storage for photos/videos with
+automatic foreground upload/reopening recovery, account isolation and storage-full
+handling. Owners capture; Found manages saving/uploading. Local-save and cloud-
+upload states must be distinct and truthful. Retain stable IDs, reconcile before
+retry, bound attempts and preserve pending originals on logout. Browser storage
+is not permanent backup. Native background transfer is separate, not promised.
+
+## November 21, 2026 - Compact Upload Design Correction Approved
+
+Shawn approved replacing the rejected large upload box with compact status,
+removing Hide/Dismiss buttons and placing recovery with the affected capture.
+Jony leads the Apple-inspired design review; Steve co-leads. This is UI scope only:
+preserve retained-session retry, company binding, close warnings and duplicate
+prevention. Video transport remains unresolved; no speculative transport repair
+or diagnostic-upload/data changes authorized by this design approval.
+
+## November 21, 2026 - Team Review Leadership Clarified
+
+Shawn explicitly states Jony Ive leads the Apple-inspired team and Steve Jobs
+co-leads. Apply those AI review roles with actual visible independent review;
+engineering supports their design/product discussion. Shawn remains the only human
+and implementation authority. This does not authorize pretending the real people
+participate or fabricating dialogue. Current camera banner is rejected and iPhone
+video acceptance remains open despite automated test passes.
+
 ## November 21, 2026 - Shared Weak-Signal Camera Repair Approved
 
 After two independent AI engineering/design reviews visible in chat, Shawn

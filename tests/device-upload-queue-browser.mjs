@@ -1,0 +1,194 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import http from 'node:http'
+import { createRequire } from 'node:module'
+import ts from 'typescript'
+const require = createRequire(import.meta.url)
+const { chromium } = require(process.env.FOUND_PLAYWRIGHT_MODULE || 'playwright')
+// Actual queue/controller and real browser IndexedDB/Web Locks. Only cloud
+// boundaries are synthetic HTTP endpoints; no real accounts or media services.
+const code = ts.transpileModule(fs.readFileSync('src/lib/deviceUploadQueue.ts','utf8'), { compilerOptions: {
+  module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,
+} }).outputText
+const script = `window.calls=[];window.mode='success';window.visibility='visible';window.connected=!location.search.includes('offline');
+Object.defineProperty(navigator,'onLine',{get:()=>window.connected});Object.defineProperty(document,'visibilityState',{get:()=>window.visibility});
+window.scope={accountId:new URLSearchParams(location.search).get('account')||'account-a',companyId:'company-a'};window.context={...window.scope};window.contextCalls=0;
+if(location.search.includes('fallback'))Object.defineProperty(navigator,'locks',{value:undefined});
+const helper={readDashboardUploadContext:async()=>{window.contextCalls++;if(window.mode==='hold-context')await new Promise(resolve=>window.releaseContext=resolve);if(window.mode==='context-failure')throw Object.assign(Error('SAFE context unavailable'),{retryable:true});return {...window.context}},createDashboardUploadSession:(blob,options)=>({run:async()=>{
+window.calls.push({id:options.uploadId,size:blob.size,type:blob.type});
+if(window.mode==='hold')await new Promise(resolve=>window.release=resolve);
+if(window.mode==='permanent')throw Object.assign(Error('SAFE size error'),{category:'size',retryable:false});
+if(window.mode==='auth')throw Object.assign(Error('SAFE sign in again'),{category:'auth',retryable:false});
+if(window.mode==='connection')throw Object.assign(Error('SAFE connection error'),{category:'connection',retryable:true});
+const existing=await(await fetch('/reconcile?id='+options.uploadId)).json();if(existing.photo)return existing.photo;
+const response=await fetch('/upload',{method:'POST',body:JSON.stringify({id:options.uploadId,...window.scope,bytes:[...new Uint8Array(await blob.arrayBuffer())],type:blob.type})});
+const result=await response.json();if(window.mode==='lost-response'){window.mode='success';throw Object.assign(Error('SAFE lost response'),{category:'connection',retryable:true})}return result.photo;
+}})};
+const module={exports:{}},exports=module.exports;function require(name){if(name!=='@/lib/uploadDashboardMedia')throw Error(name);return helper}
+${code}
+window.api=module.exports;window.queue=window.api.getDeviceUploadQueue(window.scope);window.rows=[];window.queue.subscribe(rows=>window.rows=rows);window.stop=window.queue.start();
+window.capture=(type='image/jpeg')=>window.queue.enqueue(new Blob([Uint8Array.from([9,8,7,6])],{type}),{fileName:type.startsWith('video')?'video.mp4':'photo.jpg',albumId:'album-a'});
+window.online=value=>{window.connected=value;dispatchEvent(new Event(value?'online':'offline'))};
+window.show=value=>{window.visibility=value?'visible':'hidden';document.dispatchEvent(new Event('visibilitychange'))};
+window.diskRows=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('found-device-captures-v1');r.onsuccess=()=>{const db=r.result,t=db.transaction('captures'),q=t.objectStore('captures').getAll();t.oncomplete=()=>{resolve(q.result);db.close()};t.onabort=()=>reject(Error('disk read failed'))}});
+`
+const remote = new Map(), writes = new Map()
+const server = http.createServer(async(req,res)=>{
+  const url=new URL(req.url,'http://localhost')
+  if(url.pathname==='/reconcile'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({photo:remote.get(url.searchParams.get('id'))}));return}
+  if(url.pathname==='/upload'){
+    let body='';for await(const chunk of req)body+=chunk
+    const value=JSON.parse(body);writes.set(value.id,(writes.get(value.id)||0)+1)
+    if(!remote.has(value.id))remote.set(value.id,{...value,url:'https://synthetic.invalid/'+value.id,storage_path:value.companyId+'/'+value.id,media_type:value.type.startsWith('video')?'video':'photo'})
+    res.setHeader('Content-Type','application/json');res.end(JSON.stringify({photo:remote.get(value.id)}));return
+  }
+  res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><title>Queue test</title><script>'+script.replace(/<\/script/gi,'<\\/script')+'</script>')
+})
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
+const browser=await chromium.launch({headless:true,...(process.env.FOUND_BROWSER_EXECUTABLE?{executablePath:process.env.FOUND_BROWSER_EXECUTABLE}:{})})
+const base='http://127.0.0.1:'+server.address().port
+let groups=0
+async function fixture(query='?offline'){
+  const context=await browser.newContext(),page=await context.newPage(),errors=[]
+  page.on('pageerror',error=>errors.push(error.message))
+  await page.goto(base+query);await page.waitForFunction(()=>window.queue.ready)
+  return {context,page,errors,async done(){assert.deepEqual(errors,[]);await context.close();groups++}}
+}
+try{
+  {
+    const f=await fixture();const id=await f.page.evaluate(async()=>{const row=await capture('video/mp4');return row.id})
+    assert.equal(await f.page.evaluate(()=>calls.length),0)
+    assert.deepEqual(await f.page.evaluate(async()=>{const [r]=await diskRows();return {id:r.id,bytes:[...new Uint8Array(await r.blob.arrayBuffer())],mime:r.mimeType,local:r.localSaved}}),{id,bytes:[9,8,7,6],mime:'video/mp4',local:true})
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready&&rows.length===1)
+    assert.equal(await f.page.evaluate(()=>rows[0].id),id)
+    await f.page.evaluate(()=>online(true));await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),0);assert.equal(writes.get(id),1)
+    assert.deepEqual(remote.get(id).bytes,[9,8,7,6]);await f.done();console.log('PASS real disk commit, reload and automatic video recovery')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>capture())
+    await f.page.goto(base+'?offline&account=account-b');await f.page.waitForFunction(()=>queue.ready)
+    assert.equal(await f.page.evaluate(()=>rows.length),0)
+    await f.page.goto(base+'?offline');await f.page.waitForFunction(()=>queue.ready&&rows.length===1)
+    await f.page.evaluate(()=>{window.context.accountId='account-b';online(true)})
+    await f.page.waitForFunction(()=>queue.error!==null)
+    assert.equal(await f.page.evaluate(()=>calls.length),0);assert.equal(await f.page.evaluate(()=>rows.length),0)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),1);await f.done();console.log('PASS account filtering and stale-account fail closed')
+  }
+  {
+    const f=await fixture();await f.page.clock.install();await f.page.evaluate(()=>{mode='lost-response'})
+    const id=await f.page.evaluate(async()=>{const row=await capture();online(true);return row.id})
+    await f.page.waitForFunction(()=>rows[0]?.state==='waiting')
+    await f.page.clock.fastForward(7000);await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(writes.get(id),1);assert.equal(await f.page.evaluate(()=>calls.length),2)
+    await f.done();console.log('PASS automatic reconciliation after lost cloud confirmation')
+  }
+  {
+    const f=await fixture();await f.page.clock.install();await f.page.evaluate(()=>{mode='permanent'})
+    await f.page.evaluate(async()=>{await capture();online(true)})
+    await f.page.waitForFunction(()=>rows[0]?.state==='needs_attention')
+    await f.page.evaluate(()=>{for(let i=0;i<8;i++){online(false);online(true)}})
+    await f.page.clock.fastForward(120000)
+    assert.equal(await f.page.evaluate(()=>calls.length),1);assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),1)
+    await f.done();console.log('PASS permanent errors retain originals without retry loop')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>{mode='hold'})
+    const id=await f.page.evaluate(async()=>{const row=await capture();online(true);return row.id})
+    await f.page.waitForFunction(()=>calls.length===1&&typeof window.release==='function')
+    const second=await f.context.newPage();await second.goto(base);await second.waitForFunction(()=>queue.ready)
+    await second.waitForTimeout(200);assert.equal(await second.evaluate(()=>calls.length),0)
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    await second.waitForFunction(()=>rows.length===0);assert.equal(writes.get(id),1)
+    await f.done();console.log('PASS real cross-tab Web Lock prevents overlapping transfers')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>{const original=IDBObjectStore.prototype.put;window.restorePut=()=>IDBObjectStore.prototype.put=original;IDBObjectStore.prototype.put=function(){throw new DOMException('synthetic quota','QuotaExceededError')}})
+    const result=await f.page.evaluate(async()=>{try{await capture();return 'bad'}catch(error){return {name:error.name,saved:error.capture?.localSaved,message:error.message}}})
+    assert.equal(result.name,'DeviceStorageError');assert.equal(result.saved,false)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),0)
+    await f.page.evaluate(()=>{restorePut();online(true)});await f.page.waitForTimeout(100)
+    assert.equal(await f.page.evaluate(()=>calls.length),0)
+    await f.done();console.log('PASS quota failure never claims device save or sends unsaved original')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>capture());await f.page.evaluate(()=>{dispatchEvent(new Event('found:signing-out'));online(true)})
+    await f.page.waitForTimeout(100);assert.equal(await f.page.evaluate(()=>calls.length),0)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),1)
+    await f.done();console.log('PASS sign-out pauses without deleting pending originals')
+  }
+  {
+    const f=await fixture();await f.page.clock.install();await f.page.evaluate(()=>{mode='connection'})
+    await f.page.evaluate(async()=>{await capture();online(true)})
+    for(let attempt=1;attempt<=4;attempt++){
+      await f.page.waitForFunction(n=>rows[0]?.attempts===n&&rows[0]?.state==='waiting',attempt)
+      if(attempt<4)await f.page.clock.fastForward([7000,17000,47000][attempt-1])
+    }
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready)
+    await f.page.evaluate(()=>online(true));await f.page.waitForFunction(()=>rows[0]?.attempts===4&&rows[0]?.nextAttemptAt>Date.now())
+    await f.page.clock.fastForward(60000)
+    await f.page.waitForFunction(()=>rows[0]?.attempts===0&&rows[0]?.nextAttemptAt>Date.now())
+    assert.equal(await f.page.evaluate(()=>calls.length),0)
+    await f.page.evaluate(()=>{for(let i=0;i<10;i++){online(false);online(true)}})
+    await f.page.clock.fastForward(10000);assert.equal(await f.page.evaluate(()=>calls.length),0)
+    await f.done();console.log('PASS persisted retry budget/cooldown survives reopening and online events')
+  }
+  {
+    const f=await fixture();await f.page.clock.install()
+    await f.page.evaluate(async()=>{await capture();mode='context-failure';online(true)})
+    await f.page.waitForFunction(()=>queue.error!==null)
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready)
+    await f.page.evaluate(()=>online(true));await f.page.waitForTimeout(100)
+    assert.equal(await f.page.evaluate(()=>contextCalls),0)
+    await f.page.evaluate(()=>{for(let i=0;i<10;i++){online(false);online(true)}})
+    await f.page.clock.fastForward(6000);await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(await f.page.evaluate(()=>calls.length),1)
+    await f.done();console.log('PASS context backoff persists across reopening and online events')
+  }
+  {
+    const f=await fixture('?offline&fallback');await f.page.evaluate(async()=>{await capture();mode='auth';online(true)})
+    await f.page.waitForFunction(()=>rows[0]?.state==='needs_attention')
+    const id=await f.page.evaluate(()=>rows[0].id)
+    const second=await f.context.newPage();await second.goto(base+'?offline&fallback');await second.waitForFunction(()=>queue.ready&&rows.length===1)
+    await f.page.evaluate(async id=>{mode='hold';await queue.retry(id)},id)
+    await f.page.waitForFunction(()=>calls.length===2&&typeof window.release==='function')
+    const before=await f.page.evaluate(async()=>(await diskRows())[0])
+    await second.evaluate(async id=>{online(true);await queue.retry(id)},id)
+    await second.waitForTimeout(200)
+    const after=await second.evaluate(async()=>(await diskRows())[0])
+    assert.equal(after.leaseOwner,before.leaseOwner);assert.equal(after.leaseUntil,before.leaseUntil)
+    assert.equal(after.attempts,before.attempts);assert.equal(after.state,'uploading')
+    assert.equal(await second.evaluate(()=>calls.length),0)
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    await second.waitForFunction(()=>rows.length===0)
+    assert.equal(writes.get(id),1);await f.done();console.log('PASS fallback lease protects manual retry and auth resumption in another tab')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='hold';await capture();online(true)})
+    await f.page.waitForFunction(()=>typeof window.release==='function')
+    await f.page.evaluate(()=>dispatchEvent(new Event('found:signing-out')))
+    assert.equal(await f.page.evaluate(()=>rows.length),0)
+    await f.page.evaluate(()=>release())
+    await f.page.waitForFunction(async()=>(await diskRows()).length===0)
+    assert.equal(await f.page.evaluate(()=>rows.length),0)
+    await f.done();console.log('PASS late cloud completion stays hidden after sign-out')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{await capture();mode='auth';online(true)})
+    await f.page.waitForFunction(()=>rows[0]?.state==='needs_attention')
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready)
+    await f.page.evaluate(()=>online(true));await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(await f.page.evaluate(()=>calls.length),1)
+    await f.done();console.log('PASS original account sign-in recovery resumes auth-paused capture automatically')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{await capture();mode='hold-context';online(true)})
+    await f.page.waitForFunction(()=>typeof window.releaseContext==='function')
+    await f.page.evaluate(()=>{dispatchEvent(new Event('found:signing-out'));releaseContext()})
+    await f.page.waitForTimeout(100)
+    assert.equal(await f.page.evaluate(()=>rows.length),0);assert.equal(await f.page.evaluate(()=>calls.length),0)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),1)
+    await f.done();console.log('PASS delayed context response cannot reauthorize after sign-out')
+  }
+  console.log(`Passed ${groups} durable queue groups using real browser storage; cloud is synthetic.`)
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

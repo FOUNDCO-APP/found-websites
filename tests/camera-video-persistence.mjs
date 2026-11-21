@@ -60,7 +60,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     assert.ok(['company_photos', 'photo_albums'].includes(table))
     let inserted, filters = []
     const q = {
-      insert(row) { inserted = { id: `row-${rows.length}`, ...row }; rows.push(inserted); return q },
+      insert(row) { inserted = { id: `row-${rows.length}`, for_website: false, for_social: false, in_gallery: false, website_section: null, album_id: null, created_at: new Date().toISOString(), ...row }; rows.push(inserted); return q },
       select() { return q },
       eq(key, value) { filters.push(row => row[key] === value); return q },
       order() { return q },
@@ -90,7 +90,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
       const file = options.body.get('')
       storageWrites.push({ path, type: file.type, bytes: new Uint8Array(await file.arrayBuffer()) })
       objects.set(path, true)
-      return Response.json({})
+      return Response.json({ Key: `company-assets/${path}` })
     }
     assert.equal(url, '/api/photos')
     requests.push(options)
@@ -101,18 +101,22 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
   const context = {
     Blob, FormData, Date, crypto: webcrypto, URL: { createObjectURL: () => 'blob:local' },
     chunksRef: { current: [blob] }, pendingAlbumId: albumId,
-    retained: { current: new Map() }, mounted: { current: true }, encoding: { current: 0 },
+    unsaved: { current: new Map() }, mounted: { current: true }, encoding: { current: 0 },
+    notified: { current: new Set() }, createdHere: { current: new Set() },
     captureUrls: { current: new Set() }, capturesRef: { current: captures }, captures,
     reviewIndex: kind === 'handleAnnotationSave' ? 0 : null,
-    setCaptures(update) { captures = update(captures); context.captures = captures; context.capturesRef.current = captures },
+    setCaptures(value) { captures = typeof value === 'function' ? value(captures) : value; context.captures = captures; context.capturesRef.current = captures },
     setError(error) { errors.push(error) }, setAnnotating() {}, setReviewIndex() {},
     setCloseNotice(error) { errors.push(error) },
-    uploadStatus: { companyId: 'company', beginOperation() { starts++; return ok => { if (ok) successes++; else errors.push('Upload not confirmed') } }, detachOperation() {} },
+    uploadStatus: { accountId: 'owner', companyId: 'company', queueReady: true, queueError: null },
     onUploadedRef: { current(photo) { emitted.push(photo) } },
-    createDashboardUploadSession(file, options) {
-      helperCalls.push({ file, options }); const session = helper(file, options)
-      return { ...session, run() { const result = session.run(); runs.push(result); return result } }
-    },
+    queueRef: { current: { enqueue(file, options) {
+      starts++; helperCalls.push({ file, options })
+      const result = helper(file, { ...options, uploadId: options.id, companyId: 'company', accountId: 'owner' }).run().then(photo => {
+        successes++; return { ...options, id: options.id, accountId: 'owner', companyId: 'company', blob: file, mimeType: file.type, state: 'uploaded', localSaved: false, photo }
+      }).catch(error => { errors.push(error.message); throw error })
+      runs.push(result); return result
+    } } },
     videoRef: { current: { videoWidth: 100, videoHeight: 100 } },
     canvasRef: { current: { getContext: () => ({ drawImage() {} }), toBlob(callback, type) {
       assert.equal(type, 'image/jpeg'); context.photoCompletion = callback(blob)
@@ -121,7 +125,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     getCrop: () => ({ sx: 0, sy: 0, sw: 100, sh: 100 }),
   }
   vm.createContext(context)
-  vm.runInContext(compile(['runCapture', 'retainCapture', kind].map(name => extract(source, name)).join('\n')) + `\nthis.run = ${kind};`, context)
+  vm.runInContext(compile(['updateCaptures', 'applyQueueRow', 'saveOnDevice', 'retainCapture', kind].map(name => extract(source, name)).join('\n')) + `\nthis.run = ${kind};`, context)
   if (kind === 'shoot') { await context.run(); await context.photoCompletion }
   else await context.run(kind === 'uploadVideo' ? mime : blob)
   await Promise.all(runs)

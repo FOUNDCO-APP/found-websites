@@ -2,6 +2,15 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
+- [x] Jony-led/Steve-co-led visible review; Shawn approves compact camera status correction without Hide/Dismiss/action stack.
+- [ ] Implement/visually review/test/publish compact camera status correction; preserve retained captures and duplicate-safe retry. Video transport failure remains separate/open.
+- [x] Jony-led/Steve-co-led visible review; Shawn approves device saving and automatic foreground/reopening recovery.
+- [x] Combined compact UI + verified durable queue implemented;53helper/APIgroups,13realbrowserqueuegroups,5camera cases+3negative controls, realReact/IDBUItests pass. Jony-led/Steve-co-ledUX accepts; independent combined engineeringGO conditionalbuild.
+- [x] Frozen-source build passes TypeScript/all89 static pages; eight source hashes unchanged. Independent combined engineeringGO build condition satisfied.
+- [ ] Publish device-save/recovery release, verify exact deployment and live auth/dashboard/four-client checks. Native background uploads separate.
+- [ ] Investigate actual iPhone video failure after Retry: signing/preflight200, no completedPUT/newMP4 in inspected window. Do not assume network-only cause or call physical acceptance passed.
+- [ ] Review/approve temporary sanitized iPhone upload diagnostics (size, stage, timing, HTTP/fetch/timeout only; no video/tokens/private content). Proposal only; not part of compact UI release.
+
 - [x] Shawn approves visible two-reviewer weak-signal camera proposal.
 - [x] Implement/test retained-session captures, duplicate-safe retry/reconciliation, initial company binding, stalled-request handling and accurate photo/video/permission wording.25backend groups,5camera scenarios+3negative controls, browser UI and production build pass; independent review approved.
 - [x] Published87c46b6; VercelD69dLCfoUkE3hRcfNJgJYW8EFWqy READY exact SHA. Login/admin-view dashboard/Photos200, anonymous PhotosGET/POST401, four clients/HiramGallery200.

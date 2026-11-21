@@ -1,3 +1,15 @@
+## November 21, 2026 - Device Saving And Automatic Recovery Prepared
+
+- Shawn approved local photo/video storage, automatic foreground/reopening upload,
+  account isolation, storage-full handling and the compact camera status correction.
+- Verified IndexedDB commit before Saved on this device; stable-ID reconciliation,
+  bounded persisted retries, Web Locks/fallback leases and post-logout guards.
+- No Hide/Dismiss panel. Specific attention guidance, no Retry for permanent auth/
+  size/business failures. Local original deleted only after cloud confirmation.
+- Real browser persistence/reload/isolation/quota/cross-tab tests and helper/API/
+  capture regressions pass; final visual and independent engineering review accept.
+  Production publication pending. No native-background or physical-video claim.
+
 ## November 21, 2026 - Approved Shared Camera Recovery Released
 
 - Retain camera originals in open session; duplicate-safe manual Retry reconciles

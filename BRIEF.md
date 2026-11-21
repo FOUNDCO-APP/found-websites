@@ -2,6 +2,14 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November21 current: Shawn approved device saving for photos/videos and automatic
+foreground/reopening cloud recovery, plus compact camera UI. Implemented/reviewed:
+53helper/APIgroups,13realChromiumIDBqueuegroups,5camera cases+3negative controls,
+realReact/IDBUItests and image-backed phone previews pass. Jony-led/Steve-co-ledUX
+accepts; independent engineeringGO conditionalfinalbuild. Not yet published; read
+latest SESSION_HANDOFF. Native background transfer remains separate; actual iPhone
+video cloud transfer/playback unresolved and not promised fixed by queue tests.
+
 November21 latest: approved shared weak-signal camera recovery implemented and
 independently reviewed.25backend groups,5camera scenarios+3negative controls,
 React/Chromium UI, Pro regressions and production build pass. Retained-session

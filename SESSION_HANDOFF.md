@@ -1,5 +1,123 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 21, 2026 - Device Saving And Automatic Recovery Approved
+
+Combined implementation complete, pending production publication. Actual Jony-led/
+Steve-co-led UI reviewer01a1fcf9-fdf5-7430-9a42-834d9a803efb inspected current
+image-backed previews and accepts UI/UX, including specific auth/size/business
+errors without pointless Retry. Independent engineer01a1fd01-2a44-7450-b5ba-
+e2dd58cebba2 gives combined GO conditional on frozen-source production build.
+Parent reran53 helper/API groups (real local PostgreSQL PK/mocked providers),
+13 real Chromium IndexedDB/Web Locks queue groups,5 actual camera capture-to-
+helper/API persistence cases+3 negative controls, and real React+IndexedDB UI tests
+with synthetic transport. UI320/390px image-backed previews visually inspected.
+Physical Safari/iPhone transfer/playback is not certified by these tests.
+Frozen-source production build now passed (TypeScript/all89 static pages, exit0);
+eight changed/new application file hashes verified unchanged through build.
+Publication/live checks pending. Rollback must preserve IndexedDB data: old builds
+without queue support cannot display/drain pending captures. Prefer fix-forward;
+never clear browser data to roll back. Reinstall a compatible queue build to resume.
+
+Reviewer-blocking fixes completed: atomic lease-safe manual/auth recovery mutations
+and cross-tab tests without Web Locks; persisted context backoff in IndexedDBv2
+runtime store; immediate hidden snapshots on logout plus generation guards after
+context/IndexedDB waits and before upload. Delayed-context and delayed-cloud logout
+tests pass. Photos event deduplication and initial-request merge preserve confirmed
+recovered uploads without duplicate/missing cards. Browser persistence is best
+effort, requested silently on Safari/Chromium; skip Firefox's unsolicited prompt.
+No server schema/storage setting/billing/old-media changes, real upload, message,
+or speculative video transport header alteration performed during testing.
+
+Shawn explicitly approved verified device storage for photos/videos, automatic
+foreground upload and recovery on reopening, account separation and storage-full
+handling. Native background transfer remains separate. This supersedes earlier
+pending-approval statements below. Compact design correction remains included;
+the combined release is not yet published and final UI/engineering gates remain.
+
+Implementation underway: IndexedDB Blob/metadata queue committed/verified before
+Saved on this device, stable upload IDs, authenticated account/company binding,
+reconciliation before transfer, foreground/offline/visibility scheduling and
+cross-tab locks. Pending originals not cleared on logout; new attempts pause and
+another account cannot load their queue. No signed URL/token persisted. Cloud
+confirmation precedes deletion; local storage is not a permanent backup.
+Queue cap50 captures/250MiB across this browser origin; quota/write failure keeps
+original only in memory with explicit Couldn’t save / Keep Found open guidance.
+Transient retries5/15/45sec+jitter; four attempts per cycle then15min cooldown.
+Cycle/cooldown persisted so reopen/online events do not reset budgets, while later
+reopening can still resume. Permanent errors require attention, not infinite retry.
+This behavior does not establish the cause or resolution of the iPhone video PUT
+failure; actual device transfer/playback acceptance remains open.
+
+## November 21, 2026 - Compact Camera Design Correction Approved
+
+New proposal under discussion: user asks device save followed by automatic cloud
+upload on reopening with connection, possibly background. This is durable queue
+scope beyond approved compact UI and existing in-memory retention. Jony-led/Steve-
+co-led reviewer recommends capture -> verified local save -> automatic upload,
+truthful Saving / Saved on this device / Uploading / Uploaded states. No bad-signal
+diagnosis from elapsed time; no saved claim before local transaction succeeds.
+MDN compatibility confirms Background Sync absent in Safari/iOS; reopening recovery
+is target for web, native file-based background transfer separately reviewed.
+Browser local storage has capacity/eviction limits, not permanent backup. No queue
+or automatic scheduler implemented/approved yet. Compact release remains held.
+
+Latest steering: Shawn requires automation so clients do not manage uploads, and
+asks whether Jony/Steve approved finished UI/UX. Parent clarified only direction
+approved; final revised UI/UX signoff is pending, nothing from this correction
+published. Hold release pending visible role review of bounded automatic recovery
+(reconcile first; Retry fallback only), distinguish transient/permanent failures,
+and Shawn approval of new scope. Compact UI work continues; no automatic retry
+implementation yet. Independent engineering found narrow-screen Delete button
+accessible-name blocker; UI worker assigned repair and test.
+Engineering proposed same-session foreground recovery: at most3 automatic retries
+after5/15/45sec plus jitter, no new attempts after15min, offline/hidden pause and
+online/visible resume without overlap or budget reset. Structured sanitized errors
+must distinguish transient from auth/size/type/company/permanent failures first;
+do not auto-loop current generic errors. Jony/Steve review pending, no implementation.
+
+Shawn approved the queued compact correction after Jony-led/Steve-co-led visible
+review. UI-only implementation underway: CameraSheet, shared upload status and
+browser fixtures; no transport/API changes. Remove large framed box and Hide/
+Dismiss buttons, put status near capture thumbnail or outside review image, and
+recovery controls on the affected capture. Retain existing recovery protections.
+Actual phone screenshots rejected the previous design despite automated passes;
+visually review representative image-backed fixtures, not only blank black ones.
+
+Video investigation separate/open. Read-only management storage config confirms
+fileSizeLimit52428800 (50MiB); actual failed Blob size unknown, not proof of cause.
+No Docker executable on PATH; local full Supabase integration unavailable without
+additional setup. No live diagnostic upload or transport changes performed.
+Backend reviewer proposes (not approved/implemented) bounded temporary diagnostics
+for the next iPhone field test: opaque attempt ID, Blob byte size/MIME, stage/timing,
+HTTP/fetch/timeout classification and destination-validity booleans only. No content,
+filename, signed URL/query/token, headers or raw provider response; copy-on-request,
+no automatic transmission. Test redaction and failure modes before any release.
+This could investigate without Safari Inspector while Shawn has no Mac access.
+
+## November 21, 2026 - Physical Feedback Reopens Camera Design/Video Acceptance
+
+Shawn rejects released upload banner as oversized/ugly with confusing Hide status,
+Dismiss and stacked actions covering capture review. User confirms photo saved;
+video still fails after Retry. Read-only16:14-16:25UTC logs show two image uploads
+200 and video sign/preflight200 with no completed PUT. Metadata verifies two new
+photo rows/JPEG objects and zero new MP4 objects after16:14UTC. Exact video cause
+not established; replayed OPTIONS permits PUT/x-upsert. No video contents read.
+Automated passes do not establish acceptable design or successful iPhone video.
+No new implementation/publish authorized from this feedback; reviews underway.
+
+Shawn explicitly sets current team leadership: Jony Ive leads; Steve Jobs co-leads.
+These remain Apple-inspired AI review roles, not real people. Show actual design/
+product discussion first, engineering evidence supporting it, then Shawn approval.
+Reviewers01a1fcf9-fdf5-7430-9a42-834d9a803efb(design) and
+01a1fcf9-fbed-7300-8fd9-6b9cfc056b45(engineering) reconvened read-only.
+Actual recommendations shown in chat: Jony-led/Steve-co-led design removes the
+large framed box and Hide/Dismiss buttons; compact thumbnail status in camera,
+review status outside image, recovery on affected capture, loss warning at close.
+Engineering confirms fake storage tests bypassed real browser serialization,
+CORS/gateway/token validation/limits and Safari transport. Missing SDK auth headers
+is a difference, not established cause; raw signed URL should be absolute. Need
+actual transport evidence, not speculative header changes. Design approval queued.
+
 ## November 21, 2026 - Approved Weak-Signal Repair Live
 
 Implemented approved shared camera scope. Helper retains immutable session

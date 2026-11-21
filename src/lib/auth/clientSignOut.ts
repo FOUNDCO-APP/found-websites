@@ -6,6 +6,9 @@ import { clearAdminOverride } from "./adminSession"
 // 2026-08-09) was exactly the kind of bug that happens when this logic
 // exists in two places and only one gets updated.
 export async function performSignOut() {
+  // Pending captures remain scoped to this account on this device. Pause new
+  // foreground uploads before credentials change; never discard originals here.
+  window.dispatchEvent(new Event("found:signing-out"))
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

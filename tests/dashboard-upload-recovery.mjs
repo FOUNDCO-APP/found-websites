@@ -18,6 +18,7 @@ await db.exec(`alter table company_photos add column album_id uuid, add column i
   create table photo_albums(id uuid primary key, company_id uuid);
   insert into photo_albums values ('${album}', '${A}');`)
 let company = A, authenticated = true, activityThrows = false, mode, lost = false
+let account = 'user', adminView = false, overrideResponse, storageCalls = 0, storageError
 let transfers = 0, posts = 0, signs = 0, failureLists = false
 const objects = new Map(), calls = [], timers = new Map()
 let timerId = 0, testCount = 0
@@ -76,6 +77,7 @@ const bucket = {
   async upload(path, buffer, options) {
     transfers++
     assert.equal(options.upsert, false)
+    if (storageError) return { error: storageError }
     if (objects.has(path)) return { error: { message: 'exists' } }
     objects.set(path, { bytes: new Uint8Array(buffer), type: options.contentType })
     if (mode === 'photo-object-only') throw Error('PRIVATE after storage')
@@ -84,10 +86,10 @@ const bucket = {
 }
 const media = load('src/lib/mediaKind.ts', {})
 const route = load('src/app/dashboard/api/photos/route.ts', {
-  '@/lib/auth/getAuthUser': { resolveDashboardIdentity: async () => authenticated ? { userId: 'user' } : null },
+  '@/lib/auth/getAuthUser': { resolveDashboardIdentity: async () => authenticated ? { userId: account, isAdminView: adminView } : null },
   '@/lib/dashboard/getCompany': { getCompany: async () => ({ id: company }), requireOwnerAccess: async () => true },
   '@/lib/customerActivity': { recordCustomerActivity: async () => { if (activityThrows) throw Error('PRIVATE') } },
-  '@/lib/mediaKind': media, '@/lib/supabase/admin': { createAdminClient: () => ({ from, storage: { from(name) { assert.equal(name, 'company-assets'); return bucket } } }) },
+  '@/lib/mediaKind': media, '@/lib/supabase/admin': { createAdminClient: () => ({ from, storage: { from(name) { storageCalls++; assert.equal(name, 'company-assets'); return bucket } } }) },
   'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
   '@/lib/deletePhotoPlacement': { deletePhotoPlacement() { throw Error('Unexpected') }, PhotoInUseError: class extends Error {} },
   '@/lib/stockPhotoPlacement': { StockPhotoPlacementError: class extends Error {} },
@@ -96,6 +98,7 @@ const route = load('src/app/dashboard/api/photos/route.ts', {
 async function network(url, options) {
   calls.push({ url, options })
   assert.ok(options.signal, 'Every helper request must be abortable')
+  if (overrideResponse) return overrideResponse(url, options)
   const metadata = typeof options.body === 'string' ? JSON.parse(options.body) : null
   if (metadata?.intent === 'reconcile-upload' && mode === 'fail-first-reconcile') throw Error('PRIVATE network')
   if (metadata?.intent === 'reconcile-upload' && mode === 'delay-first-reconcile') await new Promise(resolve => { releaseReconcile = resolve })
@@ -123,7 +126,7 @@ async function network(url, options) {
   if (mode === 'lost-save' && saving && response.ok && !lost) { lost = true; throw Error('Load failed PRIVATE') }
   return response
 }
-const { createDashboardUploadSession, uploadDashboardMedia } = load('src/lib/uploadDashboardMedia.ts', {
+const { createDashboardUploadSession, uploadDashboardMedia, DashboardUploadError, readDashboardUploadContext } = load('src/lib/uploadDashboardMedia.ts', {
   '@/lib/mediaKind': media, '@/lib/supabase/client': { createClient() { throw Error('Unexpected browser auth/client') } },
 }, { fetch: network })
 const bytes = Uint8Array.from([0, 255, 12, 128, 42])
@@ -135,6 +138,7 @@ const rows = () => db.query('select * from company_photos order by id').then(r =
 async function reset() {
   await db.exec('truncate company_photos')
   company = A; authenticated = true; activityThrows = false; failureLists = false
+  account = 'user'; adminView = false; overrideResponse = undefined; storageCalls = 0; storageError = undefined
   mode = undefined; lost = false; transfers = 0; signs = 0; posts = 0
   objects.clear(); calls.length = 0; timers.clear()
   releaseReconcile = undefined
@@ -142,8 +146,20 @@ async function reset() {
 async function test(name, fn) { await reset(); await fn(); assert.equal(timers.size, 0); testCount++; console.log('PASS ' + name) }
 async function rejectsSafe(action) { await assert.rejects(action, error => {
   assert.doesNotMatch(error.message, /PRIVATE|Load failed|exists/)
-  assert.match(error.message, /confirm|timed out/); return true
+  assert.ok(error instanceof DashboardUploadError)
+  assert.match(error.message, /confirm|timed out|upload|capture|business|account/i); return true
 }) }
+async function expectCategory(action, category, retryable, retryAfterMs = 0) {
+  await assert.rejects(action, error => {
+    assert.ok(error instanceof DashboardUploadError)
+    assert.equal(error.category, category)
+    assert.equal(error.retryable, retryable)
+    assert.equal(error.retryAfterMs, retryAfterMs)
+    assert.equal(error.publicMessage, error.message)
+    assert.doesNotMatch(error.message + JSON.stringify(error), /PRIVATE|secret-token|Load failed/)
+    return true
+  })
+}
 try {
   for (const [mime, ext] of [['video/mp4', 'mp4'], ['video/webm;codecs=h264', 'webm'], ['video/webm', 'webm'], ['image/jpeg', 'jpg']]) {
     await test(`real pipeline ${mime}`, async () => {
@@ -208,7 +224,7 @@ try {
   await test('forged completion URL/path and absent object rejected', async () => {
     const id = uuid(), path = `${A}/${id}.mp4`
     for (const [storage_path, url] of [[`${B}/${id}.mp4`, bucket.getPublicUrl(path).data.publicUrl], [path, 'https://evil.invalid/video.mp4'], [path, bucket.getPublicUrl(path).data.publicUrl]]) {
-      const result = await route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ upload_id: id, expected_company_id: A, file_name: 'video.mp4', content_type: 'video/mp4', storage_path, url }) }))
+      const result = await route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ upload_id: id, expected_company_id: A, expected_account_id: account, file_name: 'video.mp4', content_type: 'video/mp4', storage_path, url }) }))
       assert.equal(result.ok, false)
     }
     assert.equal((await rows()).length, 0)
@@ -265,6 +281,103 @@ try {
     company = B; mode = undefined; releaseReconcile()
     await result
     assert.equal(transfers, 0); assert.equal(objects.size, 0); assert.equal((await rows()).length, 0)
+  })
+  await test('authorized upload context performs no storage or file work', async () => {
+    const context = await readDashboardUploadContext()
+    assert.deepEqual(plain(context), { companyId: A, accountId: 'user' })
+    assert.deepEqual(JSON.parse(calls[0].options.body), { intent: 'upload-context' })
+    assert.equal(storageCalls, 0); assert.equal(transfers, 0); assert.equal((await rows()).length, 0)
+    const response = await route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'upload-context', upload_id: 'ignored', album_id: 'ignored' }) }))
+    assert.equal(response.status, 200)
+    assert.equal(response.headers.get('Cache-Control'), 'no-store')
+    adminView = true
+    assert.equal((await readDashboardUploadContext()).accountId, 'found-admin')
+    authenticated = false
+    await expectCategory(() => readDashboardUploadContext(), 'auth', false)
+    assert.equal(storageCalls, 0)
+  })
+  await test('account binds first request and rejects change after lost photo response', async () => {
+    const s = session('image/jpeg', { accountId: 'user', companyId: A })
+    mode = 'lost-save'; await rejectsSafe(() => s.run())
+    assert.equal(JSON.parse(calls[0].options.body).expected_account_id, 'user')
+    const form = calls.find(call => call.options.body instanceof FormData).options.body
+    assert.equal(form.get('expected_account_id'), 'user')
+    const before = plain(await rows()), count = storageCalls
+    account = 'other-user'; mode = undefined
+    await expectCategory(() => s.run(), 'auth', false)
+    assert.equal(storageCalls, count); assert.deepEqual(plain(await rows()), before)
+    account = 'user'; await s.run(); assert.equal((await rows()).length, 1)
+  })
+  await test('supplied account rejects switch before first successful reconcile', async () => {
+    const s = session('image/jpeg', { accountId: 'user' }); mode = 'fail-first-reconcile'
+    await expectCategory(() => s.run(), 'connection', true)
+    account = 'other-user'; mode = undefined
+    await expectCategory(() => s.run(), 'auth', false)
+    assert.equal(storageCalls, 0); assert.equal(transfers, 0)
+  })
+  await test('legacy session binds response account before subsequent retries', async () => {
+    const s = session(); mode = 'lost-put'; await rejectsSafe(() => s.run())
+    const previous = storageCalls; account = 'other-user'; mode = undefined
+    await expectCategory(() => s.run(), 'auth', false)
+    assert.equal(storageCalls, previous); assert.equal(transfers, 1); assert.equal((await rows()).length, 0)
+  })
+  await test('all upload mutation forms reject foreign expected account before storage', async () => {
+    const post = body => route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }))
+    const id = uuid(), path = `${A}/${id}.mp4`
+    for (const details of [{ intent: 'signed-upload' }, { storage_path: path, url: bucket.getPublicUrl(path).data.publicUrl }, { intent: 'reconcile-upload' }, { intent: 'upload-context' }]) {
+      const response = await post({ upload_id: id, expected_company_id: A, expected_account_id: 'foreign', file_name: 'video.mp4', ...details })
+      assert.equal(response.status, 409); assert.equal((await response.json()).code, 'ACCOUNT_CHANGED')
+    }
+    const form = new FormData(); form.append('file', capture('image/jpeg'), 'photo.jpg'); form.append('expected_account_id', 'foreign')
+    assert.equal((await route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', body: form }))).status, 409)
+    assert.equal(storageCalls, 0); assert.equal((await rows()).length, 0)
+  })
+  for (const [status, code, category, retryable] of [
+    [401, undefined, 'auth', false], [403, undefined, 'auth', false], [413, undefined, 'size', false],
+    [400, undefined, 'validation', false], [404, undefined, 'validation', false], [409, undefined, 'validation', false], [422, undefined, 'validation', false],
+    [409, 'BUSINESS_CHANGED', 'business', false], [409, 'ACCOUNT_CHANGED', 'auth', false], [409, 'STORAGE_NOT_READY', 'transient', true],
+    [429, undefined, 'transient', true], [408, undefined, 'timeout', true], [500, undefined, 'transient', true], [503, undefined, 'transient', true],
+    [500, 'EntityTooLarge', 'size', false], [500, 'InvalidMimeType', 'validation', false], [503, 'AUTH_REQUIRED', 'auth', false],
+    [503, 'UPLOAD_ID_CONFLICT', 'validation', false], [418, undefined, 'unknown', false],
+  ]) await test(`HTTP classification ${status}/${code ?? 'no-code'}`, async () => {
+    overrideResponse = () => Response.json({ code, message: 'PRIVATE secret-token', error: 'PRIVATE' }, { status, headers: { 'Retry-After': '120' } })
+    await expectCategory(() => session().run(), category, retryable, retryable ? 60000 : 0)
+    assert.equal(calls.length, 1, 'No automatic helper retries')
+  })
+  await test('Retry-After seconds/date/invalid values are bounded and own errors preserved', async () => {
+    for (const [header, expected] of [['12', 12000], ['-10', 0], ['nonsense', 0], [new Date(Date.now() + 120000).toUTCString(), 60000]]) {
+      overrideResponse = () => Response.json({ error: 'PRIVATE' }, { status: 429, headers: { 'Retry-After': header } })
+      await expectCategory(() => readDashboardUploadContext(), 'transient', true, expected)
+    }
+    const original = new DashboardUploadError('business')
+    overrideResponse = () => { throw original }
+    await assert.rejects(() => session().run(), error => error === original)
+  })
+  await test('invalid success JSON/context/schema is nonretryable unknown', async () => {
+    for (const data of ['PRIVATE not JSON', 'null', '[]', '{}', JSON.stringify({ company_id: A, account_id: 42 })]) {
+      overrideResponse = () => new Response(data, { status: 200 })
+      await expectCategory(() => readDashboardUploadContext(), 'unknown', false)
+    }
+    for (const data of [{ company_id: A, account_id: 'user' }, { company_id: A, account_id: 'user', uploaded: 'yes' }, { company_id: A, account_id: 'user', photo: {} }]) {
+      overrideResponse = () => Response.json(data)
+      await expectCategory(() => session().run(), 'unknown', false)
+    }
+  })
+  await test('server-issued storage-not-ready is retryable; invalid completion is permanent', async () => {
+    const id = uuid(), path = `${A}/${id}.mp4`
+    const body = { upload_id: id, expected_company_id: A, expected_account_id: 'user', file_name: 'video.mp4', storage_path: path, url: bucket.getPublicUrl(path).data.publicUrl }
+    const post = value => route.POST(new Request('https://app.invalid/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) }))
+    const response = await post(body)
+    assert.equal(response.status, 409); assert.equal((await response.json()).code, 'STORAGE_NOT_READY')
+    const invalid = await post({ ...body, url: 'https://evil.invalid/secret-token' })
+    assert.equal(invalid.status, 400); assert.equal((await invalid.json()).code, 'INVALID_UPLOAD')
+  })
+  await test('server strips provider text and preserves permanent provider classification', async () => {
+    for (const [error, category] of [[{ statusCode: '413', message: 'PRIVATE secret-token' }, 'size'], [{ code: 'InvalidMimeType', message: 'PRIVATE' }, 'validation'], [{ status: 403, message: 'PRIVATE' }, 'auth']]) {
+      storageError = error
+      await expectCategory(() => session('image/jpeg').run(), category, false)
+      assert.equal((await rows()).length, 0)
+    }
   })
   console.log(`Passed ${testCount} upload recovery groups; real local PostgreSQL PK, no live I/O.`)
 } finally { await db.close() }

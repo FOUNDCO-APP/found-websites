@@ -1,3 +1,25 @@
+## November 21, 2026 - Capture First, Found Handles Saving
+
+Shawn approved the Jony-led/Steve-co-led device-first automatic flow. Distinguish
+Saving (not yet committed), Saved on this device (verified local commit), Uploading
+and Uploaded (confirmed cloud save). Routine connection recovery is automatic;
+manual controls belong to exceptional attention states. No bad-signal diagnosis
+from elapsed time, permanent-backup claim, or promise of iPhone web uploads after
+closure. Compact presentation below remains; loss warning only for unsaved local
+originals. Reopening Found recovers the correct account/business queue.
+
+## November 21, 2026 - Compact Camera Status Supersedes Large Banner
+
+Actual iPhone screenshots showed the first recovery banner obscuring the camera
+and review image with a large border, instructions and Hide/Dismiss controls.
+Shawn rejected it; automated bounds tests were insufficient visual evidence.
+Following actual screenshot review, Jony-led/Steve-co-led correction approved:
+small neutral spinner/photo-video label near thumbnail; concise review status
+outside image; affected-item recovery; close-loss guidance only when closing.
+No large framed action panel or competing duplicate status. Verify actual image-
+backed previews at phone sizes and preserve recovery semantics/accessibility.
+This supersedes the prior shared banner presentation below, not retry safeguards.
+
 ## November 21, 2026 - Honest Camera Upload Recovery
 
 Shawn approved the visible engineering and Jony/Angela AI-review direction:

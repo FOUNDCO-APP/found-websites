@@ -440,7 +440,7 @@ function PhotosPageInner() {
   useEffect(() => {
     function onNavUpload(e: Event) {
       const photo = (e as CustomEvent).detail?.photo
-      if (photo) setPhotos(prev => [photo, ...prev])
+      if (photo) setPhotos(prev => [photo, ...prev.filter(existing => existing.id !== photo.id)])
     }
     window.addEventListener("found:photo-uploaded", onNavUpload)
     return () => window.removeEventListener("found:photo-uploaded", onNavUpload)
@@ -455,7 +455,12 @@ function PhotosPageInner() {
         fetch("/api/albums").then(r => r.json()),
         worker ? Promise.resolve({ estimates: null, error: null }) : fetchEstimateSnapshot(),
       ])
-      setPhotos(pd.photos ?? [])
+      // A recovered capture can arrive while this initial request is in flight.
+      // Keep that confirmed event instead of replacing it with an older snapshot.
+      setPhotos(previous => {
+        const known = new Set(previous.map(photo => photo.id))
+        return [...previous, ...((pd.photos ?? []) as Photo[]).filter(photo => !known.has(photo.id))]
+      })
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
