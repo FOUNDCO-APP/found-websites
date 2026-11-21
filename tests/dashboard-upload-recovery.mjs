@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { webcrypto } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 import ts from 'typescript'
 import { PGlite } from '@electric-sql/pglite'
 
@@ -25,9 +26,9 @@ let timerId = 0, testCount = 0
 let releaseReconcile
 const uuid = () => webcrypto.randomUUID()
 const plain = value => JSON.parse(JSON.stringify(value))
-function load(path, dependencies, extra = {}) {
+function load(path, dependencies, extra = {}, source = fs.readFileSync(path, 'utf8')) {
   const module = { exports: {} }
-  const js = ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: {
+  const js = ts.transpileModule(source, { compilerOptions: {
     target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
   } }).outputText
   vm.runInNewContext(js, { module, exports: module.exports, Blob, File, FormData, Request, Response,
@@ -85,7 +86,7 @@ const bucket = {
   },
 }
 const media = load('src/lib/mediaKind.ts', {})
-const route = load('src/app/dashboard/api/photos/route.ts', {
+const routeDependencies = {
   '@/lib/auth/getAuthUser': { resolveDashboardIdentity: async () => authenticated ? { userId: account, isAdminView: adminView } : null },
   '@/lib/dashboard/getCompany': { getCompany: async () => ({ id: company }), requireOwnerAccess: async () => true },
   '@/lib/customerActivity': { recordCustomerActivity: async () => { if (activityThrows) throw Error('PRIVATE') } },
@@ -94,7 +95,8 @@ const route = load('src/app/dashboard/api/photos/route.ts', {
   '@/lib/deletePhotoPlacement': { deletePhotoPlacement() { throw Error('Unexpected') }, PhotoInUseError: class extends Error {} },
   '@/lib/stockPhotoPlacement': { StockPhotoPlacementError: class extends Error {} },
   '@/lib/stockPhotoPublication': { assertStockPhotoAlbum: async () => {}, assertStockPhotoPatch: async () => {} },
-})
+}
+let route = load('src/app/dashboard/api/photos/route.ts', routeDependencies)
 async function network(url, options) {
   calls.push({ url, options })
   assert.ok(options.signal, 'Every helper request must be abortable')
@@ -378,6 +380,60 @@ try {
       await expectCategory(() => session('image/jpeg').run(), category, false)
       assert.equal((await rows()).length, 0)
     }
+  })
+  // Read the actual historical client. No checked-in source is rewritten and no
+  // upload reaches a provider; only our local API/storage/PGlite harness runs.
+  const historicalHelper = execFileSync('git', ['show', '87c46b6:src/lib/uploadDashboardMedia.ts'], { encoding: 'utf8' })
+  const oldClient = () => load('src/lib/uploadDashboardMedia.ts', {
+    '@/lib/mediaKind': media, '@/lib/supabase/client': { createClient() { throw Error('Unexpected browser auth/client') } },
+  }, { fetch: network }, historicalHelper)
+  for (const type of ['image/jpeg', 'video/mp4']) await test(`actual87c stable-ID client compatibility and lost-response recovery ${type}`, async () => {
+    const s = oldClient().createDashboardUploadSession(capture(type), {
+      fileName: type.startsWith('video') ? 'old-video.mp4' : 'old-photo.jpg', companyId: A, albumId: album,
+    })
+    mode = 'lost-save'
+    await assert.rejects(() => s.run(), /confirm/)
+    assert.equal((await rows()).length, 1, 'Old client reaches persistence before simulated lost response')
+    assert.equal((await rows())[0].id, s.uploadId)
+    assert.equal(transfers, 1)
+    mode = undefined
+    const photo = await s.run()
+    assert.equal(photo.id, s.uploadId); assert.equal(photo.album_id, album)
+    assert.equal(transfers, 1, 'Old client reconciles rather than sending bytes again')
+    assert.equal((await rows()).length, 1)
+    for (const call of calls.filter(call => call.url === '/api/photos')) {
+      const payload = call.options.body
+      if (payload instanceof FormData) {
+        assert.equal(payload.get('upload_id'), s.uploadId)
+        assert.equal(payload.get('expected_company_id'), A)
+        assert.equal(payload.has('expected_account_id'), false)
+      } else {
+        const data = JSON.parse(payload)
+        assert.equal(data.upload_id, s.uploadId)
+        assert.equal(data.expected_company_id, A)
+        assert.equal(Object.hasOwn(data, 'expected_account_id'), false)
+      }
+    }
+  })
+  for (const type of ['image/jpeg', 'video/mp4']) await test(`negative control mandatory-account guard breaks actual87c ${type}`, async () => {
+    const path = 'src/app/dashboard/api/photos/route.ts'
+    const current = fs.readFileSync(path, 'utf8')
+    const anchor = /    const admin = createAdminClient\(\)\r?\n    const bucket = admin\.storage\.from\(BUCKET\)/
+    assert.match(current, anchor)
+    const broken = current.replace(anchor, `    if (uploadId && body?.intent !== "reconcile-upload" && expectedAccount !== accountId) {
+      return NextResponse.json({ code: "ACCOUNT_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
+    }
+    const admin = createAdminClient()
+    const bucket = admin.storage.from(BUCKET)`)
+    const fixedRoute = route
+    route = load(path, routeDependencies, {}, broken)
+    try {
+      const s = oldClient().createDashboardUploadSession(capture(type), {
+        fileName: type.startsWith('video') ? 'old-video.mp4' : 'old-photo.jpg', companyId: A, albumId: album,
+      })
+      await assert.rejects(() => s.run(), /confirm/)
+      assert.equal(transfers, 0); assert.equal((await rows()).length, 0)
+    } finally { route = fixedRoute }
   })
   console.log(`Passed ${testCount} upload recovery groups; real local PostgreSQL PK, no live I/O.`)
 } finally { await db.close() }

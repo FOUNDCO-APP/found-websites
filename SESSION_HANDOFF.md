@@ -2,6 +2,22 @@
 
 ## November 21, 2026 - Device Saving And Automatic Recovery Approved
 
+Release93cfa07ebe7c932704d487b73755a22f330b3fa8 reached Vercel READY
+dpl_4hTYh9ATL2LGYDUxnSdo4quEhePt during final compatibility inspection. Parent
+found mandatory expected_account_id on all stable-ID mutations rejects already-open
+87c/a69 clients, which send company binding but no account field. Correcting forward
+now: remove only the missing-account requirement; still authenticate/authorize each
+request and reject any supplied mismatching account before storage. New queue
+always supplies its bound account. Company binding remains mandatory for stable-ID
+mutations. No rollback/IndexedDB clearing: preserve pending originals. Backend
+worker adds actual old-helper regression; final engineering review/live checks
+pending compatibility release. Earlier53 groups did not cover old stable-ID clients.
+Compatibility correction now has57 passing helper/API groups: actual87c helper
+photo/video calls and lost-response recovery pass; in-memory negative controls
+prove the removed missing-account guard broke both. Wrong supplied account still
+rejected. Parent fixed only that guard and explanatory comments; no new type/API
+shape changes. Independent compatibility review and final hosted build pending.
+
 Combined implementation complete, pending production publication. Actual Jony-led/
 Steve-co-led UI reviewer01a1fcf9-fdf5-7430-9a42-834d9a803efb inspected current
 image-backed previews and accepts UI/UX, including specific auth/size/business
@@ -27,6 +43,12 @@ recovered uploads without duplicate/missing cards. Browser persistence is best
 effort, requested silently on Safari/Chromium; skip Firefox's unsolicited prompt.
 No server schema/storage setting/billing/old-media changes, real upload, message,
 or speculative video transport header alteration performed during testing.
+Scope: new captures made in Found's shared in-app camera (including annotations).
+Existing library/file-picker one-shot uploads remain compatible but are not moved
+into the durable queue in this release. Previously failed in-memory captures cannot
+be recovered retroactively by loading this build. Device queue belongs to this
+browser/profile/origin; it does not travel to another browser or device before
+cloud upload. Native background transfer remains separate.
 
 Shawn explicitly approved verified device storage for photos/videos, automatic
 foreground upload and recovery on reopening, account separation and storage-full

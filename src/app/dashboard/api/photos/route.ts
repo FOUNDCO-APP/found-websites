@@ -97,9 +97,9 @@ export async function POST(req: Request) {
     if (uploadId && body?.intent !== "reconcile-upload" && expectedCompany !== company.id) {
       return NextResponse.json({ code: "BUSINESS_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
     }
-    if (uploadId && body?.intent !== "reconcile-upload" && expectedAccount !== accountId) {
-      return NextResponse.json({ code: "ACCOUNT_CHANGED", error: "This upload couldn't be verified." }, { status: 409 })
-    }
+    // Older open tabs send stable IDs/company binding but no account field.
+    // Authenticate every request above; enforce account binding whenever sent.
+    // New device-queue clients always send it, including their first request.
     const admin = createAdminClient()
     const bucket = admin.storage.from(BUCKET)
     const albumId = (json ? body.album_id : form?.get("album_id")) || null
