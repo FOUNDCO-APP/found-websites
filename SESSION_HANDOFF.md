@@ -1,5 +1,19 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Follow-Up Publication Approved
+
+Shawn explicitly instructed Push for tested3c921535d5082a2479ada7e9ebaf505a245e3b5b.
+Clean worktree/remote main ancestor verified; pushed without force or source edits.
+Vercel dpl_8URNz9SL5ifG1HKRx1qsQmGPhCmu READY/exact SHA verified. Live read-only
+checks pass: /login/dashboard/Photos200; upload-context200 with original company/
+found-admin binding and Cache-Control no-store; anonymous Photos/context401;
+wrong supplied account409. Hiram Home/Gallery and Divine/MBJ/RC Home all200.
+No production uploads, customer messages, billing or provider-setting changes.
+Supersedes prepared/not-published status in the historical section below. Existing
+brief/task/change logs updated for documentation-only closeout.
+Physical iPhone portrait/upright playback/reopen
+acceptance remains open; browser aspect verification is not physical certification.
+
 ## November 22, 2026 - Approved Status/Portrait Correction Prepared
 
 Implemented, not published. Parent owns CameraSheet/Format integration; Bohr

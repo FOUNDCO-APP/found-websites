@@ -6,7 +6,7 @@
 - [x] Implement one-owner/transient inline status, no-permission pending review, stable-ID selection/terminal races; direct portrait ideals and bounded live/decoded aspect checks with stale/control/late-frame guards. Browser/profile/persistence tests and role reviews pass; no queue/helper/API changes.
 - [x] Final follow-up build passes TypeScript/all89pages; seven application-file hashes unchanged, role-review build condition satisfied.
 - [x] Tested follow-up source and existing MDs saved in the local release commit (see git log).
-- [ ] Final publication approval, push and live verification. b75306a remains last published app release.
+- [x] Shawn approves Push;3c92153 live, Vercel8URNz9SL5ifG1HKRx1qsQmGPhCmu READY/exactSHA; live login/dashboard/Photos/context/auth protection and four-client/HiramGallery checks pass.
 - [ ] Physical acceptance failed for portrait per Shawn/screenshots; verify corrected Safari/PWA front/rear/lock preview and saved playback before marking complete.
 
 - [x] Approve fresh Jony-led/Steve-co-led camera/review layout proposal: reserved status above raised shutter controls, clear hierarchy, optional Format consolidation, responsive safe areas/tap targets; preserve queue behavior.

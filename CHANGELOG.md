@@ -1,12 +1,14 @@
-## November 22, 2026 - Status And Portrait Follow-Up Prepared
+## November 22, 2026 - Status And Portrait Follow-Up Released
 
 - Shawn approved actual-iPhone corrections. Floating saved toast replaced with one
   inline owner, brief acknowledgments and reachable pending work without permission.
 - Portrait no longer substitutes landscape for missing capabilities. Bounded live/
   original-Blob decoded aspect checks, truthful labels and protected originals.
 - Browser/profile/persistence tests and role reviews pass; production build passes
-  TypeScript/all89pages with seven source hashes unchanged. Publication pending in
-  SESSION_HANDOFF. Physical Safari remains open. No new deployment.
+  TypeScript/all89pages with seven source hashes unchanged. Shawn approved Push;
+  3c921535d5082a2479ada7e9ebaf505a245e3b5b live, Vercel
+  dpl_8URNz9SL5ifG1HKRx1qsQmGPhCmu READY/exactSHA. Live dashboard/auth and four-
+  client checks pass. Physical Safari portrait/upright playback remains open.
 
 ## November 22, 2026 - Camera/Resumable Upgrade Released
 
