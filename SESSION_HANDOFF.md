@@ -1,5 +1,80 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Approved Status/Portrait Correction Prepared
+
+Implemented, not published. Parent owns CameraSheet/Format integration; Bohr
+01a20020-bfe9-70f2-9c49-01a576d7ec03 owns provider/inline/layout and focused tests.
+Bernoulli01a20022-0015-70d1-9fc3-60bc033cf648 owns orientation/profile helpers,
+tests and reviews parent's recorder integration. Einstein01a20020-c163-7592-
+8cfd-7ae292c33229 independently reviews source. Author reviews identified as
+such; no claim of real Apple participants or multiple independent role approvals.
+
+Status: no floating toast. One in-flow host below header/admin/activation rows,
+hidden while camera/review owns presentation. Verified save acknowledgment becomes
+waiting; confirmed success expires2600ms. No completed counts alongside pending.
+Review opens actual CameraSheet without camera/mic permission. Attention-first
+selection, stable capture ID across prepends, terminal handling for already-uploaded
+targets and queue-error override close wrong-item and infinite-loading races.
+
+Portrait always requests1080x1920/9:16 ideals regardless of missing/sensor capability
+metadata. Bounded2500ms observations distinguish requested orientation, track
+settings and actual settled preview dimensions (500msminimum/250msquiet window).
+Record blocked until live aspect matches, checked again immediately before start.
+Resize/loadeddata/canplay recheck late frames; generation/abort guards cover mode,
+stream, close and zoom/torch. Both controls restart verification after applying
+constraints/fallback, closing a reproduced permanently-disabled-Record race.
+Checking, observed mismatch and inability to check use truthful labels. No CSS
+stretch/cosmetic rotation/canvas re-encoding, automatic quality change or byte loss.
+
+Original retention starts before private-Blob decoded-playback observation. Mismatch
+annotates the capture by ID through queue updates, without changing upload state.
+Aspect matching is NOT verification of upright content/container rotation. This
+diagnostic is camera-session memory, not a migration/new durable metadata contract.
+
+Tests pass: real React/Chromium/IndexedDB camera suite (missing capabilities, wide
+frame block, resize recovery, zoom recheck, inline status, acknowledgments, no review
+acquisition, terminal/selection races, auth/errors/recovery,320/390/844/150%text and
+44pxsideinsets); focused173-line inline suite (lifetimes, scope/late completion,
+priority/navigation/review);5actual handler paths+3negative controls; profile/
+orientation cancellation/stale/late-frame/timeout/decode cleanup and extracted
+zoom/torch race regressions. Real Chrome synthetic recording/decoded aspect/photo
+restore passes: parent track1080x1920/20fps,5Mbps/128kbps reported,250360byte Blob,
+decoded1216x2160/readable late frame. Upright-content verification explicitlyfalse;
+not a real field-quality benchmark. Parent visually reviewed inline/review fixtures.
+
+No queue/helper/API/DB, client media, billing, provider setting, paid service or
+message changes. Design-author review and independent engineering accept scopes
+conditional final production build; production build now exit0, TypeScript/all89
+pages pass and seven app-file hashes verified unchanged through build. Build
+condition satisfied. Prepared source/docs saved in local release commit (git log);
+final publication approval pending. No new push
+or deployment. Physical Safari/PWA/front/rear/orientation-lock
+preview, upright playback and reopen recovery remain required, not passed.
+
+## November 22, 2026 - iPhone Feedback: Status Noise And Portrait Failure
+
+Shawn supplied four actual iPhone screenshots A7ACA70E: persistent Saved on this
+device toast covers dashboard header, camera summaries accumulate completed plus
+pending counts, and Video is a wide strip with large black areas in portrait view.
+He explicitly reports portrait does not work. Physical acceptance is NOT passed.
+Screenshots show some uploaded counts, not proof of this video file's orientation.
+
+Read-only reviews ran with existing design author Bohr and recorder reviewer
+Bernoulli. Design proposes one inline owner per screen, no floating header toast,
+brief save/success acknowledgments, pending-only summaries and reachable retained
+captures. Steve usability concern within that same design review: do not hide
+unfinished work when removing the toast. This is one role-lens review, not two
+independent Apple participants. Engineering confirms capability gate explicitly
+substitutes landscape when portrait capabilities are missing; selected orientation
+is not verified against delivered frames. Earlier Chrome qualification did not
+prove iPhone portrait. Request portrait ideals without the gate, bounded settled
+frame validation, truthful selected/delivered state, encoded playback and physical
+Safari/PWA/front/rear/lock checks. No CSS stretching/cosmetic rotation, guessed
+device cause, canvas rewrite, queue/storage deletion or automatic quality downgrade.
+Actual reviews shown in chat. Shawn approved both corrections; implementation and
+separate reviews are in progress. No new deployment. Retain b75306a originals
+and recovery protections. Proposed status host must provide pending review access.
+
 ## November 22, 2026 - Camera Release Approved And Pushed
 
 Shawn explicitly instructed Push. Verified clean worktree and remote main ancestor;

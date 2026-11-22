@@ -44,10 +44,11 @@ const react = bundle(require.resolve('react'))
 const client = bundle(require.resolve('react-dom/client'))
 const camera = bundle(path.join(root, 'src/components/dashboard/CameraSheet.tsx'))
 const provider = bundle(path.join(root, 'src/components/dashboard/UploadStatusProvider.tsx'))
+const inlineHost = bundle(path.join(root, 'src/components/dashboard/UploadStatusInline.tsx'))
 const script = `const process={env:{NODE_ENV:"production"}};const modules={${modules.join(',')}},cache={};function load(id){if(cache[id])return cache[id].exports;const module=cache[id]={exports:{}};const [fn,deps]=modules[id];fn(name=>load(deps[name]),module,module.exports);return module.exports;}const R=load(${react}),e=R.createElement;window.sessions=[];window.uploaded=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureOnline=true;Object.defineProperty(navigator,'onLine',{get:()=>window.fixtureOnline});window.fixtureClosed=0;window.permission=new URLSearchParams(location.search).has('denied')?'denied':'granted';window.mediaError=new URLSearchParams(location.search).has('device')?'NotFoundError':null;window.recorders=[];
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>({state:window.permission})}});
-window.profileConstraints=[];const track={readyState:'live',stop(){},getCapabilities(){return {}},async applyConstraints(value){window.profileConstraints.push(value)},getSettings(){const c=window.profileConstraints.at(-1);return {width:c?.width?.ideal||4096,height:c?.height?.ideal||3072,frameRate:c?.frameRate?.ideal||30}}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
-Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{if(window.mediaError)throw new DOMException('test',window.mediaError);return stream}}});
+window.profileConstraints=[];window.fixtureSettings={width:4096,height:3072,frameRate:30};window.syncFixtureDimensions=()=>document.querySelectorAll('video[data-fixture-stream]').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.fixtureSettings[key],configurable:true});v.dispatchEvent(new Event('resize'))});const track={readyState:'live',stop(){},getCapabilities(){return {}},async applyConstraints(value){window.profileConstraints.push(value);window.fixtureSettings={width:value.width?.ideal||4096,height:value.height?.ideal||3072,frameRate:value.frameRate?.ideal||30};if(window.ignorePortraitConstraints&&window.fixtureSettings.height>window.fixtureSettings.width)window.fixtureSettings={width:1920,height:1080,frameRate:30};window.syncFixtureDimensions()},getSettings(){return {...window.fixtureSettings}}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
+window.mediaRequests=0;Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.mediaRequests++;if(window.mediaError)throw new DOMException('test',window.mediaError);return stream}}});
 // A real local photo may be supplied for visual review; otherwise draw a textured room.
 window.fixtureScene=document.createElement('canvas');window.fixtureScene.width=720;window.fixtureScene.height=960;
 const scene=window.fixtureScene.getContext('2d');
@@ -65,13 +66,13 @@ window.fixtureSceneReady=(async()=>{
    for(let i=0;i<20000;i++){scene.fillStyle=i%2?'#ffffff0b':'#0000000b';scene.fillRect((i*137)%720,(i*277)%960,2,2)}
  }
 })();
-Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){window.fixtureSceneReady.then(()=>{this.poster=window.fixtureScene.toDataURL();Object.defineProperty(this,'videoWidth',{value:720,configurable:true});Object.defineProperty(this,'videoHeight',{value:960,configurable:true});this.dispatchEvent(new Event('loadedmetadata'))})}});
+Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){window.fixtureSceneReady.then(()=>{this.dataset.fixtureStream='true';this.poster=window.fixtureScene.toDataURL();Object.defineProperty(this,'readyState',{value:2,configurable:true});Object.defineProperty(this,'videoWidth',{value:window.fixtureSettings.width,configurable:true});Object.defineProperty(this,'videoHeight',{value:window.fixtureSettings.height,configurable:true});this.dispatchEvent(new Event('loadedmetadata'))})}});
 const canvasContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(...args){const ctx=canvasContext.apply(this,args);const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(image,...values)=>draw(image instanceof HTMLVideoElement?window.fixtureScene:image,...values);return ctx};
 
 class Recorder{static isTypeSupported(){return true}state='inactive';constructor(stream,options={}){this.stream=stream;this.options=options;this.mimeType=options.mimeType||'video/mp4';this.videoBitsPerSecond=options.videoBitsPerSecond;this.audioBitsPerSecond=options.audioBitsPerSecond;window.recorders.push(this)}start(){this.state='recording'}stop(){this.state='inactive';window.finishRecording=()=>{this.ondataavailable({data:new Blob(['original-video'],{type:this.mimeType})});this.onstop()};if(!window.deferRecording)window.finishRecording()}}
 window.MediaRecorder=Recorder;
 const root=load(${client}).createRoot(document.getElementById('root'));new MutationObserver(()=>document.querySelectorAll('video').forEach(video=>{if(!video.poster)video.poster=window.fixtureScene.toDataURL()})).observe(document.getElementById('root'),{childList:true,subtree:true});
-function Harness(){const [open,setOpen]=R.useState(true);window.unmountCamera=()=>setOpen(false);window.openCamera=()=>setOpen(true);window.uploadFixtureStatus=load(${provider}).useUploadStatus();return open?e(load(${camera}).default,{pendingAlbumId:'job-a',onUploaded:photo=>window.uploaded.push(photo),onClose:()=>{window.fixtureClosed++;setOpen(false)}}):null}
+function Harness(){const [open,setOpen]=R.useState(true);window.unmountCamera=()=>setOpen(false);window.openCamera=()=>setOpen(true);window.openReviewCamera=id=>{window.fixtureReviewId=id;setOpen(true)};window.uploadFixtureStatus=load(${provider}).useUploadStatus();return e(R.Fragment,null,e('header',{style:{height:60}},'FOUND'),e(load(${inlineHost}).default),open?e(load(${camera}).default,{pendingAlbumId:'job-a',initialReviewCaptureId:window.fixtureReviewId,onUploaded:photo=>window.uploaded.push(photo),onClose:()=>{window.fixtureClosed++;setOpen(false)}}):null)}
 window.render=(identity=window.fixtureScope)=>root.render(e(load(${provider}).default,{...identity,key:JSON.stringify(identity)},e(Harness)));window.render();`
 const server=http.createServer((req,res)=>{if(req.url==='/fixture-scene'&&process.env.FOUND_CAMERA_FIXTURE_IMAGE){res.setHeader('Content-Type','image/jpeg');res.end(fs.readFileSync(process.env.FOUND_CAMERA_FIXTURE_IMAGE));return}res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:system-ui,sans-serif;background:#080A09}*{box-sizing:border-box}button{font:inherit}button:disabled{opacity:.45}dialog::backdrop{background:#000b}</style><div id="root"></div><script>'+script.replace(/<\/script/gi,'<\\/script')+'</script>')})
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
@@ -103,7 +104,7 @@ const shots=async(name,review=false)=>{
    const relation=await page.locator('[data-camera-review-status]').evaluate(el=>{const r=el.getBoundingClientRect(),preview=el.nextElementSibling.getBoundingClientRect(),header=el.previousElementSibling.getBoundingClientRect();return r.top>=header.bottom-.5&&r.bottom<=preview.top+.5})
    assert.equal(relation,true)
    assert.equal(await page.getByRole('button',{name:'Delete',exact:true}).count(),1)
-  }else await bounds(page.getByRole('status',{name:'Camera upload status'}))
+  }else if(await page.getByRole('status',{name:'Camera upload status'}).count()) await bounds(page.getByRole('status',{name:'Camera upload status'}))
   await page.screenshot({path:path.join(screenshotDir,name+'-'+width+(enlarged?'-large':'')+'.png')})
  }
  await page.setViewportSize({width:390,height:844})
@@ -171,7 +172,17 @@ try{
  // CSS transforms animate, so inspect the target style rather than an intermediate matrix.
  assert.equal(await livePreview.evaluate(el=>el.style.transform),'')
  assert.equal(await livePreview.evaluate(el=>getComputedStyle(el.nextElementSibling).display),'none')
- assert.equal(await format().getAttribute('aria-label'),'Format, 16:9 · Portrait')
+ assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
+ assert.equal(await page.evaluate(()=>window.profileConstraints.some(c=>c.width?.ideal===1080&&c.height?.ideal===1920)),true,'Missing capability metadata must still request portrait')
+ await page.evaluate(()=>{window.fixtureSettings={width:1920,height:1080,frameRate:30};window.syncFixtureDimensions()})
+ await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true,'Wide delivered frames must not be labelled or recorded as portrait')
+ await page.evaluate(()=>{window.fixtureSettings={width:1080,height:1920,frameRate:30};window.syncFixtureDimensions()})
+ await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
+ assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
+ await page.getByRole('button',{name:'2x',exact:true}).click()
+ await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
+ assert.equal(await format().getAttribute('aria-label'),'Format, Portrait','Video zoom must restart settled orientation verification')
  await format().click()
  assert.equal(await formatPanel().getByRole('group',{name:'Aspect ratio'}).count(),0)
  assert.equal(await formatPanel().getByRole('group',{name:'Orientation'}).count(),1)
@@ -233,10 +244,22 @@ try{
  await page.getByRole('button',{name:'Close camera'}).click()
  await page.waitForFunction(()=>window.fixtureClosed===1)
  assert.equal(await page.getByRole('dialog').count(),0)
- await page.getByRole('complementary',{name:'Upload status'}).filter({hasText:'Saved on this device'}).waitFor()
+ await page.getByRole('complementary',{name:'Upload status'}).filter({hasText:/Saved on this device|waiting to upload/}).waitFor()
+ const inlinePosition=await page.getByRole('complementary',{name:'Upload status'}).evaluate(el=>({position:getComputedStyle(el).position,top:el.getBoundingClientRect().top,headerBottom:document.querySelector('header').getBoundingClientRect().bottom}))
+ assert.ok(!['fixed','absolute'].includes(inlinePosition.position)&&inlinePosition.top>=inlinePosition.headerBottom,'Status must be inline below the header')
+ const acquisitionCount=await page.evaluate(()=>window.mediaRequests)
+ await page.getByRole('button',{name:'Review uploads',exact:true}).click()
+ await page.locator('.camera-review').waitFor()
+ assert.equal(await page.evaluate(()=>window.mediaRequests),acquisitionCount,'Pending review must not acquire camera or microphone')
+ await noGlobal()
+ await page.getByRole('button',{name:'Done',exact:true}).click()
  await page.evaluate(()=>window.openCamera())
  await page.getByRole('button',{name:'Review captures'}).click()
- await page.getByRole('status').filter({hasText:'Saved on this device'}).waitFor()
+ await page.getByRole('status').filter({hasText:/Saved on this device|waiting to upload/}).waitFor()
+ await page.getByRole('button',{name:'Camera',exact:true}).click()
+ await page.getByRole('status',{name:'Camera upload status'}).filter({hasText:'1 waiting to upload'}).waitFor()
+ assert.doesNotMatch(await page.getByRole('status',{name:'Camera upload status'}).innerText(),/uploaded/)
+ await page.getByRole('button',{name:'Review captures'}).click()
  assert.equal(await unloadBlocked(),false)
  console.log('PASS verified local save, close safety, provider lifetime and camera reopen hydration')
  // Reload recovers real IndexedDB bytes, uploads automatically, never uses a new ID.
@@ -382,7 +405,13 @@ try{
  assert.equal(await page.evaluate(()=>window.recorders.length),2)
  // Legacy mixed counts stay independent and compact.
  await page.evaluate(()=>{window.uploadFixtureStatus.start(3);window.uploadFixtureStatus.complete(false,'raw detail');window.uploadFixtureStatus.complete(true)})
- await page.getByRole('complementary',{name:'Upload status'}).filter({hasText:'1 uploading · 1 added · 1 not confirmed'}).waitFor()
+ await noGlobal()
+ await page.getByRole('button',{name:'Stop recording',exact:true}).click()
+ await page.evaluate(()=>window.finishRecording())
+ await page.waitForFunction(()=>window.uploadFixtureStatus.queueRows.length===2&&window.uploadFixtureStatus.queueRows.every(row=>row.localSaved))
+ await page.getByRole('button',{name:'Close camera'}).click()
+ await page.getByRole('complementary',{name:'Upload status'}).filter({hasText:/uploading|not confirmed/}).waitFor()
+ assert.doesNotMatch(await page.getByRole('complementary',{name:'Upload status'}).innerText(),/added|uploaded/)
  await bounds(page.getByRole('complementary',{name:'Upload status'}))
  assert.equal(await page.getByRole('button',{name:/Hide|Dismiss/}).count(),0)
  // Provider safely resumes without a camera at all.
@@ -422,6 +451,31 @@ try{
  assert.equal(await page.evaluate(()=>window.uploadFixtureStatus.deviceQueue),null)
 
  console.log('PASS video finalization, scoped global/legacy status and camera-free recovery')
+ // Terminal uploaded rows can arrive before a review-only camera hydrates.
+ await fresh();await setOnline(false);await takePhoto()
+ await page.getByRole('status',{name:'Camera upload status'}).filter({hasText:'Saved on this device'}).waitFor()
+ const terminalId=(await persisted())[0].id
+ await page.getByRole('button',{name:'Close camera'}).click()
+ await page.evaluate(()=>window.releaseTestPresentation=window.uploadFixtureStatus.registerCameraPresentation())
+ await setOnline(true);await page.waitForFunction(()=>window.sessions.length===1);await finish()
+ await page.waitForFunction(()=>window.uploadFixtureStatus.queueRows[0]?.state==='uploaded')
+ const terminalAcquisitions=await page.evaluate(()=>window.mediaRequests)
+ await page.evaluate(id=>window.openReviewCamera(id),terminalId)
+ await page.getByRole('status').filter({hasText:'This upload is no longer pending.'}).waitFor()
+ assert.equal(await page.evaluate(()=>window.mediaRequests),terminalAcquisitions)
+ assert.equal(await page.getByText('Loading uploads…',{exact:true}).count(),0)
+ await page.getByRole('button',{name:'Done',exact:true}).click()
+ await page.evaluate(()=>window.releaseTestPresentation())
+ // Selection follows a stable ID, not an array index when another capture arrives.
+ await fresh();await setOnline(false);await takePhoto()
+ await page.getByRole('status',{name:'Camera upload status'}).filter({hasText:'Saved on this device'}).waitFor()
+ await page.getByRole('button',{name:'Review captures'}).click()
+ const selectedPreview=await page.locator('.camera-review-preview img').getAttribute('src')
+ await page.evaluate(()=>window.uploadFixtureStatus.deviceQueue.enqueue(new Blob(['newer-video'],{type:'video/mp4'}),{fileName:'video-newer.mp4'}))
+ await page.waitForFunction(()=>window.uploadFixtureStatus.queueRows.length===2)
+ await page.waitForFunction(()=>document.querySelectorAll('.picker-scroll button').length===2)
+ assert.equal(await page.locator('.camera-review-preview img').getAttribute('src'),selectedPreview)
+ console.log('PASS uploaded-before-hydration terminal handling and stable selected capture through prepend')
  assert.deepEqual(errors,[])
  assert.deepEqual(insetViolations,[], 'Camera controls must remain inside simulated landscape safe areas')
  console.log('PASS durable queue UI integration: real React + real IndexedDB + mocked transport; 320/390 portrait, 844 landscape, 150% text, transferring/finalizing progress')

@@ -5,6 +5,7 @@ import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
 import CameraFormatControl from "@/components/dashboard/CameraFormatControl"
 import type { DeviceCapture } from "@/lib/deviceUploadQueue"
 import { createCameraProfileGuard, createProfiledRecorder, recordingMime, recordingMeasurement } from "@/lib/cameraRecordingProfile"
+import { verifyCameraOrientation, verifyRecordedOrientation, type OrientationResult } from "@/lib/cameraOrientation"
 import { useUploadStatus, getUploadAttentionLabel, getQueueErrorLabel } from "@/components/dashboard/UploadStatusProvider"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
@@ -19,7 +20,7 @@ const RATIOS = [
 
 type UploadProgress = NonNullable<DeviceCapture["uploadProgress"]>
 
-type Capture = { uploadProgress?: UploadProgress; id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
+type Capture = { playbackOrientation?: OrientationResult["status"]; savedAt?: number; uploadProgress?: UploadProgress; id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
 
 // Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
@@ -41,11 +42,15 @@ export type UploadedPhoto = {
   mime_type?: string | null
 }
 
-export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
+export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initialReviewCaptureId }: {
   onClose: () => void
   onUploaded: (photo: UploadedPhoto) => void
   pendingAlbumId?: string | null
+  initialReviewCaptureId?: string
 }) {
+  const reviewOnly = !!initialReviewCaptureId
+  const initialReviewResolved = useRef(false)
+  const [reviewUnavailable, setReviewUnavailable] = useState(false)
   const uploadStatus    = useUploadStatus()
   const unsaved = useRef(new Map<string, { blob: Blob; fileName: string; albumId: string | null; saving: boolean }>())
   const queueRef = useRef(uploadStatus.deviceQueue)
@@ -59,10 +64,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const profileAvailable = useRef(false)
   const [profileBusy, setProfileBusy] = useState(false)
   const recordingDetails = useRef<ReturnType<typeof recordingMeasurement> | null>(null)
+  const orientationRef = useRef<OrientationResult | null>(null)
+  const orientationGeneration = useRef(0)
+  const orientationAbort = useRef<AbortController | null>(null)
+  const [orientation, setOrientation] = useState<OrientationResult | null>(null)
   const captureUrls = useRef(new Set<string>())
   const onUploadedRef = useRef(onUploaded)
   onUploadedRef.current = onUploaded
   const capturesRef = useRef<Capture[]>([])
+  const selectedCaptureId = useRef<string | null>(null)
   const closeDialog = useRef<HTMLDialogElement>(null)
   const [closeNotice, setCloseNotice] = useState<string | null>(null)
   const videoRef        = useRef<HTMLVideoElement>(null)
@@ -90,6 +100,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const [shutterFlash, setFlash]  = useState(false)
   const [ready, setReady]         = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [statusTick, setStatusTick] = useState(0)
+  const statusNow = Date.now()
 
   useEffect(() => {
     if (closeNotice) closeDialog.current?.showModal()
@@ -99,14 +111,22 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     const next = change(capturesRef.current)
     capturesRef.current = next
     setCaptures(next)
+    if (selectedCaptureId.current) {
+      const index = next.findIndex(c => c.id === selectedCaptureId.current)
+      if (index < 0) selectedCaptureId.current = null
+      setReviewIndex(index < 0 ? null : index)
+    }
+  }
+  function selectReview(index: number | null) {
+    selectedCaptureId.current = index === null ? null : capturesRef.current[index]?.id ?? null
+    setReviewIndex(index)
   }
   const pendingCaptures = captures.filter(c => c.uploading || c.state === "saving")
   const attentionCaptures = captures.filter(c => c.uploadError || c.state === "save_failed")
-  const uploadedCaptures = captures.filter(c => c.photoId)
   const deviceSavedCaptures = captures.filter(c => !c.photoId && c.localSaved && !c.uploading && c.state !== "needs_attention")
   const queueNotice = getQueueErrorLabel(uploadStatus.queueError)
   function captureLabel(capture: Capture): string {
-    if (capture.photoId) return "Uploaded"
+    if (capture.photoId) return capture.playbackOrientation === "mismatch" ? "Uploaded · Check video framing" : "Uploaded"
     if (capture.state === "saving") return "Saving…"
     if (capture.state === "save_failed") return "Couldn’t save. Keep Found open."
     if (capture.uploading) {
@@ -117,10 +137,21 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       return percent === null ? `Uploading ${capture.isVideo ? "video" : "photo"}…` : `Uploading ${capture.isVideo ? "video" : "photo"} · ${percent}%`
     }
     if (capture.state === "needs_attention") return ["auth", "size", "business"].includes(capture.errorCategory ?? "") ? getUploadAttentionLabel(capture.errorCategory) : queueNotice ?? getUploadAttentionLabel(capture.errorCategory)
-    return queueNotice ?? (capture.localSaved ? "Saved on this device" : "Saving…")
+    return queueNotice ?? (capture.localSaved ? statusNow - (capture.savedAt ?? 0) < 2600 ? "Saved on this device" : "1 waiting to upload" : "Saving…")
   }
-  const localSummary = captures.length === 1 ? captureLabel(captures[0])
-    : queueNotice ?? [pendingCaptures.length ? `${pendingCaptures.length} saving or uploading` : "", uploadedCaptures.length ? `${uploadedCaptures.length} uploaded` : "", deviceSavedCaptures.length ? `${deviceSavedCaptures.length} saved on this device` : "", attentionCaptures.length ? `${attentionCaptures.length} need attention` : ""].filter(Boolean).join(" · ")
+  const unfinished = captures.filter(c => !c.photoId)
+  const localSummary = queueNotice ?? (unfinished.length === 1 ? captureLabel(unfinished[0]) : unfinished.length
+    ? [pendingCaptures.length ? `${pendingCaptures.length} saving or uploading` : "", deviceSavedCaptures.length ? `${deviceSavedCaptures.length} waiting to upload` : "", attentionCaptures.length ? `${attentionCaptures.length} need attention` : ""].filter(Boolean).join(" · ")
+    : captures.some(c => c.photoId && statusNow - (c.startedAt ?? 0) < 2600) ? "Uploaded" : null)
+  useEffect(() => {
+    const now = Date.now()
+    const expiry = captures.flatMap(c => [c.savedAt, c.photoId ? c.startedAt : undefined])
+      .filter((time): time is number => typeof time === "number" && time + 2600 > now)
+      .map(time => time + 2600)
+    if (!expiry.length) return
+    const timer = setTimeout(() => setStatusTick(t => t + 1), Math.max(1, Math.min(...expiry) - now))
+    return () => clearTimeout(timer)
+  }, [captures, statusTick])
   const spinner = <span aria-hidden="true" className="camera-upload-spinner" />
 
   useEffect(() => uploadStatus.registerCameraPresentation(), [uploadStatus.registerCameraPresentation])
@@ -135,6 +166,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     window.addEventListener("beforeunload", warn)
     return () => {
       mounted.current = false
+      orientationGeneration.current++; orientationAbort.current?.abort()
       window.removeEventListener("beforeunload", warn)
       if (timerRef.current) clearInterval(timerRef.current)
       if (recorderRef.current?.state === "recording") recorderRef.current.stop()
@@ -152,7 +184,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (!previous && row.state === "uploaded") return
     const previewUrl = previous?.previewUrl ?? URL.createObjectURL(row.blob)
     captureUrls.current.add(previewUrl)
-    const capture: Capture = { uploadProgress: row.uploadProgress, id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/") || row.fileName.startsWith("video-"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
+    const capture: Capture = { playbackOrientation: previous?.playbackOrientation, savedAt: previous?.savedAt ?? (row.localSaved ? previous?.state === "saving" ? Date.now() : row.createdAt : undefined), uploadProgress: row.uploadProgress, id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/") || row.fileName.startsWith("video-"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
     if (!row.localSaved && row.state !== "uploaded" && !unsaved.current.has(row.id)) {
       unsaved.current.set(row.id, { blob: row.blob, fileName: row.fileName, albumId: row.albumId, saving: false })
     }
@@ -170,6 +202,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   useEffect(() => {
     for (const row of uploadStatus.queueRows) applyQueueRow(row)
   }, [uploadStatus.queueRows])
+  useEffect(() => {
+    if (!initialReviewCaptureId || initialReviewResolved.current) return
+    const index = captures.findIndex(c => c.id === initialReviewCaptureId)
+    if (index >= 0) { initialReviewResolved.current = true; selectReview(index) }
+    else if (uploadStatus.queueReady && (!uploadStatus.queueRows.some(row => row.id === initialReviewCaptureId && row.state !== "uploaded") || !!uploadStatus.queueError)) {
+      initialReviewResolved.current = true; setReviewUnavailable(true)
+    }
+  }, [initialReviewCaptureId, captures, uploadStatus.queueReady, uploadStatus.queueRows])
 
   async function saveOnDevice(id: string) {
     const entry = unsaved.current.get(id)
@@ -219,12 +259,30 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     unsaved.current.set(id, { blob, fileName, albumId: pendingAlbumId ?? null, saving: false })
     updateCaptures(list => [{ id, previewUrl, fileName, albumId: pendingAlbumId ?? null, state: "saving", localSaved: false, uploading: false, isVideo: blob.type.startsWith("video/") || fileName.startsWith("video-") }, ...list])
     void saveOnDevice(id)
+    return id
+  }
+
+  async function checkPreviewOrientation(track: MediaStreamTrack) {
+    const video = videoRef.current
+    if (!video || !profileAvailable.current || !mounted.current) return
+    const generation = ++orientationGeneration.current
+    orientationAbort.current?.abort()
+    const controller = new AbortController()
+    orientationAbort.current = controller
+    orientationRef.current = null; setOrientation(null)
+    const current = () => mounted.current && generation === orientationGeneration.current
+      && streamRef.current?.getVideoTracks()[0] === track && profileAvailable.current
+    const result = await verifyCameraOrientation(video, track, portrait, { signal: controller.signal, isCurrent: current })
+    if (!current()) return
+    orientationRef.current = result; setOrientation(result)
   }
 
   // Start / restart camera stream
   useEffect(() => {
+    if (reviewOnly) return // Reviewing pending originals must not request camera/mic permission.
     profileGuard.current.invalidate()
     profileAvailable.current = false
+    orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null)
     let alive = true
     let frameTimeout: ReturnType<typeof setTimeout> | null = null
     ;(async () => {
@@ -286,7 +344,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
-  }, [facing])
+  }, [facing, reviewOnly])
 
   // Keep capture blocked while the browser changes the sensor profile. Stills
   // regain their original detail ideals when returning from Video to Photo.
@@ -297,15 +355,32 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     profileAvailable.current = false
     setProfileBusy(true)
     void profileGuard.current.request(track, mode, portrait, () => active && mounted.current && streamRef.current?.getVideoTracks()[0] === track)
-      .then(result => {
-        if (result.isCurrent()) { profileAvailable.current = true; setProfileBusy(false); setZoom(1); setTorchOn(false); hwZoomRef.current = false }
+      .then(async result => {
+        if (result.isCurrent()) {
+          profileAvailable.current = true; setProfileBusy(false); setZoom(1); setTorchOn(false); hwZoomRef.current = false
+          if (mode === "video") await checkPreviewOrientation(track)
+        }
       })
-    return () => { active = false; profileGuard.current.invalidate(); profileAvailable.current = false }
+    return () => { active = false; profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null }
   }, [ready, mode, portrait, facing])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || mode !== "video") return
+    const resized = () => {
+      if (recorderRef.current?.state === "recording") return
+      const track = streamRef.current?.getVideoTracks()[0]
+      if (track && profileAvailable.current) void checkPreviewOrientation(track)
+    }
+    video.addEventListener("resize", resized)
+    video.addEventListener("loadeddata", resized)
+    video.addEventListener("canplay", resized)
+    return () => { video.removeEventListener("resize", resized); video.removeEventListener("loadeddata", resized); video.removeEventListener("canplay", resized) }
+  }, [mode, portrait, facing])
 
   function changeMode(next: CameraMode) {
     if (recording || encoding.current || next === mode) return
-    profileGuard.current.invalidate(); profileAvailable.current = false; setProfileBusy(true); setMode(next)
+    profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setMode(next)
   }
 
   async function applyZoom(level: ZoomLevel) {
@@ -318,6 +393,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     hwZoomRef.current = result.status === "applied"
     setZoom(result.status === "applied" || mode === "photo" ? level : 1)
     profileAvailable.current = true; setProfileBusy(false)
+    if (mode === "video") await checkPreviewOrientation(track)
   }
 
   async function toggleTorch() {
@@ -329,6 +405,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (!result.isCurrent()) return
     if (result.status === "applied") setTorchOn(next)
     profileAvailable.current = true; setProfileBusy(false)
+    if (mode === "video") await checkPreviewOrientation(track)
   }
 
   // Compute canvas crop: zoom region first, then aspect ratio crop within it
@@ -369,6 +446,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
 
   function startRecording() {
     if (!profileAvailable.current || encoding.current > 0 || recorderRef.current?.state === "recording") return
+    const frame = videoRef.current
+    const verified = orientationRef.current
+    const frameMatches = frame && frame.readyState >= 2 && (portrait ? frame.videoWidth / frame.videoHeight < .98 : frame.videoWidth / frame.videoHeight > 1.02)
+    if (!frameMatches || verified?.status !== "verified" || verified.requested !== (portrait ? "portrait" : "landscape")) {
+      const track = streamRef.current?.getVideoTracks()[0]
+      if (track) void checkPreviewOrientation(track)
+      return
+    }
     const stream = streamRef.current
     if (!stream) return
     let mr: MediaRecorder
@@ -387,7 +472,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         if (chunks.length) {
           const blob = new Blob(chunks, { type: mimeType })
           recordingDetails.current = { ...initialDetails, blobBytes: blob.size, blobMime: mimeType || null }
-          if (mimeType) uploadVideo(mimeType)
+          if (mimeType) {
+            const id = uploadVideo(mimeType)
+            // Retention starts before playback inspection; never discard or
+            // rewrite original bytes because a browser cannot decode them.
+            if (id) void verifyRecordedOrientation(blob, portrait, { isCurrent: () => mounted.current }).then(result => {
+              if (mounted.current) updateCaptures(list => list.map(c => c.id === id ? { ...c, playbackOrientation: result.status } : c))
+            })
+          }
           else {
             // Keep the original bytes even when a browser reports an unknown
             // container. Do not invent a MIME/extension or discard a recording.
@@ -417,8 +509,9 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   function uploadVideo(mimeType: string) {
     const ext = mimeType.includes("mp4") ? "mp4" : "webm"
     const blob = new Blob(chunksRef.current, { type: mimeType })
-    retainCapture(blob, `video-${crypto.randomUUID()}.${ext}`)
+    const id = retainCapture(blob, `video-${crypto.randomUUID()}.${ext}`)
     chunksRef.current = []
+    return id
   }
 
   async function handleAnnotationSave(blob: Blob) {
@@ -426,13 +519,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     if (!capture?.photoId || unsaved.current.has(capture.id)) return
     setAnnotating(false)
     retainCapture(blob, `annotated-${crypto.randomUUID()}.jpg`)
-    setReviewIndex(0)
+    selectReview(0)
   }
 
   async function deleteCapture(capture: Capture) {
     if (!capture.photoId || unsaved.current.has(capture.id)) return
     updateCaptures(prev => prev.filter(c => c.id !== capture.id))
-    setReviewIndex(null)
+    selectReview(null)
     setConfirmDelete(false)
     URL.revokeObjectURL(capture.previewUrl)
     captureUrls.current.delete(capture.previewUrl)
@@ -463,6 +556,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       return
     }
     profileGuard.current.invalidate(); profileAvailable.current = false
+    orientationGeneration.current++; orientationAbort.current?.abort()
     streamRef.current?.getTracks().forEach(t => t.stop())
     streamRef.current = null
     onClose()
@@ -480,6 +574,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const baseR    = RATIOS.find(r => r.value === ratio)!
   const currentR = (portrait && ratio !== "1:1") ? { ...baseR, w: baseR.h, h: baseR.w } : baseR
   const cssZoom  = mode === "photo" && !hwZoomRef.current && zoom > 1 ? zoom : 1
+  const videoOrientationLabel = mode !== "video" ? undefined
+    : !orientation ? "Checking orientation…"
+    : orientation.status === "verified" && orientation.requested === (portrait ? "portrait" : "landscape") ? portrait ? "Portrait" : "Landscape"
+    : orientation.status === "mismatch" ? `${portrait ? "Portrait" : "Landscape"} unavailable` : "Couldn’t check orientation"
 
   function fmtTime(s: number) {
     return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
@@ -555,7 +653,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "white", fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>{fmtTime(recSecs)}</span>
             </div>
           ) : (
-            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} disabled={recording || profileBusy || encoding.current > 0} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; setProfileBusy(true); setPortrait(next) }} />
+            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} videoOrientationLabel={videoOrientationLabel} disabled={recording || profileBusy || encoding.current > 0} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setPortrait(next) }} />
           )}
         </div>
 
@@ -594,7 +692,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       {/* â”€â”€ Bottom bar â”€â”€ */}
       {/* Status reserves its own row, independent of thumbnail and shutter. */}
       <div className="camera-status-slot" data-camera-status-slot>
-        {captures.length > 0 && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
+        {localSummary && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
           {pendingCaptures.length > 0 && spinner}<span>{localSummary}</span>
         </div>}
       </div>
@@ -608,7 +706,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         {/* Last capture thumbnail â€” tap to review */}
         <button
           aria-label="Review captures"
-          onClick={() => captures.length > 0 ? setReviewIndex(Math.max(0, captures.findIndex(c => c.uploadError || c.state === "save_failed"))) : undefined}
+          onClick={() => captures.length > 0 ? selectReview(Math.max(0, captures.findIndex(c => c.uploadError || c.state === "save_failed"))) : undefined}
           style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
         >
           {captures[0] ? (
@@ -639,7 +737,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         <button
           aria-label={mode === "photo" ? "Take photo" : recording ? "Stop recording" : "Record video"}
           onClick={handleShutter}
-          disabled={!ready || (!recording && profileBusy)}
+          disabled={!ready || (!recording && (profileBusy || (mode === "video" && (orientation?.status !== "verified" || orientation.requested !== (portrait ? "portrait" : "landscape")))))}
           style={{
             width: 78, height: 78, borderRadius: "50%",
             border: `4px solid ${mode === "video" ? (recording ? "#FF3B30" : "rgba(255,50,50,0.7)") : "rgba(255,255,255,0.9)"}`,
@@ -678,6 +776,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       {/* â”€â”€ Review overlay â”€â”€ */}
       </div>
 
+      {reviewOnly && (reviewIndex === null || !captures[reviewIndex]) && <section aria-label="Upload review" style={{ position: "absolute", inset: 0, zIndex: 80, background: "#080A09", padding: "max(env(safe-area-inset-top, 0px), 24px) 24px max(env(safe-area-inset-bottom, 0px), 24px)", display: "flex", flexDirection: "column", gap: 24 }}>
+        <button onClick={handleClose} style={{ alignSelf: "flex-end", minWidth: 44, minHeight: 44, border: 0, background: "transparent", color: "white", font: "inherit" }}>Done</button>
+        <p role="status" style={{ textAlign: "center", color: "#ccc" }}>{queueNotice ?? (reviewUnavailable || initialReviewResolved.current ? "This upload is no longer pending." : "Loading uploads…")}</p>
+      </section>}
+
       {reviewIndex !== null && captures[reviewIndex] && (() => {
         const cap = captures[reviewIndex]
         return (
@@ -693,13 +796,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
             }}>
               {/* Back to camera */}
               <button
-                onClick={() => { setReviewIndex(null); setConfirmDelete(false) }}
+                onClick={() => { if (reviewOnly) handleClose(); else { selectReview(null); setConfirmDelete(false) } }}
                 style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
                   <polyline points="15 18 9 12 15 6"/>
                 </svg>
-                <span style={{ fontSize: "1rem", fontWeight: 600, color: "white" }}>Camera</span>
+                <span style={{ fontSize: "1rem", fontWeight: 600, color: "white" }}>{reviewOnly ? "Done" : "Camera"}</span>
               </button>
 
               <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
@@ -740,7 +843,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
             {/* â”€â”€ Main preview â”€â”€ */}
             <div className="camera-review-status" data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
               <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9375rem", lineHeight: 1.45, minWidth: 0 }}>
-                {(cap.uploading || cap.state === "saving") && spinner}<span>{captureLabel(cap)}</span>
+                {(cap.uploading || cap.state === "saving") && spinner}<span>{captureLabel(cap)}{cap.playbackOrientation === "mismatch" && !cap.photoId ? " · Check video framing" : ""}</span>
               </span>
               {(cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
             </div>
@@ -777,7 +880,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                     <button
                       key={c.id}
                       aria-label={`Review ${c.isVideo ? "video" : "photo"} ${i + 1}`}
-                      onClick={() => { setReviewIndex(i); setConfirmDelete(false) }}
+                      onClick={() => { selectReview(i); setConfirmDelete(false) }}
                       style={{ flexShrink: 0, padding: 0, background: "none", border: "none", cursor: "pointer", position: "relative" }}
                     >
                       <div style={{
@@ -857,7 +960,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         <div style={{ background: "#161b18", color: "white", padding: 24, borderRadius: 20, maxWidth: 420 }}>
           <h2 id="camera-close-title" style={{ fontSize: "1.125rem" }}>Uploads not finished</h2>
           <p id="camera-close-description" style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>{closeNotice}</p>
-          <button autoFocus style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => { setCloseNotice(null); const index = captures.findIndex(c => !c.photoId && !c.localSaved); if (index >= 0) setReviewIndex(index) }}>Keep camera open</button>
+          <button autoFocus style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => { setCloseNotice(null); const index = captures.findIndex(c => !c.photoId && !c.localSaved); if (index >= 0) selectReview(index) }}>Keep camera open</button>
           {!encoding.current && recorderRef.current?.state !== "recording" && unsaved.current.size > 0 && [...unsaved.current.values()].every(entry => !entry.saving) && <><p style={{ fontSize: "0.9375rem", lineHeight: 1.5 }}>Closing loses originals that couldn’t be saved on this device.</p><button style={{ minHeight: 44, padding: "8px 16px", borderRadius: 12 }} onClick={() => {
             if (encoding.current || recorderRef.current?.state === "recording" || [...unsaved.current.values()].some(entry => entry.saving)) return
             mounted.current = false

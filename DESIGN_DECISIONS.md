@@ -1,3 +1,12 @@
+## November 22, 2026 - One Status Owner And Verified Orientation (Approved)
+
+Actual iPhone feedback rejects the persistent saved toast/cumulative success counts.
+Approved: one quiet inline row outside camera; camera/review owns its own status
+while open. Brief acknowledgments expire, pending work remains reachable and safe;
+review requests no camera permission. Portrait must not silently request landscape
+or treat selection as delivered orientation. Verify live/decoded aspect separately;
+upright real-device playback remains an acceptance gate. No cosmetic transformation.
+
 ## November 21, 2026 - Camera Dock And Optional Format (Approved)
 
 Shawn approved the visible Jony-led/Steve-co-led review direction. Preserve the

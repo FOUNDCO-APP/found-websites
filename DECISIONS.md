@@ -1,3 +1,13 @@
+## November 22, 2026 - Status And Portrait Follow-Up Approved
+
+Shawn approved both visible-review corrections after actual iPhone feedback:
+replace floating saved messages with one inline owner/expiring acknowledgments
+while keeping pending originals reachable; remove capability-based landscape
+substitution and verify delivered preview/decoded playback aspect before claiming
+orientation. Preserve originals and existing recovery/auth/transport contracts.
+No canvas transformation or guessed upright-content verification. Physical iPhone
+acceptance remains open; prepared release requires final publication approval.
+
 ## November 21, 2026 - Measured Media And Resumable Transfer (Approved)
 
 Shawn approved preparing explicit video settings and resumable uploads alongside

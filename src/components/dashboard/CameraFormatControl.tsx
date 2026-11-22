@@ -4,13 +4,14 @@ import React, { useEffect, useId, useRef, useState } from "react"
 
 type Ratio = "16:9" | "4:3" | "1:1"
 
-export default function CameraFormatControl({ ratio, portrait, onRatioChange, onPortraitChange, disabled = false, allowRatio = true }: {
+export default function CameraFormatControl({ ratio, portrait, onRatioChange, onPortraitChange, disabled = false, allowRatio = true, videoOrientationLabel }: {
   ratio: Ratio
   portrait: boolean
   onRatioChange: (ratio: Ratio) => void
   onPortraitChange: (portrait: boolean) => void
   disabled?: boolean
   allowRatio?: boolean
+  videoOrientationLabel?: string
 }) {
   const id = useId()
   const panel = useRef<HTMLDivElement>(null)
@@ -27,8 +28,8 @@ export default function CameraFormatControl({ ratio, portrait, onRatioChange, on
     return { ...button, background: selected ? "#fff" : "#292e2b", color: selected ? "#000" : "#eee" }
   }
   return <>
-    <button ref={trigger} type="button" popoverTarget={id} aria-haspopup="dialog" aria-expanded={formatOpen} aria-controls={id} aria-label={`Format, ${selection}`} disabled={disabled} style={{ ...button, background: "rgba(0,0,0,0.65)", color: "white", display: "flex", alignItems: "center", gap: 8 }}>
-      Format <span aria-hidden="true" style={{ opacity: 0.65 }}>{ratio} ▾</span>
+    <button ref={trigger} type="button" popoverTarget={id} aria-haspopup="dialog" aria-expanded={formatOpen} aria-controls={id} aria-label={videoOrientationLabel ? `Format, ${videoOrientationLabel}` : `Format, ${selection}`} disabled={disabled} style={{ ...button, background: "rgba(0,0,0,0.65)", color: "white", display: "flex", alignItems: "center", gap: 8, maxWidth: "100%", flexWrap: "wrap", justifyContent: "center" }}>
+      {videoOrientationLabel ?? "Format"} <span aria-hidden="true" style={{ opacity: 0.65 }}>{videoOrientationLabel ? "▾" : `${portrait && ratio === "16:9" ? "9:16" : portrait && ratio === "4:3" ? "3:4" : ratio} ▾`}</span>
     </button>
     <div ref={panel} id={id} popover="auto" role="dialog" aria-label="Camera format" onToggle={event => setFormatOpen(event.newState === "open")} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); close() } }} style={{ position: "fixed", inset: "auto", top: "calc(max(env(safe-area-inset-top, 0px), 12px) + 56px)", left: "max(env(safe-area-inset-left, 0px), 16px)", right: "max(env(safe-area-inset-right, 0px), 16px)", margin: "0 auto", width: "min(320px, calc(100% - max(env(safe-area-inset-left, 0px), 16px) - max(env(safe-area-inset-right, 0px), 16px)))", maxHeight: "calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - max(env(safe-area-inset-bottom, 0px), 16px) - 72px)", overflowY: "auto", boxSizing: "border-box", padding: 16, border: "1px solid #444b46", borderRadius: 20, background: "#161b18", color: "white", boxShadow: "0 12px 40px #0008" }}>
       <p style={{ margin: "0 0 12px", fontSize: "0.9375rem", fontWeight: 600 }}>Format</p>

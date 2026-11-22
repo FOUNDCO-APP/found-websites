@@ -2,6 +2,13 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 latest feedback: actual iPhone shows persistent saved messages and wide
+Video preview despite Portrait. Acceptance remains open/failed for portrait. Two
+role reviews returned corrective proposals shown in chat; Shawn approved both.
+Corrections prepared: browser/profile/persistence tests, actual role reviews and
+production build(TypeScript/89pages) pass. Seven app-source hashes unchanged during
+build. Final publication approval pending; no new deployment. See SESSION_HANDOFF.
+
 November22: Shawn approved Push; tested shared camera/resumable release b75306a
 is live. Vercel FT4vQRiUkHRMBoctHJP1ruy5gb4B READY/exact SHA; read-only login,
 dashboard/Photos/context, auth isolation and four-client checks pass. Full evidence

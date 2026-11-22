@@ -1,3 +1,13 @@
+## November 22, 2026 - Status And Portrait Follow-Up Prepared
+
+- Shawn approved actual-iPhone corrections. Floating saved toast replaced with one
+  inline owner, brief acknowledgments and reachable pending work without permission.
+- Portrait no longer substitutes landscape for missing capabilities. Bounded live/
+  original-Blob decoded aspect checks, truthful labels and protected originals.
+- Browser/profile/persistence tests and role reviews pass; production build passes
+  TypeScript/all89pages with seven source hashes unchanged. Publication pending in
+  SESSION_HANDOFF. Physical Safari remains open. No new deployment.
+
 ## November 22, 2026 - Camera/Resumable Upgrade Released
 
 - Shawn approved Push; b75306a4095fb9a44a11e67922c69fdbfb43439a published.

@@ -12,6 +12,9 @@ const { chromium } = require(process.env.FOUND_PLAYWRIGHT_MODULE || 'playwright'
 const helper = ts.transpileModule(fs.readFileSync(new URL('../src/lib/cameraRecordingProfile.ts', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText
+const orientationHelper = ts.transpileModule(fs.readFileSync(new URL('../src/lib/cameraOrientation.ts', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText
 let browser
 let stage = 'launch'
 const deadline = setTimeout(() => { console.error('FAIL camera recording browser: deadline exceeded'); process.exit(1) }, 45000)
@@ -33,9 +36,11 @@ try {
   page.setDefaultTimeout(10000)
   await page.goto(origin)
   await page.addScriptTag({ content: `{const module={exports:{}};const exports=module.exports;${helper}\nwindow.cameraProfile=module.exports;}` })
+  await page.addScriptTag({ content: `{const module={exports:{}};const exports=module.exports;${orientationHelper}\nwindow.cameraOrientation=module.exports;}` })
   stage = 'media'
   const metrics = await page.evaluate(async () => {
     const { createCameraProfileGuard, cameraProfileConstraints, createProfiledRecorder, recordingMime, recordingMeasurement } = window.cameraProfile
+    const { verifyCameraOrientation, verifyRecordedOrientation } = window.cameraOrientation
     const check = (condition, message) => { if (!condition) throw Error(message) }
     const bounded = (promise, message, ms = 8000) => new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(Error(message)), ms)
@@ -47,6 +52,9 @@ try {
     }), `${name} timeout`)
     let stream, recorder, objectUrl
     const playback = document.createElement('video')
+    const preview = document.createElement('video')
+    preview.muted = true; preview.playsInline = true
+    document.body.append(preview)
     playback.muted = true; playback.playsInline = true
     document.body.append(playback)
     try {
@@ -56,6 +64,12 @@ try {
       const guard = createCameraProfileGuard()
       const applied = await bounded(guard.request(track, 'video', true, () => true), 'video constraints timeout')
       check(applied.status === 'applied' && applied.isCurrent(), 'video profile not applied')
+      preview.srcObject = stream
+      await bounded(preview.play(), 'preview play timeout')
+      const liveOrientation = await verifyCameraOrientation(preview, track, true)
+      check(['verified', 'mismatch'].includes(liveOrientation.status), 'live orientation unavailable')
+      check(liveOrientation.uprightContentVerified === false, 'false upright claim')
+      check(liveOrientation.status === (liveOrientation.frame.height > liveOrientation.frame.width ? 'verified' : 'mismatch'), 'live aspect classification wrong')
       recorder = createProfiledRecorder(stream)
       const initial = recordingMeasurement(recorder, track)
       const chunks = []
@@ -69,6 +83,16 @@ try {
       check(!!mime && chunks.length > 0, 'missing actual MIME or chunks')
       const blob = new Blob(chunks, { type: mime })
       check(blob.size > 0, 'empty recording')
+      const encodedOrientation = await verifyRecordedOrientation(blob, true)
+      check(['verified', 'mismatch'].includes(encodedOrientation.status), 'encoded orientation unavailable')
+      check(encodedOrientation.uprightContentVerified === false, 'false upright claim')
+      check(encodedOrientation.status === (encodedOrientation.frame.height > encodedOrientation.frame.width ? 'verified' : 'mismatch'), 'encoded aspect classification wrong')
+      // Exercise a real decoder mismatch without transforming the original Blob.
+      const opposite = await verifyRecordedOrientation(blob, encodedOrientation.frame.height < encodedOrientation.frame.width)
+      check(opposite.status === 'mismatch', 'opposite orientation not detected')
+      const cancelled = new AbortController(); cancelled.abort()
+      check((await verifyRecordedOrientation(blob, true, { signal: cancelled.signal })).reason === 'cancelled', 'decoder cancellation failed')
+      check((await verifyRecordedOrientation(new Blob(['not media'], { type: 'video/mp4' }), true, { timeoutMs: 500 })).status === 'unavailable', 'invalid media accepted')
       const measurement = recordingMeasurement(recorder, track, blob)
       check(initial.track.width > 0 && initial.track.height > 0, 'missing real track dimensions')
       objectUrl = URL.createObjectURL(blob)
@@ -103,10 +127,12 @@ try {
         width: measurement.track.width, height: measurement.track.height, frameRate: measurement.track.frameRate,
         videoBitsPerSecond: measurement.videoBitsPerSecond, audioBitsPerSecond: measurement.audioBitsPerSecond,
         blobBytes: measurement.blobBytes, playbackWidth: playback.videoWidth, playbackHeight: playback.videoHeight,
-        finalFrameReadable: true, restoredWidth: still.width, restoredHeight: still.height }
+        finalFrameReadable: true, restoredWidth: still.width, restoredHeight: still.height,
+        liveOrientation: liveOrientation.status, encodedOrientation: encodedOrientation.status, uprightContentVerified: false }
     } finally {
       if (recorder?.state === 'recording') recorder.stop()
       stream?.getTracks().forEach(track => track.stop())
+      preview.srcObject = null; preview.remove()
       playback.removeAttribute('src'); playback.load(); playback.remove()
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }

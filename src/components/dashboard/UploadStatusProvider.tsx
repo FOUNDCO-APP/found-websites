@@ -2,7 +2,6 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { getDeviceUploadQueue, type DeviceCapture } from "@/lib/deviceUploadQueue"
-import { TYPE } from "@/lib/dashboard/typography"
 
 export function getUploadAttentionLabel(category?: string): string {
   if (category === "auth") return "Sign in to finish uploading."
@@ -22,7 +21,7 @@ export function getQueueErrorLabel(error: string | null): string | null {
 }
 
 type Kind = "photo" | "video" | "item"
-type Operation = { id: string; kind: Kind; state: "pending" | "added" | "unconfirmed"; startedAt: number; attempt: number; legacy?: boolean; local?: boolean; onRetry?: () => void; onReview?: () => void }
+type Operation = { id: string; scope: string; kind: Kind; state: "pending" | "added" | "unconfirmed"; startedAt: number; finishedAt?: number; attempt: number; legacy?: boolean; local?: boolean; onRetry?: () => void; onReview?: () => void }
 type OperationOptions = Pick<Operation, "id" | "kind" | "local" | "onRetry" | "onReview">
 type UploadStatusContextValue = {
   accountId: string | null
@@ -31,6 +30,7 @@ type UploadStatusContextValue = {
   queueRows: DeviceCapture[]
   queueReady: boolean
   queueError: string | null
+  inlineStatus: { text: string; busy: boolean; captureId?: string; legacyAttention: boolean } | null
   registerCameraPresentation: () => () => void
   start: (count: number, kind?: Kind) => void
   complete: (success: boolean, errorMessage?: string) => void
@@ -50,6 +50,8 @@ export function useUploadStatus() {
 export default function UploadStatusProvider({ children, companyId = null, accountId = null }: { children: React.ReactNode; companyId?: string | null; accountId?: string | null }) {
   const [queueBinding, setQueueBinding] = useState<{ scope: string; controller: ReturnType<typeof getDeviceUploadQueue>; rows: DeviceCapture[]; ready: boolean; error: string | null } | null>(null)
   const [cameraCount, setCameraCount] = useState(0)
+  const savedAcknowledgements = useRef(new Map<string, number>())
+  const [queueSuccess, setQueueSuccess] = useState<{ scope: string; until: number } | null>(null)
   const cameraCountRef = useRef(0)
   const scope = JSON.stringify([accountId, companyId])
   const binding = queueBinding?.scope === scope ? queueBinding : null
@@ -74,15 +76,26 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     const controller = getDeviceUploadQueue({ accountId, companyId, endpoint })
     let alive = true
     const notified = new Set<string>()
+    const observed = new Set<string>()
+    const pendingSeen = new Set<string>()
     const unsubscribe = controller.subscribe(rows => {
       if (!alive) return
       const scoped = rows.filter(row => row.accountId === accountId && row.companyId === companyId)
+      for (const row of scoped) {
+        if (row.state !== "uploaded") pendingSeen.add(row.id)
+        if (row.localSaved && !observed.has(row.id)) {
+          observed.add(row.id)
+          // Recovered captures are waiting work, not a fresh save celebration.
+          if (Date.now() - row.createdAt < 2600) savedAcknowledgements.current.set(`${scope}:${row.id}`, Date.now() + 2600)
+        }
+      }
       setQueueBinding({ scope, controller, rows: [...scoped], ready: controller.ready, error: controller.error })
       let release = false
       for (const row of scoped) {
         if (row.state !== "uploaded" || !row.photo || notified.has(row.id)) continue
         notified.add(row.id)
         if (!cameraCountRef.current) {
+          if (pendingSeen.has(row.id)) setQueueSuccess({ scope, until: Date.now() + 2600 })
           window.dispatchEvent(new CustomEvent("found:photo-uploaded", { detail: { photo: row.photo } }))
           release = true
         }
@@ -94,64 +107,70 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     return () => { alive = false; unsubscribe(); stop() }
   }, [accountId, companyId, scope])
   const [operations, setOperations] = useState<Operation[]>([])
+  useEffect(() => { setOperations(previous => previous.filter(op => op.scope === scope)) }, [scope])
   const [now, setNow] = useState(Date.now())
   const sequence = useRef(0)
   const start = useCallback((count: number, kind: Kind = "item") => {
-    const added: Operation[] = Array.from({ length: Math.max(0, count) }, () => ({ id: `legacy-${++sequence.current}`, kind, state: "pending", legacy: true, startedAt: Date.now(), attempt: 0 }))
-    if (!added.length) return
-    setOperations(previous => [...previous.filter(op => op.local || op.state !== "added"), ...added])
-  }, [])
+    const added: Operation[] = Array.from({ length: Math.max(0, count) }, () => ({ id: `legacy-${++sequence.current}`, scope, kind, state: "pending", legacy: true, startedAt: Date.now(), attempt: 0 }))
+    if (added.length) setOperations(previous => [...previous.filter(op => op.scope === scope && (op.local || op.state !== "added")), ...added])
+  }, [scope])
   const complete = useCallback((success: boolean, _errorMessage?: string) => {
     setOperations(previous => {
-      const index = previous.findIndex(op => op.legacy && op.state === "pending")
-      return previous.map((op, i) => i === index ? { ...op, state: success ? "added" : "unconfirmed" } : op)
+      const index = previous.findIndex(op => op.scope === scope && op.legacy && op.state === "pending")
+      return previous.map((op, i) => i === index ? { ...op, state: success ? "added" : "unconfirmed", finishedAt: Date.now() } : op)
     })
-  }, [])
+  }, [scope])
   const beginOperation = useCallback((options: OperationOptions) => {
     const attempt = ++sequence.current
-    setOperations(previous => [...previous.filter(op => op.id !== options.id), { ...options, state: "pending", startedAt: Date.now(), attempt }])
-    return (success: boolean, _errorMessage?: string) => setOperations(previous => previous.map(op => op.id === options.id && op.attempt === attempt ? { ...op, state: success ? "added" : "unconfirmed" } : op))
-  }, [])
+    setOperations(previous => [...previous.filter(op => op.scope === scope && op.id !== options.id), { ...options, scope, state: "pending", startedAt: Date.now(), attempt }])
+    return (success: boolean, _errorMessage?: string) => setOperations(previous => previous.map(op => op.scope === scope && op.id === options.id && op.attempt === attempt ? { ...op, state: success ? "added" : "unconfirmed", finishedAt: Date.now() } : op))
+  }, [scope])
   const detachOperation = useCallback((id: string) => {
-    setOperations(previous => previous.filter(op => op.id !== id || !op.local).map(op => op.id === id ? { ...op, onRetry: undefined, onReview: undefined } : op))
-  }, [])
-  const visible = operations.filter(op => !op.local)
+    setOperations(previous => previous.filter(op => op.scope !== scope || op.id !== id || !op.local).map(op => op.scope === scope && op.id === id ? { ...op, onRetry: undefined, onReview: undefined } : op))
+  }, [scope])
+  const dismiss = useCallback(() => setOperations(previous => previous.filter(op => op.scope !== scope || op.local || op.state === "pending")), [scope])
+  const visible = operations.filter(op => op.scope === scope && !op.local)
   const pending = visible.filter(op => op.state === "pending")
   const failed = visible.filter(op => op.state === "unconfirmed")
-  const added = visible.filter(op => op.state === "added").length
+  const added = visible.filter(op => op.state === "added" && (op.finishedAt ?? 0) + 2600 > now)
+  const queued = queueRows.filter(row => row.state !== "uploaded")
+  // Only presentation deadlines run here. They never mutate or retry queue work.
+  const deadlines = [...added.map(op => (op.finishedAt ?? 0) + 2600), ...pending.map(op => op.startedAt + 15000), ...queued.map(row => savedAcknowledgements.current.get(`${scope}:${row.id}`) ?? 0), queueSuccess?.scope === scope ? queueSuccess.until : 0].filter(until => until > now)
+  const nextDeadline = deadlines.length ? Math.min(...deadlines) : 0
   useEffect(() => {
-    if (!pending.length) return
-    const timer = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(timer)
-  }, [pending.length])
-  useEffect(() => {
-    if (!visible.length || pending.length || failed.length) return
-    const timer = setTimeout(() => setOperations(previous => previous.filter(op => op.local || op.state !== "added")), 2600)
+    if (!nextDeadline) return
+    const timer = setTimeout(() => setNow(Date.now()), Math.max(0, nextDeadline - Date.now()) + 1)
     return () => clearTimeout(timer)
-  }, [operations, visible.length, pending.length, failed.length])
-  // Retained for existing callers; never removes an active operation.
-  const dismiss = useCallback(() => setOperations(previous => previous.filter(op => op.local || op.state === "pending")), [])
-  const kind = visible.length === 1 ? visible[0].kind : "item"
-  const slow = pending.some(op => now - op.startedAt >= 15000)
-  const headline = visible.length === 1
-    ? pending.length ? `Uploading ${kind}…` : failed.length ? "Upload not confirmed" : `${kind === "video" ? "Video" : kind === "photo" ? "Photo" : "Item"} added`
-    : [pending.length ? `${pending.length} uploading` : "", added ? `${added} added` : "", failed.length ? `${failed.length} not confirmed` : ""].filter(Boolean).join(" · ")
-  const queued = cameraCount ? [] : queueRows.filter(row => row.state !== "uploaded")
-  const queueHeadline = getQueueErrorLabel(queueError) ?? (queued.length === 1
-    ? queued[0].state === "uploading" ? `Uploading ${queued[0].mimeType.startsWith("video/") ? "video" : "photo"}…` : queued[0].state === "needs_attention" ? getUploadAttentionLabel(queued[0].errorCategory) : "Saved on this device"
-    : [queued.filter(row => row.state === "uploading").length ? `${queued.filter(row => row.state === "uploading").length} uploading` : "", queued.filter(row => row.state === "saved" || row.state === "waiting").length ? `${queued.filter(row => row.state === "saved" || row.state === "waiting").length} saved on this device` : "", queued.filter(row => row.state === "needs_attention").length ? `${queued.filter(row => row.state === "needs_attention").length} need attention` : ""].filter(Boolean).join(" · "))
-  return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
+  }, [nextDeadline])
+  useEffect(() => {
+    // Drop presentation-only legacy completions after their acknowledgement.
+    setOperations(previous => previous.filter(op => op.state !== "added" || (op.finishedAt ?? 0) + 2600 > now))
+  }, [now])
+  const attention = queued.filter(row => row.state === "needs_attention" || !row.localSaved)
+  const transferring = queued.filter(row => row.state === "uploading")
+  const waiting = queued.filter(row => row.localSaved && row.state !== "needs_attention" && row.state !== "uploading")
+  const affected = attention[0] ?? queued[0]
+  const queueLabel = getQueueErrorLabel(queueError)
+  let text: string | null = null
+  if (queued.length || pending.length || failed.length || queueLabel) {
+    if (queueLabel) text = queueLabel
+    else if (queued.length === 1 && !pending.length && !failed.length) {
+      const row = queued[0]
+      if (!row.localSaved) text = "Couldn’t save. Keep Found open."
+      else if (row.state === "needs_attention") text = getUploadAttentionLabel(row.errorCategory)
+      else if (row.state === "uploading") {
+        const progress = row.uploadProgress
+        const percent = progress && Number.isFinite(progress.bytesUploaded) && Number.isFinite(progress.bytesTotal) && progress.bytesTotal > 0 ? Math.max(0, Math.min(100, Math.floor(progress.bytesUploaded / progress.bytesTotal * 100))) : null
+        text = progress?.stage === "finalizing" ? "Finishing upload…" : `Uploading ${row.mimeType.startsWith("video/") ? "video" : "photo"}${percent === null ? "…" : ` · ${percent}%`}`
+      } else text = (savedAcknowledgements.current.get(`${scope}:${row.id}`) ?? 0) > now ? "Saved on this device" : "1 waiting to upload"
+    } else {
+      text = [transferring.length + pending.length ? `${transferring.length + pending.length} uploading` : "", waiting.length ? `${waiting.length} waiting to upload` : "", attention.length + failed.length ? `${attention.length + failed.length} need attention` : ""].filter(Boolean).join(" · ")
+    }
+  } else if (added.length || (queueSuccess?.scope === scope && queueSuccess.until > now)) text = "Uploaded"
+  // File-picker uploads still rely on an open page; their existing guidance stays.
+  if (text && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
+  const inlineStatus = !cameraCount && text ? { text, busy: pending.length > 0 || transferring.length > 0, captureId: affected?.id, legacyAttention: failed.length > 0 } : null
+  return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, inlineStatus, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
     {children}
-    {(!!visible.length || !!queued.length || (!cameraCount && !!queueError)) && <aside aria-label="Upload status" style={{ position: "fixed", top: "max(env(safe-area-inset-top, 0px), 14px)", left: "50%", transform: "translateX(-50%)", zIndex: 500, width: "max-content", maxWidth: "calc(100vw - 32px)", padding: "10px 14px", borderRadius: 14, background: "rgba(22,25,23,0.94)", color: "#eee", boxShadow: "0 4px 16px #0003" }}>
-      <div role="status" aria-live="polite" aria-atomic="true" style={{ ...TYPE.subhead, display: "flex", alignItems: "center", gap: 8 }}>
-        {(pending.length > 0 || queued.some(row => row.state === "uploading")) && <span aria-hidden="true" className="shared-upload-spinner" />}
-        <span>{visible.length ? headline : queueHeadline}{visible.length > 0 && queued.length > 0 ? ` · ${queueHeadline}` : ""}{slow ? " · Keep Found open." : ""}{failed.length && !pending.length ? " · Check Photos." : ""}</span>
-      </div>
-      <style>{`
-        .shared-upload-spinner { display: inline-block; flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #ffffff40; border-top-color: #ddd; animation: shared-upload-spin 1s linear infinite; }
-        @keyframes shared-upload-spin { to { transform: rotate(360deg); } }
-        @media (prefers-reduced-motion: reduce) { .shared-upload-spinner { animation: none; } }
-      `}</style>
-    </aside>}
   </UploadStatusContext.Provider>
 }

@@ -13,9 +13,9 @@ assert.deepEqual(plain(constraints('photo', true)), { width: { ideal: 4096 }, he
 const caps = { width: { min: 1, max: 4096 }, height: { min: 1, max: 3072 }, aspectRatio: { min: .5, max: 2 } }
 assert.equal(constraints('video', true, caps).aspectRatio.ideal, 9 / 16)
 assert.equal(constraints('video', false, caps).width.ideal, 1920)
-assert.equal(constraints('video', true).height.ideal, 1080)
-assert.equal(constraints('video', true, { ...caps, height: { max: 1080 } }).aspectRatio.ideal, 16 / 9)
-assert.equal(constraints('video', true, { ...caps, aspectRatio: { min: 1 } }).width.ideal, 1920)
+assert.equal(constraints('video', true).height.ideal, 1920)
+assert.equal(constraints('video', true, { ...caps, height: { max: 1080 } }).aspectRatio.ideal, 9 / 16)
+assert.equal(constraints('video', true, { ...caps, aspectRatio: { min: 1 } }).width.ideal, 1080)
 assert.equal(constraints('video').frameRate.ideal, 30)
 assert.ok(!JSON.stringify(constraints('video')).match(/exact|min|max/))
 
@@ -167,6 +167,8 @@ function extractFunction(name) {
 }
 function recordingHarness({ mime = 'video/webm', retentionThrows = false, startThrows = false } = {}) {
   const retained = [], notices = []
+  const playbackChecks = [], captureRows = []
+  let previewChecks = 0
   let running = false, timer = false, settingsReads = 0
   const liveTrack = { getSettings() {
     settingsReads++
@@ -180,10 +182,22 @@ function recordingHarness({ mime = 'video/webm', retentionThrows = false, startT
   const scope = {
     Blob, crypto: { randomUUID: () => 'fixture-uuid' },
     profileAvailable: { current: true }, encoding: { current: 0 }, mounted: { current: true },
+    portrait: true, orientationRef: { current: { status: 'verified', requested: 'portrait' } },
+    videoRef: { current: { readyState: 2, videoWidth: 1080, videoHeight: 1920 } },
+    checkPreviewOrientation() { previewChecks++ },
     streamRef: { current: { getVideoTracks: () => [liveTrack] } }, recorderRef: { current: null },
     chunksRef: { current: [] }, timerRef: { current: null }, recordingDetails: { current: null },
     createProfiledRecorder: () => mr, recordingMime, recordingMeasurement,
-    retainCapture(blob, fileName) { if (retentionThrows) throw Error('retention failed'); retained.push({ blob, fileName }) },
+    retainCapture(blob, fileName) {
+      if (retentionThrows) throw Error('retention failed')
+      const id = `capture-${retained.length}`
+      retained.push({ blob, fileName }); captureRows.push({ id }); return id
+    },
+    verifyRecordedOrientation(blob, portrait, options) {
+      assert.ok(retained.some(c => c.blob.size === blob.size && c.blob.type === blob.type), 'retain original before asynchronous decoder')
+      return new Promise(resolve => playbackChecks.push({ blob, portrait, options, resolve }))
+    },
+    updateCaptures(change) { const next = change(captureRows); captureRows.splice(0, captureRows.length, ...next) },
     setRecording(value) { running = value }, setRecSecs() {},
     setCloseNotice(value) { notices.push(value) },
     setInterval() { timer = true; return 1 }, clearInterval() { timer = false },
@@ -192,7 +206,7 @@ function recordingHarness({ mime = 'video/webm', retentionThrows = false, startT
   vm.runInContext(ts.transpileModule(['startRecording', 'stopRecording', 'uploadVideo'].map(extractFunction).join('\n'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText, scope)
-  return { scope, mr, retained, notices, start: () => scope.startRecording(), stop: () => scope.stopRecording(),
+  return { scope, mr, retained, notices, playbackChecks, captureRows, previewChecks: () => previewChecks, start: () => scope.startRecording(), stop: () => scope.stopRecording(),
     snapshot: () => ({ running, timer, settingsReads }),
     chunk: (value, type = mime) => mr.ondataavailable({ data: new Blob([value], { type }) }),
     finalize() { mr.state = 'inactive'; mr.onstop() },
@@ -221,6 +235,14 @@ for (const mime of ['video/webm;codecs=vp8,opus', 'video/mp4', '']) {
   assert.equal(h.scope.chunksRef.current.length, 0)
   if (!mime) assert.deepEqual(h.notices, ['Video format needs attention. Keep Found open while saving.'], 'unknown-format notice must not claim verified device storage')
   else assert.deepEqual(h.notices, [])
+  assert.equal(h.playbackChecks.length, mime ? 1 : 0)
+  if (mime) {
+    assert.equal(h.playbackChecks[0].portrait, true)
+    h.playbackChecks[0].resolve({ status: 'mismatch' })
+    await Promise.resolve()
+    assert.equal(h.captureRows[0].playbackOrientation, 'mismatch')
+    assert.equal(await h.retained[0].blob.text(), 'first-final', 'decoder mismatch preserves original')
+  }
   h.start()
   h.chunk('second')
   h.stop()
@@ -250,7 +272,175 @@ assert.equal(failedStart.scope.recorderRef.current, null)
 assert.equal(failedStart.scope.encoding.current, 0)
 assert.equal(failedStart.snapshot().timer, false)
 assert.ok(failedStart.notices.length)
+for (const invalid of ['unverified', 'wrong-request', 'landscape-frame', 'not-ready']) {
+  const h = recordingHarness()
+  if (invalid === 'unverified') h.scope.orientationRef.current = null
+  if (invalid === 'wrong-request') h.scope.orientationRef.current.requested = 'landscape'
+  if (invalid === 'landscape-frame') { h.scope.videoRef.current.videoWidth = 1920; h.scope.videoRef.current.videoHeight = 1080 }
+  if (invalid === 'not-ready') h.scope.videoRef.current.readyState = 1
+  h.start()
+  assert.equal(h.mr.state, 'inactive', `start blocked: ${invalid}`)
+  assert.equal(h.previewChecks(), 1)
+}
+const closingPlayback = recordingHarness()
+closingPlayback.start(); closingPlayback.chunk('original'); closingPlayback.stop(); closingPlayback.finalize()
+closingPlayback.scope.mounted.current = false
+assert.equal(closingPlayback.playbackChecks[0].options.isCurrent(), false)
+closingPlayback.playbackChecks[0].resolve({ status: 'mismatch' })
+await Promise.resolve()
+assert.equal(closingPlayback.captureRows[0].playbackOrientation, undefined, 'decoder completion after close cannot update UI')
+const chunkMimeFallback = recordingHarness({ mime: '' })
+chunkMimeFallback.start(); chunkMimeFallback.chunk('mp4 bytes', 'video/mp4'); chunkMimeFallback.stop(); chunkMimeFallback.finalize()
+assert.equal(chunkMimeFallback.retained[0].fileName, 'video-fixture-uuid.mp4')
+assert.equal(chunkMimeFallback.retained[0].blob.type, 'video/mp4', 'emitted MIME overrides missing recorder MIME')
 console.log('PASS camera recording profile: capabilities, aspect, recorder fallback, actual MIME, sanitized measurement, serialized mode/close races')
 console.log('PASS microphone timing: actual photo-open acquisition, audio-denial fallback, total denial, late close, existing silent stream')
 console.log('PASS advanced constraints: serialized zoom/torch, preserved profile, stale cancellation and rejection fallback')
 console.log('PASS actual CameraSheet recording: final chunk, raw unknown MIME, local details, session separation, spontaneous stop and cleanup failures')
+
+// Orientation checks observe settled delivered frames, not sensor capabilities.
+const orientationModule = { exports: {} }
+let privateVideo, createdUrls = 0, revokedUrls = 0
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/cameraOrientation.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { module: orientationModule, exports: orientationModule.exports, performance, setTimeout, clearTimeout,
+  document: { createElement(name) { assert.equal(name, 'video'); return privateVideo } },
+  URL: { createObjectURL() { createdUrls++; return 'blob:local' }, revokeObjectURL(url) { assert.equal(url, 'blob:local'); revokedUrls++ } },
+})
+const { verifyCameraOrientation, verifyRecordedOrientation } = orientationModule.exports
+class OrientationVideo extends EventTarget {
+  videoWidth = 1080; videoHeight = 1920; readyState = 2; error = null
+  removed = false; paused = false; loads = 0
+  load() { this.loads++ }
+  pause() { this.paused = true }
+  removeAttribute(name) { assert.equal(name, 'src'); this.src = '' }
+  remove() { this.removed = true }
+}
+const shortWait = { timeoutMs: 400, minWaitMs: 100, settleMs: 50 }
+const orientationTrack = { readyState: 'live', getSettings: () => ({ width: 1920, height: 1080, deviceId: 'PRIVATE' }) }
+const deliveredPortrait = await verifyCameraOrientation(new OrientationVideo(), orientationTrack, true, shortWait)
+assert.equal(deliveredPortrait.status, 'verified', 'delivered frame, not sensor orientation, determines result')
+assert.equal(deliveredPortrait.track.width, 1920)
+assert.equal(deliveredPortrait.frame.width, 1080)
+assert.equal(deliveredPortrait.uprightContentVerified, false)
+assert.ok(!JSON.stringify(deliveredPortrait).includes('PRIVATE'))
+const lateResize = new OrientationVideo()
+lateResize.videoWidth = 1920; lateResize.videoHeight = 1080
+setTimeout(() => { lateResize.videoWidth = 1080; lateResize.videoHeight = 1920 }, 70)
+assert.equal((await verifyCameraOrientation(lateResize, orientationTrack, true, { ...shortWait, minWaitMs: 180 })).status, 'verified', 'late resize settles before classification')
+const ignoredIdeals = new OrientationVideo()
+ignoredIdeals.videoWidth = 1920; ignoredIdeals.videoHeight = 1080
+assert.equal((await verifyCameraOrientation(ignoredIdeals, orientationTrack, true, shortWait)).status, 'mismatch', 'successful constraints do not certify portrait')
+const noFrames = new OrientationVideo(); noFrames.readyState = 0
+assert.equal((await verifyCameraOrientation(noFrames, orientationTrack, true, { timeoutMs: 80 })).reason, 'timeout')
+let currentOrientation = true
+const staleOrientation = verifyCameraOrientation(new OrientationVideo(), orientationTrack, true, { ...shortWait, isCurrent: () => currentOrientation })
+currentOrientation = false
+assert.equal((await staleOrientation).reason, 'stale')
+const abortOrientation = new AbortController()
+const pendingOrientation = verifyCameraOrientation(new OrientationVideo(), orientationTrack, true, { ...shortWait, signal: abortOrientation.signal })
+abortOrientation.abort()
+assert.equal((await pendingOrientation).reason, 'cancelled')
+assert.equal((await verifyCameraOrientation(new OrientationVideo(), { ...orientationTrack, readyState: 'ended' }, true)).reason, 'ended')
+const brokenVideo = new OrientationVideo(); brokenVideo.error = {}
+assert.equal((await verifyCameraOrientation(brokenVideo, orientationTrack, true)).reason, 'decode-error')
+const rawOriginal = new Blob(['original bytes'], { type: 'video/webm' })
+for (const scenario of ['match', 'mismatch', 'timeout', 'cancel', 'decode-error']) {
+  privateVideo = new OrientationVideo()
+  if (scenario === 'mismatch') { privateVideo.videoWidth = 1920; privateVideo.videoHeight = 1080 }
+  if (scenario === 'timeout') privateVideo.readyState = 0
+  const controller = new AbortController()
+  const check = verifyRecordedOrientation(rawOriginal, true, { ...shortWait, timeoutMs: scenario === 'timeout' ? 80 : 400, signal: controller.signal })
+  if (scenario === 'cancel') controller.abort()
+  if (scenario === 'decode-error') privateVideo.dispatchEvent(new Event('error'))
+  const observed = await check
+  assert.equal(observed.status, scenario === 'match' ? 'verified' : scenario === 'mismatch' ? 'mismatch' : 'unavailable')
+  assert.equal(observed.scope, 'decoded-playback-aspect')
+  assert.equal(observed.uprightContentVerified, false)
+  assert.equal(privateVideo.removed, true)
+  assert.equal(privateVideo.paused, true)
+  assert.equal(privateVideo.src, '')
+  assert.equal(createdUrls, revokedUrls, 'object URLs released on every outcome')
+  assert.equal(await rawOriginal.text(), 'original bytes', 'verification never alters or discards the original')
+}
+const priorUrls = createdUrls
+assert.equal((await verifyRecordedOrientation(rawOriginal, true, { isCurrent: () => false })).reason, 'stale')
+assert.equal(createdUrls, priorUrls, 'stale work does not allocate decoder resources')
+console.log('PASS orientation: missing-capability ideals, delivered vs sensor dimensions, late resize, ignored ideals, stale/abort/timeout and decoder cleanup; no upright-content claim')
+
+// Actual extracted controls must restart verification after constraints, even
+// when a resize was skipped while profileAvailable was false.
+function controlHarness() {
+  const checks = []
+  let finishConstraint
+  const currentTrack = { readyState: 'live' }
+  const scope = { AbortController,
+    videoRef: { current: { videoWidth: 1080, videoHeight: 1920, readyState: 2 } },
+    streamRef: { current: { getVideoTracks: () => [currentTrack] } },
+    profileAvailable: { current: true }, orientationGeneration: { current: 0 },
+    orientationAbort: { current: null }, orientationRef: { current: null },
+    mounted: { current: true }, encoding: { current: 0 }, hwZoomRef: { current: false },
+    profileBusy: false, recording: false, mode: 'video', portrait: true, zoom: 1, torchOk: true, torchOn: false,
+    setProfileBusy(value) { scope.profileBusy = value }, setZoom(value) { scope.zoom = value },
+    setTorchOn(value) { scope.torchOn = value }, setOrientation(value) { scope.observed = value },
+    setMode(value) { scope.mode = value },
+    verifyCameraOrientation(video, track, portrait, options) {
+      assert.equal(video, scope.videoRef.current); assert.equal(track, currentTrack)
+      return new Promise(resolve => checks.push({ resolve, options }))
+    },
+    profileGuard: { current: {
+      invalidate() {},
+      request() { return new Promise(resolve => { finishConstraint = resolve }) },
+    } },
+  }
+  vm.createContext(scope)
+  vm.runInContext(ts.transpileModule(['checkPreviewOrientation', 'applyZoom', 'toggleTorch', 'changeMode'].map(extractFunction).join('\n'), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022 },
+  }).outputText, scope)
+  return { scope, checks, currentTrack, finishConstraint: (status = 'applied', current = true) => finishConstraint({ status, isCurrent: () => current }) }
+}
+for (const control of ['applyZoom', 'toggleTorch']) {
+  for (const status of ['applied', 'fallback']) {
+    const h = controlHarness()
+    const earlier = h.scope.checkPreviewOrientation(h.currentTrack)
+    const action = h.scope[control](2)
+    assert.equal(h.scope.profileAvailable.current, false)
+    assert.equal(h.checks[0].options.isCurrent(), false)
+    h.checks[0].resolve({ status: 'unavailable', reason: 'stale' })
+    await earlier
+    h.finishConstraint(status)
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(h.checks.length, 2, `${control}/${status} restarts orientation without a resize event`)
+    assert.equal(h.checks[0].options.signal.aborted, true)
+    h.checks[1].resolve({ status: 'verified', requested: 'portrait' })
+    await action
+    assert.equal(h.scope.orientationRef.current.status, 'verified')
+    assert.equal(h.scope.profileAvailable.current, true)
+    assert.equal(h.scope.profileBusy, false)
+  }
+  const late = controlHarness()
+  const oldCheck = late.scope.checkPreviewOrientation(late.currentTrack)
+  const action = late.scope[control](2)
+  late.finishConstraint()
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(late.checks.length, 2)
+  late.checks[1].resolve({ status: 'verified', requested: 'portrait' })
+  await action
+  late.checks[0].resolve({ status: 'mismatch', requested: 'portrait' })
+  await oldCheck
+  assert.equal(late.scope.orientationRef.current.status, 'verified', 'old result cannot overwrite new check')
+  const cancelled = controlHarness()
+  const staleAction = cancelled.scope[control](2)
+  cancelled.finishConstraint('applied', false)
+  await staleAction
+  assert.equal(cancelled.checks.length, 0, 'stale control completion cannot start verification')
+}
+const modeCancellation = controlHarness()
+const beforeMode = modeCancellation.scope.checkPreviewOrientation(modeCancellation.currentTrack)
+modeCancellation.scope.changeMode('photo')
+assert.equal(modeCancellation.checks[0].options.signal.aborted, true)
+modeCancellation.checks[0].resolve({ status: 'verified', requested: 'portrait' })
+await beforeMode
+assert.equal(modeCancellation.scope.orientationRef.current, null)
+assert.equal(modeCancellation.scope.observed, null, 'mode switch prevents obsolete UI result')
+console.log('PASS actual zoom/torch race: applied/fallback retry without resize, old-result suppression, stale controls and mode cancellation')

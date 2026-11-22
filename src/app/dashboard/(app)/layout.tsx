@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import UploadStatusProvider from "@/components/dashboard/UploadStatusProvider"
+import UploadStatusInline from "@/components/dashboard/UploadStatusInline"
 import AccountMenu from "@/components/dashboard/AccountMenu"
 import CustomerActivityTracker from "@/components/dashboard/CustomerActivityTracker"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
@@ -159,6 +160,8 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
             </form>
           </div>
         )}
+
+        <UploadStatusInline />
 
         {/* Activation banner */}
         {company && company.subscription_status !== "active" && company.subscription_status !== "trialing" && (

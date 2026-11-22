@@ -107,7 +107,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     chunksRef: { current: [blob] }, pendingAlbumId: albumId,
     unsaved: { current: new Map() }, mounted: { current: true }, encoding: { current: 0 },
     notified: { current: new Set() }, createdHere: { current: new Set() },
-    captureUrls: { current: new Set() }, capturesRef: { current: captures }, captures,
+    captureUrls: { current: new Set() }, capturesRef: { current: captures }, captures, selectedCaptureId: { current: null },
     reviewIndex: kind === 'handleAnnotationSave' ? 0 : null,
     setCaptures(value) { captures = typeof value === 'function' ? value(captures) : value; context.captures = captures; context.capturesRef.current = captures },
     setError(error) { errors.push(error) }, setAnnotating() {}, setReviewIndex() {},
@@ -129,7 +129,7 @@ async function scenario(source, mime, extension, kind = 'uploadVideo') {
     getCrop: () => ({ sx: 0, sy: 0, sw: 100, sh: 100 }),
   }
   vm.createContext(context)
-  vm.runInContext(compile(['updateCaptures', 'applyQueueRow', 'saveOnDevice', 'retainCapture', kind].map(name => extract(source, name)).join('\n')) + `\nthis.run = ${kind};`, context)
+  vm.runInContext(compile(['updateCaptures', 'selectReview', 'applyQueueRow', 'saveOnDevice', 'retainCapture', kind].map(name => extract(source, name)).join('\n')) + `\nthis.run = ${kind};`, context)
   if (kind === 'shoot') { await context.run(); await context.photoCompletion }
   else await context.run(kind === 'uploadVideo' ? mime : blob)
   await Promise.all(runs)

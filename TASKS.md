@@ -2,6 +2,13 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
+- [x] November22 actual iPhone follow-up: Shawn approves both status-noise/portrait corrections after visible design and recorder reviews.
+- [x] Implement one-owner/transient inline status, no-permission pending review, stable-ID selection/terminal races; direct portrait ideals and bounded live/decoded aspect checks with stale/control/late-frame guards. Browser/profile/persistence tests and role reviews pass; no queue/helper/API changes.
+- [x] Final follow-up build passes TypeScript/all89pages; seven application-file hashes unchanged, role-review build condition satisfied.
+- [x] Tested follow-up source and existing MDs saved in the local release commit (see git log).
+- [ ] Final publication approval, push and live verification. b75306a remains last published app release.
+- [ ] Physical acceptance failed for portrait per Shawn/screenshots; verify corrected Safari/PWA front/rear/lock preview and saved playback before marking complete.
+
 - [x] Approve fresh Jony-led/Steve-co-led camera/review layout proposal: reserved status above raised shutter controls, clear hierarchy, optional Format consolidation, responsive safe areas/tap targets; preserve queue behavior.
 - [x] Approve measured video/media pipeline plan: qualify explicit recording profile, resumable transfers/byte progress, real browser-to-Supabase and device detail-quality tests. Current10secvideo cause still unproven; no speculative compression fix or paid upgrade.
 - [x] Implement approved layout and resumable media upgrade; UI/engineering reviews and production build pass. Publication remains separate.
