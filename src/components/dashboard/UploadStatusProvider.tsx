@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { getDeviceUploadQueue, type DeviceCapture } from "@/lib/deviceUploadQueue"
+import { reportMediaStorageDiagnostic } from "@/lib/mediaStorageDiagnostics"
 
 export function getUploadAttentionLabel(category?: string): string {
   if (category === "auth") return "Sign in to finish uploading."
@@ -15,7 +16,11 @@ export function getQueueErrorLabel(error: string | null): string | null {
   if (!error) return null
   if (error === "Sign in to finish uploading.") return "Sign in to finish uploading."
   if (error === "Return to the original account and business to finish uploading.") return "Return to the original business."
-  if (error.startsWith("Device storage") || error.startsWith("Couldn’t save")) return "Couldn’t save. Keep Found open."
+  if (error === "Upload paused.") return error
+  if (error === "Uploads paused. Device storage needs attention.") return "Upload paused."
+  // A queue open/read/update failure does not establish loss of a capture.
+  // Only its verified localSaved flag can justify original-loss guidance.
+  if (error.startsWith("Device storage") || error.startsWith("Couldn’t save")) return "Upload paused."
   if (error === "Waiting for a connection") return "Waiting to upload."
   return "Upload needs attention"
 }
@@ -54,6 +59,8 @@ export default function UploadStatusProvider({ children, companyId = null, accou
   const [queueSuccess, setQueueSuccess] = useState<{ scope: string; until: number } | null>(null)
   const cameraCountRef = useRef(0)
   const scope = JSON.stringify([accountId, companyId])
+  const currentScope = useRef(scope)
+  currentScope.current = scope
   const binding = queueBinding?.scope === scope ? queueBinding : null
   const deviceQueue = binding?.controller ?? null
   const queueRows = binding?.rows ?? []
@@ -79,8 +86,9 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     const observed = new Set<string>()
     const pendingSeen = new Set<string>()
     const unsubscribe = controller.subscribe(rows => {
-      if (!alive) return
+      if (!alive || currentScope.current !== scope) return
       const scoped = rows.filter(row => row.accountId === accountId && row.companyId === companyId)
+      reportMediaStorageDiagnostic(controller.storageDiagnostic)
       for (const row of scoped) {
         if (row.state !== "uploaded") pendingSeen.add(row.id)
         if (row.localSaved && !observed.has(row.id)) {
@@ -103,7 +111,11 @@ export default function UploadStatusProvider({ children, companyId = null, accou
       if (release) controller.releaseUploaded()
     })
     const stop = controller.start()
-    setQueueBinding({ scope, controller, rows: controller.getSnapshot(), ready: controller.ready, error: controller.error })
+    if (alive && currentScope.current === scope) {
+      const rows = controller.getSnapshot().filter(row => row.accountId === accountId && row.companyId === companyId)
+      reportMediaStorageDiagnostic(controller.storageDiagnostic)
+      setQueueBinding({ scope, controller, rows, ready: controller.ready, error: controller.error })
+    }
     return () => { alive = false; unsubscribe(); stop() }
   }, [accountId, companyId, scope])
   const [operations, setOperations] = useState<Operation[]>([])
@@ -151,13 +163,17 @@ export default function UploadStatusProvider({ children, companyId = null, accou
   const waiting = queued.filter(row => row.localSaved && row.state !== "needs_attention" && row.state !== "uploading")
   const affected = attention[0] ?? queued[0]
   const queueLabel = getQueueErrorLabel(queueError)
+  const unverified = queued.filter(row => !row.localSaved)
+  const verified = queued.filter(row => row.localSaved)
+  const savedPrefix = verified.length === 1 ? "Saved on this device" : `${verified.length} saved on this device`
+  const queueBlocked = !!queueError
   let text: string | null = null
   if (queued.length || pending.length || failed.length || queueLabel) {
-    if (queueLabel) text = queueLabel
+    if (unverified.length) text = "Couldn’t save on this device. Keep this camera open."
+    else if (queueLabel) text = verified.length ? `${savedPrefix} · ${queueLabel}` : queueLabel
     else if (queued.length === 1 && !pending.length && !failed.length) {
       const row = queued[0]
-      if (!row.localSaved) text = "Couldn’t save. Keep Found open."
-      else if (row.state === "needs_attention") text = getUploadAttentionLabel(row.errorCategory)
+      if (row.state === "needs_attention") text = `${savedPrefix} · ${row.errorCategory === "storage" ? "Upload paused." : getUploadAttentionLabel(row.errorCategory)}`
       else if (row.state === "uploading") {
         const progress = row.uploadProgress
         const percent = progress && Number.isFinite(progress.bytesUploaded) && Number.isFinite(progress.bytesTotal) && progress.bytesTotal > 0 ? Math.max(0, Math.min(100, Math.floor(progress.bytesUploaded / progress.bytesTotal * 100))) : null
@@ -168,8 +184,8 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     }
   } else if (added.length || (queueSuccess?.scope === scope && queueSuccess.until > now)) text = "Uploaded"
   // File-picker uploads still rely on an open page; their existing guidance stays.
-  if (text && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
-  const inlineStatus = !cameraCount && text ? { text, busy: pending.length > 0 || transferring.length > 0, captureId: affected?.id, legacyAttention: failed.length > 0 } : null
+  if (text && !unverified.length && !queueBlocked && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
+  const inlineStatus = !cameraCount && text ? { text, busy: !queueBlocked && !unverified.length && (pending.length > 0 || transferring.length > 0), captureId: affected?.id, legacyAttention: failed.length > 0 } : null
   return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, inlineStatus, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
     {children}
   </UploadStatusContext.Provider>

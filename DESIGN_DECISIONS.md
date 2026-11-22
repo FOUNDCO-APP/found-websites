@@ -1,3 +1,12 @@
+## November 22, 2026 - Save Truth And Reviewability (Approved)
+
+An error updating the queue is not evidence that a verified original failed saving.
+Per-capture save truth is authoritative; unverified originals require Keep this
+camera open, while saved originals may show Upload paused. Preserve auth/business
+guidance without false original-loss claims, and show spinning only for active
+work. A global queue error cannot hide an available original during review hydration.
+Keep one existing status location and existing exceptional recovery controls.
+
 ## November 22, 2026 - One Status Owner And Verified Orientation (Approved)
 
 Actual iPhone feedback rejects the persistent saved toast/cumulative success counts.

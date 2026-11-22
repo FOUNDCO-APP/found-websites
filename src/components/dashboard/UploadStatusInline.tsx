@@ -12,7 +12,7 @@ export default function UploadStatusInline() {
   useEffect(() => { setReview(null) }, [scope])
   const reviewing = review?.scope === scope ? review : null
   return <>
-    {inlineStatus && <aside aria-label="Upload status" className="found-upload-inline" style={{ maxWidth: 760, margin: "0 auto", padding: "8px max(env(safe-area-inset-right, 0px), 20px) 0 max(env(safe-area-inset-left, 0px), 20px)", color: "#c5cbc7" }}>
+    {inlineStatus && !reviewing && <aside aria-label="Upload status" className="found-upload-inline" style={{ maxWidth: 760, margin: "0 auto", padding: "8px max(env(safe-area-inset-right, 0px), 20px) 0 max(env(safe-area-inset-left, 0px), 20px)", color: "#c5cbc7" }}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 16px", minHeight: 44, borderBottom: "1px solid rgba(255,255,255,0.07)", paddingBottom: 8 }}>
         <div role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: "1 1 160px", fontSize: "0.9375rem", lineHeight: 1.45, overflowWrap: "anywhere" }}>
           {inlineStatus.busy && <span aria-hidden="true" className="inline-upload-spinner" />}

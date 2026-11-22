@@ -128,7 +128,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   function captureLabel(capture: Capture): string {
     if (capture.photoId) return capture.playbackOrientation === "mismatch" ? "Uploaded · Check video framing" : "Uploaded"
     if (capture.state === "saving") return "Saving…"
-    if (capture.state === "save_failed") return "Couldn’t save. Keep Found open."
+    if (!capture.localSaved) return "Couldn’t save on this device. Keep this camera open."
+    if (queueNotice) return `Saved on this device · ${queueNotice}`
     if (capture.uploading) {
       const progress = capture.uploadProgress
       if (progress?.stage === "finalizing") return "Finishing upload…"
@@ -136,13 +137,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         ? Math.min(100, Math.max(0, Math.floor(progress.bytesUploaded / progress.bytesTotal * 100))) : null
       return percent === null ? `Uploading ${capture.isVideo ? "video" : "photo"}…` : `Uploading ${capture.isVideo ? "video" : "photo"} · ${percent}%`
     }
-    if (capture.state === "needs_attention") return ["auth", "size", "business"].includes(capture.errorCategory ?? "") ? getUploadAttentionLabel(capture.errorCategory) : queueNotice ?? getUploadAttentionLabel(capture.errorCategory)
-    return queueNotice ?? (capture.localSaved ? statusNow - (capture.savedAt ?? 0) < 2600 ? "Saved on this device" : "1 waiting to upload" : "Saving…")
+    if (capture.state === "needs_attention") return `Saved on this device · ${getUploadAttentionLabel(capture.errorCategory)}`
+    return statusNow - (capture.savedAt ?? 0) < 2600 ? "Saved on this device" : "1 waiting to upload"
   }
   const unfinished = captures.filter(c => !c.photoId)
-  const localSummary = queueNotice ?? (unfinished.length === 1 ? captureLabel(unfinished[0]) : unfinished.length
+  const unprotected = unfinished.filter(c => !c.localSaved)
+  const localSummary = unprotected.length ? (unprotected.length === 1 ? captureLabel(unprotected[0]) : unprotected.some(c => c.state !== "saving") ? "Couldn’t save on this device. Keep this camera open." : "Saving…")
+    : unfinished.length && queueNotice ? `Saved on this device · ${queueNotice}`
+    : unfinished.length === 1 ? captureLabel(unfinished[0]) : unfinished.length
     ? [pendingCaptures.length ? `${pendingCaptures.length} saving or uploading` : "", deviceSavedCaptures.length ? `${deviceSavedCaptures.length} waiting to upload` : "", attentionCaptures.length ? `${attentionCaptures.length} need attention` : ""].filter(Boolean).join(" · ")
-    : captures.some(c => c.photoId && statusNow - (c.startedAt ?? 0) < 2600) ? "Uploaded" : null)
+    : captures.some(c => c.photoId && statusNow - (c.startedAt ?? 0) < 2600) ? "Uploaded" : queueNotice
   useEffect(() => {
     const now = Date.now()
     const expiry = captures.flatMap(c => [c.savedAt, c.photoId ? c.startedAt : undefined])
@@ -204,12 +208,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   }, [uploadStatus.queueRows])
   useEffect(() => {
     if (!initialReviewCaptureId || initialReviewResolved.current) return
-    const index = captures.findIndex(c => c.id === initialReviewCaptureId)
+    // The preceding hydration effect updates this ref synchronously. Its React
+    // state render can still be empty here, especially when queueError is set.
+    const index = capturesRef.current.findIndex(c => c.id === initialReviewCaptureId)
     if (index >= 0) { initialReviewResolved.current = true; selectReview(index) }
-    else if (uploadStatus.queueReady && (!uploadStatus.queueRows.some(row => row.id === initialReviewCaptureId && row.state !== "uploaded") || !!uploadStatus.queueError)) {
+    else if (uploadStatus.queueReady && !uploadStatus.queueError && !uploadStatus.queueRows.some(row => row.id === initialReviewCaptureId && row.state !== "uploaded")) {
       initialReviewResolved.current = true; setReviewUnavailable(true)
     }
-  }, [initialReviewCaptureId, captures, uploadStatus.queueReady, uploadStatus.queueRows])
+  }, [initialReviewCaptureId, captures, uploadStatus.queueReady, uploadStatus.queueRows, uploadStatus.queueError])
 
   async function saveOnDevice(id: string) {
     const entry = unsaved.current.get(id)
@@ -633,7 +639,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       )}
 
       {/* â”€â”€ Top bar â”€â”€ */}
-      <div className="camera-topbar" style={{
+      <div className="camera-topbar" aria-hidden={reviewOnly || reviewIndex !== null} inert={reviewOnly || reviewIndex !== null} style={{
         position: "absolute", top: 0, left: 0, right: 0, zIndex: 30,
         display: "flex", alignItems: "flex-start", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top, 0px), 20px) 18px 16px",
@@ -666,7 +672,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       </div>
 
       {/* â”€â”€ Zoom + mode (above bottom controls) â”€â”€ */}
-      <div className="camera-dock">
+      <div className="camera-dock" aria-hidden={reviewOnly || reviewIndex !== null} inert={reviewOnly || reviewIndex !== null}>
       <div className="camera-mode-row" style={{
         position: "absolute", bottom: `calc(max(env(safe-area-inset-bottom, 0px), 40px) + 112px)`,
         left: 0, right: 0, zIndex: 30,
@@ -692,8 +698,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       {/* â”€â”€ Bottom bar â”€â”€ */}
       {/* Status reserves its own row, independent of thumbnail and shutter. */}
       <div className="camera-status-slot" data-camera-status-slot>
-        {localSummary && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
-          {pendingCaptures.length > 0 && spinner}<span>{localSummary}</span>
+        {localSummary && !reviewOnly && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
+          {pendingCaptures.some(c => c.state === "saving" || (c.uploading && !queueNotice)) && spinner}<span>{localSummary}</span>
         </div>}
       </div>
       <div className="camera-shutter-row" style={{
@@ -843,7 +849,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
             {/* â”€â”€ Main preview â”€â”€ */}
             <div className="camera-review-status" data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
               <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9375rem", lineHeight: 1.45, minWidth: 0 }}>
-                {(cap.uploading || cap.state === "saving") && spinner}<span>{captureLabel(cap)}{cap.playbackOrientation === "mismatch" && !cap.photoId ? " · Check video framing" : ""}</span>
+                {((cap.uploading && !queueNotice) || cap.state === "saving") && spinner}<span>{captureLabel(cap)}{cap.playbackOrientation === "mismatch" && !cap.photoId ? " · Check video framing" : ""}</span>
               </span>
               {(cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
             </div>

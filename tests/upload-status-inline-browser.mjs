@@ -46,7 +46,7 @@ const client = bundle(require.resolve('react-dom/client'))
 const provider = bundle(path.join(root,'src/components/dashboard/UploadStatusProvider.tsx'))
 const inline = bundle(path.join(root,'src/components/dashboard/UploadStatusInline.tsx'))
 const script = `const process={env:{NODE_ENV:"production"}};const modules={${modules.join(',')}},cache={};function load(id){if(cache[id])return cache[id].exports;const module=cache[id]={exports:{}};const [fn,deps]=modules[id];fn(name=>load(deps[name]),module,module.exports);return module.exports;}const R=load(${react}),e=R.createElement;
-window.sessions=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureOnline=false;window.cameraRequests=0;window.permissionChecks=0;
+window.sessions=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureOnline=false;window.cameraRequests=0;window.permissionChecks=0;window.storageReports=[];addEventListener('found:device-storage-diagnostic',event=>window.storageReports.push(event.detail));
 Object.defineProperty(navigator,'onLine',{get:()=>window.fixtureOnline});
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>{window.permissionChecks++;return {state:'granted'}}}});
 Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.cameraRequests++;throw new DOMException('Fixture unavailable','NotFoundError')}}});
@@ -55,6 +55,7 @@ function Harness(){window.inlineFixtureStatus=load(${provider}).useUploadStatus(
  e(load(${inline}).default),
  e('main',null,e('h1',null,'Ready for your next job.'),e('div',{className:'cards'},e('a',{href:'#camera'},'Camera'),e('a',{href:'#job'},'Start Job'),e('a',{href:'#contacts'},'My Contacts'),e('a',{href:'#website'},'Edit My Site'))),
  e('nav',{id:'navigation','aria-label':'Dashboard'},e('a',{href:'#home',onClick:()=>window.navClicks=(window.navClicks||0)+1},'Home'),e('a',{href:'#photos'},'Photos'),e('a',{href:'#more'},'More')))}
+window.inlineCameraOverlap=[];new MutationObserver(()=>{if(document.querySelector('.found-camera')&&document.querySelector('.found-upload-inline'))window.inlineCameraOverlap.push('duplicate-owner')}).observe(document.getElementById('root'),{childList:true,subtree:true});
 const root=load(${client}).createRoot(document.getElementById('root'));window.render=(identity=window.fixtureScope)=>{window.fixtureScope=identity;root.render(e(load(${provider}).default,identity,e(Harness)))};window.render();
 window.enqueue=async(id='pending-a')=>{const canvas=document.createElement('canvas');canvas.width=240;canvas.height=320;const ctx=canvas.getContext('2d');ctx.fillStyle='#9e8464';ctx.fillRect(0,0,240,320);ctx.fillStyle='#c7ba9e';ctx.fillRect(30,20,180,210);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));await window.inlineFixtureStatus.deviceQueue.enqueue(blob,{id,fileName:id+'.jpg',albumId:null})};
 `
@@ -163,7 +164,76 @@ try{
  await page.screenshot({path:path.join(screenshotDir,'pending-review.png')})
  await page.getByRole('button',{name:'Done',exact:true}).click()
  await row().waitFor()
+ assert.deepEqual(await page.evaluate(()=>window.inlineCameraOverlap),[])
  console.log('PASS review targets hydrated pending capture, no camera permission and no duplicated inline status')
+ // Inject controller-level maintenance state, leaving real committed Blob rows
+ // untouched. A queue failure must never rewrite per-capture save truth.
+ const queueError=async(error)=>page.evaluate(error=>{const q=window.inlineFixtureStatus.deviceQueue;Object.defineProperty(q,'error',{configurable:true,get:()=>error});q.releaseUploaded()},error)
+ await fresh()
+ await page.evaluate(()=>window.enqueue('verified-maintenance'))
+ for(const error of ['Device storage couldn’t open. Keep Found open for new captures.','Device storage couldn’t update. Keep Found open.','Couldn’t save on this device. Keep Found open.','Upload paused.','Uploads paused. Device storage needs attention.']){
+  await queueError(error)
+  await statusText().filter({hasText:'Saved on this device · Upload paused.'}).waitFor()
+  assert.equal(await row().locator('.inline-upload-spinner').count(),0)
+  assert.equal((await row().innerText()).includes('Couldn’t save'),false)
+  assert.equal(await page.evaluate(()=>window.inlineFixtureStatus.queueRows[0].localSaved),true)
+ }
+ await screenshot('verified-upload-paused')
+ for(const [error,label] of [['Sign in to finish uploading.','Sign in to finish uploading.'],['Return to the original account and business to finish uploading.','Return to the original business.']]){
+  await queueError(error)
+  await statusText().filter({hasText:'Saved on this device · '+label}).waitFor()
+  assert.equal(await row().locator('.inline-upload-spinner').count(),0)
+ }
+ // Even an in-flight transfer snapshot cannot make maintenance appear active.
+ await queueError(null)
+ await online()
+ await page.waitForFunction(()=>window.sessions.length===1)
+ await queueError('Device storage couldn’t update. Keep Found open.')
+ await statusText().filter({hasText:'Saved on this device · Upload paused.'}).waitFor()
+ assert.equal(await row().locator('.inline-upload-spinner').count(),0)
+ console.log('PASS verified saved truth survives queue open/read/update/auth/business errors without spinner or original-loss claim')
+ await fresh()
+ await queueError('Device storage couldn’t open. Keep Found open for new captures.')
+ await statusText().filter({hasText:'Upload paused.'}).waitFor()
+ assert.equal((await row().innerText()).includes('Saved on this device'),false)
+ assert.equal((await row().innerText()).includes('Couldn’t save'),false)
+ // A real IndexedDB write failure is the specific evidence for unsaved guidance.
+ await page.evaluate(()=>{const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='captures')throw new DOMException('synthetic quota','QuotaExceededError');return put.apply(this,args)}})
+ await page.evaluate(()=>window.enqueue('unverified-original').catch(()=>{}))
+ await statusText().filter({hasText:'Couldn’t save on this device. Keep this camera open.'}).waitFor()
+ assert.equal(await page.evaluate(()=>window.inlineFixtureStatus.queueRows[0].localSaved),false)
+ assert.equal(await row().locator('.inline-upload-spinner').count(),0)
+ await screenshot('unverified-original')
+ console.log('PASS neutral queue-only failure and precise unsaved guidance only after actual failed local write')
+ assert.deepEqual(await page.evaluate(()=>window.storageReports),[{operation:'initial-write',category:'quota',errorName:'QuotaExceededError',verifiedOriginal:false}])
+ await fresh()
+ await page.evaluate(()=>{
+  const q=window.inlineFixtureStatus.deviceQueue
+  window.oldDiagnosticQueue=q
+  Object.defineProperty(q,'storageDiagnostic',{configurable:true,get:()=>window.testStorageDiagnostic??null})
+  window.testStorageDiagnostic={operation:'capture-read',category:'aborted',errorName:'AbortError',verifiedOriginal:true,accountId:'SECRET',captureId:'SECRET',message:'SECRET',blob:new Blob(['SECRET'])}
+  q.releaseUploaded();q.releaseUploaded()
+ })
+ assert.deepEqual(await page.evaluate(()=>window.storageReports),[{operation:'capture-read',category:'aborted',errorName:'AbortError',verifiedOriginal:true}])
+ await page.evaluate(()=>{window.testStorageDiagnostic={operation:'SECRET',category:'quota',errorName:'SECRET',verifiedOriginal:false};window.oldDiagnosticQueue.releaseUploaded()})
+ assert.equal(await page.evaluate(()=>window.storageReports.length),1)
+ await page.evaluate(()=>window.render({accountId:'account-b',companyId:'company-b'}))
+ await page.waitForFunction(()=>window.inlineFixtureStatus.accountId==='account-b'&&window.inlineFixtureStatus.queueReady)
+ await page.evaluate(()=>{window.testStorageDiagnostic={operation:'remove',category:'aborted',errorName:'AbortError',verifiedOriginal:true};window.oldDiagnosticQueue.releaseUploaded()})
+ assert.equal(await page.evaluate(()=>window.storageReports.length),1)
+ // Suppress subscription emission to exercise the separate initial snapshot path.
+ await page.evaluate(()=>{
+  const q=window.oldDiagnosticQueue,subscribe=q.subscribe.bind(q)
+  q.subscribe=listener=>subscribe(()=>{})
+  window.testStorageDiagnostic={operation:'budget-read',category:'unavailable',errorName:'InvalidStateError',verifiedOriginal:true}
+  window.render({accountId:'account-a',companyId:'company-a'})
+ })
+ await page.waitForFunction(()=>window.inlineFixtureStatus.accountId==='account-a'&&window.storageReports.length===2)
+ assert.deepEqual(await page.evaluate(()=>window.storageReports[1]),{operation:'budget-read',category:'unavailable',errorName:'InvalidStateError',verifiedOriginal:true})
+ await page.evaluate(()=>window.render({accountId:null,companyId:null}))
+ await page.waitForFunction(()=>window.inlineFixtureStatus.accountId===null)
+ assert.equal(await page.evaluate(()=>window.storageReports.length),2)
+ console.log('PASS actual failed-write diagnostic, scoped subscribe/initial snapshot reporting, sanitization, deduplication and stale-account/logout suppression')
  // Verify server layout mounts the actual host after its header, within provider scope.
  const layout=fs.readFileSync(path.join(root,'src/app/dashboard/(app)/layout.tsx'),'utf8')
  const host=layout.indexOf('<UploadStatusInline />')

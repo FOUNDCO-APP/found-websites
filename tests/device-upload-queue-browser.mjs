@@ -23,6 +23,7 @@ if(window.mode==='cancel-hold')await new Promise((resolve,reject)=>{window.relea
 if(window.mode==='permanent')throw Object.assign(Error('SAFE size error'),{category:'size',retryable:false});
 if(window.mode==='auth')throw Object.assign(Error('SAFE sign in again'),{category:'auth',retryable:false});
 if(window.mode==='connection')throw Object.assign(Error('SAFE connection error'),{category:'connection',retryable:true});
+if(window.mode==='resume-failure'){try{await options.onResumeInfo({version:1,url:'synthetic-resume'})}catch{throw Object.assign(Error('SAFE sanitized callback failure'),{category:'unknown',retryable:false})}}
 const existing=await(await fetch('/reconcile?id='+options.uploadId)).json();if(existing.photo)return existing.photo;
 const response=await fetch('/upload',{method:'POST',body:JSON.stringify({id:options.uploadId,...window.scope,bytes:[...new Uint8Array(await blob.arrayBuffer())],type:blob.type})});
 const result=await response.json();if(window.mode==='lost-response'){window.mode='success';throw Object.assign(Error('SAFE lost response'),{category:'connection',retryable:true})}return result.photo;
@@ -34,6 +35,18 @@ window.capture=(type='image/jpeg')=>window.queue.enqueue(new Blob([Uint8Array.fr
 window.online=value=>{window.connected=value;dispatchEvent(new Event(value?'online':'offline'))};
 window.show=value=>{window.visibility=value?'visible':'hidden';document.dispatchEvent(new Event('visibilitychange'))};
 window.diskRows=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('found-device-captures-v1');r.onsuccess=()=>{const db=r.result,t=db.transaction('captures'),q=t.objectStore('captures').getAll();t.oncomplete=()=>{resolve(q.result);db.close()};t.onabort=()=>reject(Error('disk read failed'))}});
+window.injectStorageFailure=(target,errorName='InvalidStateError')=>{
+ const prototype=target==='capture-read'?IDBIndex.prototype:IDBObjectStore.prototype;
+ const method=target==='capture-read'?'getAll':target==='budget-read'?'get':'put';
+ const original=prototype[method];
+ prototype[method]=function(...args){
+  const store=this.objectStore||this;
+  const match=target==='capture-read'?store.name==='captures':target==='budget-read'||target==='budget-write'?store.name==='runtime':store.name==='captures'&&args[0]?.state===(target==='waiting-update'?'waiting':'uploading');
+  if(match)throw new DOMException('PRIVATE filename account token',errorName);
+  return original.apply(this,args);
+ };
+ window.restoreStorage=()=>prototype[method]=original;
+};
 `
 const remote = new Map(), writes = new Map()
 const server = http.createServer(async(req,res)=>{
@@ -272,6 +285,112 @@ try{
     assert.equal(result.progress,undefined);assert.deepEqual(result.bytes,[9,8,7,6]);assert.equal(result.state,'waiting')
     assert.equal(await f.page.evaluate(()=>calls.length),1)
     await f.done();console.log('PASS last queue consumer stop cancels transfer and preserves originals without late progress')
+  }
+  for(const target of ['budget-read','budget-write','capture-read','capture-update','waiting-update']){
+    const f=await fixture();await f.page.clock.install()
+    const id=await f.page.evaluate(async target=>{
+      const row=await capture('video/mp4');
+      mode=target==='budget-write'?'context-failure':target==='waiting-update'?'connection':'success';
+      injectStorageFailure(target);online(true);return row.id
+    },target)
+    await f.page.waitForFunction(()=>queue.error==='Uploads paused. Device storage needs attention.')
+    const state=await f.page.evaluate(()=>({diagnostic:queue.storageDiagnostic,rows:rows.map(r=>({id:r.id,state:r.state,saved:r.localSaved,progress:r.uploadProgress})),calls:calls.length,contexts:contextCalls}))
+    assert.equal(state.diagnostic.operation,target==='waiting-update'?'capture-update':target)
+    assert.equal(state.diagnostic.errorName,'InvalidStateError')
+    assert.equal(state.diagnostic.category,'unavailable');assert.equal(state.diagnostic.verifiedOriginal,true)
+    assert.doesNotMatch(JSON.stringify(state.diagnostic),/PRIVATE|account|filename|token/)
+    assert.equal(state.rows[0].saved,true);assert.notEqual(state.rows[0].state,'uploading')
+    assert.equal(state.rows[0].progress,undefined)
+    assert.equal(state.calls,target==='waiting-update'?1:0)
+    await f.page.evaluate(()=>{restoreStorage();for(let i=0;i<5;i++){online(false);online(true);show(false);show(true)}})
+    await f.page.clock.fastForward(20*60*1000)
+    assert.equal(await f.page.evaluate(()=>calls.length),state.calls)
+    assert.equal(await f.page.evaluate(()=>contextCalls),state.contexts)
+    const disk=await f.page.evaluate(async()=>{const [r]=await diskRows();return {id:r.id,bytes:[...new Uint8Array(await r.blob.arrayBuffer())],attempts:r.attempts,state:r.state}})
+    assert.equal(disk.id,id);assert.deepEqual(disk.bytes,[9,8,7,6])
+    assert.equal(disk.attempts,target==='waiting-update'?1:0)
+    if(target==='waiting-update')assert.equal(disk.state,'uploading','Presentation correction must not rewrite original durable state')
+    await f.page.evaluate(()=>dispatchEvent(new Event('found:signing-out')))
+    assert.equal(await f.page.evaluate(()=>queue.storageDiagnostic),null)
+    assert.equal(await f.page.evaluate(()=>rows.length),0)
+    await f.done();console.log('PASS '+target+' failure retains verified originals, pauses spinner truth and blocks automatic retry')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>{
+      const original=IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='captures')throw new DOMException('PRIVATE filename secret-token','QuotaExceededError');return original.apply(this,args)};
+      window.restoreStorage=()=>IDBObjectStore.prototype.put=original;
+    })
+    const result=await f.page.evaluate(async()=>{try{await capture('video/mp4');return null}catch(error){return {diagnostic:queue.storageDiagnostic,errorDiagnostic:error.diagnostic,saved:error.capture.localSaved,errorJSON:JSON.stringify(error),message:error.message}}})
+    assert.equal(result.diagnostic.operation,'initial-write');assert.equal(result.diagnostic.category,'quota')
+    assert.equal(result.diagnostic.verifiedOriginal,false);assert.equal(result.saved,false)
+    assert.equal(result.diagnostic.errorName,'QuotaExceededError');assert.deepEqual(result.errorDiagnostic,result.diagnostic)
+    assert.match(result.message,/Keep Found open/);assert.doesNotMatch(result.errorJSON,/PRIVATE|secret-token|fileName|blob|accountId/)
+    await f.page.evaluate(()=>restoreStorage());assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),0)
+    assert.equal(await f.page.evaluate(()=>rows[0].localSaved),false);assert.equal(await f.page.evaluate(()=>calls.length),0)
+    await f.done();console.log('PASS initial-write quota failure remains unverified with sanitized capture-free diagnostics')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(()=>{
+      const original=IDBObjectStore.prototype.get;
+      IDBObjectStore.prototype.get=function(...args){if(this.name==='captures')throw new DOMException('PRIVATE filename token','TransactionInactiveError');return original.apply(this,args)};
+      window.restoreStorage=()=>IDBObjectStore.prototype.get=original;
+    })
+    const result=await f.page.evaluate(async()=>{try{await capture();return null}catch(error){return {diagnostic:error.diagnostic,saved:error.capture.localSaved}}})
+    assert.equal(result.diagnostic.operation,'initial-write');assert.equal(result.diagnostic.errorName,'TransactionInactiveError')
+    assert.equal(result.saved,false);assert.equal(result.diagnostic.verifiedOriginal,false)
+    await f.page.evaluate(()=>restoreStorage());assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),0)
+    await f.done();console.log('PASS exception inside write-success verification callback aborts commit without uncaught browser error')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{
+      await capture('video/mp4');mode='resume-failure';
+      const original=IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='captures'&&args[0]?.resumeInfo)throw new DOMException('PRIVATE token','InvalidStateError');return original.apply(this,args)};
+      window.restoreStorage=()=>IDBObjectStore.prototype.put=original;online(true)
+    })
+    await f.page.waitForFunction(()=>queue.error==='Uploads paused. Device storage needs attention.')
+    const result=await f.page.evaluate(()=>({diagnostic:queue.storageDiagnostic,state:rows[0].state,saved:rows[0].localSaved,calls:calls.length}))
+    assert.equal(result.diagnostic.operation,'capture-update');assert.equal(result.diagnostic.verifiedOriginal,true)
+    assert.equal(result.diagnostic.errorName,'InvalidStateError');assert.equal(result.state,'waiting');assert.equal(result.saved,true);assert.equal(result.calls,1)
+    await f.page.evaluate(()=>restoreStorage())
+    assert.deepEqual(await f.page.evaluate(async()=>[...new Uint8Array(await (await diskRows())[0].blob.arrayBuffer())]),[9,8,7,6])
+    await f.done();console.log('PASS resume metadata persistence failure survives helper sanitization and pauses verified original honestly')
+  }
+  for(const fault of ['subscriber','broadcast']){
+    const f=await fixture()
+    const result=await f.page.evaluate(async fault=>{
+      if(fault==='subscriber')queue.subscribe(()=>{throw Error('PRIVATE observer failure')});
+      else BroadcastChannel.prototype.postMessage=function(){throw Error('PRIVATE optional notification')};
+      window.healthyUpdates=0;queue.subscribe(()=>healthyUpdates++);
+      const row=await capture('video/mp4');
+      const disk=(await diskRows())[0];
+      return {id:row.id,saved:row.localSaved,diagnostic:queue.storageDiagnostic,error:queue.error,updates:healthyUpdates,diskSaved:disk.localSaved,bytes:[...new Uint8Array(await disk.blob.arrayBuffer())]}
+    },fault)
+    assert.equal(result.saved,true);assert.equal(result.diskSaved,true)
+    assert.equal(result.diagnostic,null);assert.equal(result.error,null)
+    assert.ok(result.updates>=2);assert.deepEqual(result.bytes,[9,8,7,6])
+    await f.page.evaluate(()=>online(true));await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    assert.equal(writes.get(result.id),1)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows()).length),0)
+    assert.equal(await f.page.evaluate(()=>queue.storageDiagnostic),null)
+    await f.done();console.log('PASS throwing '+fault+' cannot reject a verified commit or block healthy observers and upload')
+  }
+  {
+    const f=await fixture();await f.page.evaluate(async()=>{mode='hold';await capture('video/mp4');online(true)})
+    await f.page.waitForFunction(()=>calls.length===1&&rows[0]?.state==='uploading')
+    await f.page.evaluate(()=>{history.replaceState(null,'','?offline')})
+    await f.page.reload();await f.page.waitForFunction(()=>queue.ready&&rows.length===1)
+    assert.equal(await f.page.evaluate(()=>rows[0].state),'waiting')
+    assert.equal(await f.page.evaluate(()=>calls.length),0)
+    assert.equal(await f.page.evaluate(async()=>(await diskRows())[0].state),'uploading')
+    await f.page.evaluate(()=>{mode='hold-context';online(true)})
+    await f.page.waitForFunction(()=>typeof releaseContext==='function')
+    assert.equal(await f.page.evaluate(()=>rows[0].state),'waiting')
+    await f.page.evaluate(()=>{mode='hold';releaseContext()})
+    await f.page.waitForFunction(()=>calls.length===1&&rows[0]?.state==='uploading')
+    await f.page.evaluate(()=>release());await f.page.waitForFunction(()=>rows[0]?.state==='uploaded')
+    await f.done();console.log('PASS stale uploading row waits offline and during context check; spinner resumes only for live attempt')
   }
   console.log(`Passed ${groups} durable queue groups using real browser storage; cloud is synthetic.`)
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

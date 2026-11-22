@@ -24,20 +24,50 @@ const scopeKey = (scope: DeviceScope) => JSON.stringify([scope.accountId, scope.
 const sameScope = (row: DeviceCapture, scope: DeviceScope) => row.accountId === scope.accountId && row.companyId === scope.companyId
 let database: Promise<IDBDatabase> | null = null
 
+export type DeviceStorageOperation = "open" | "scope" | "initial-write" | "capture-read" | "capture-update" | "budget-read" | "budget-write" | "lease-claim" | "lease-release" | "remove"
+export type DeviceStorageDiagnostic = Readonly<{
+  operation: DeviceStorageOperation
+  category: "quota" | "unavailable" | "blocked" | "timeout" | "aborted" | "conflict" | "capacity" | "unknown"
+  errorName: "QuotaExceededError" | "InvalidStateError" | "NotFoundError" | "SecurityError" | "AbortError" | "UnknownError" | "DataCloneError" | "TransactionInactiveError" | "TimeoutError"
+  verifiedOriginal: boolean
+}>
+const STORAGE_PAUSED = "Uploads paused. Device storage needs attention."
+const STORAGE_UNSAVED = "Couldn’t save on this device. Keep Found open."
 export class DeviceStorageError extends Error {
-  constructor(public capture?: DeviceCapture) {
-    super("Couldn’t save on this device. Keep Found open.")
+  readonly capture?: DeviceCapture
+  readonly diagnostic: DeviceStorageDiagnostic
+  constructor(capture?: DeviceCapture, operation: DeviceStorageOperation = "initial-write", originalError?: unknown,
+    category?: DeviceStorageDiagnostic["category"], verifiedOriginal = false) {
+    super(operation === "initial-write" || (capture && !capture.localSaved) ? STORAGE_UNSAVED : STORAGE_PAUSED)
     this.name = "DeviceStorageError"
+    // Compatibility for capture retention, never enumerable diagnostic payload.
+    Object.defineProperty(this, "capture", { value: capture, enumerable: false })
+    let name: unknown
+    try { name = (originalError as { name?: unknown } | null)?.name } catch { /* Untrusted error shape. */ }
+    const allowed = ["QuotaExceededError", "InvalidStateError", "NotFoundError", "SecurityError", "AbortError", "UnknownError", "DataCloneError", "TransactionInactiveError", "TimeoutError"]
+    const errorName = (typeof name === "string" && allowed.includes(name) ? name : "UnknownError") as DeviceStorageDiagnostic["errorName"]
+    this.diagnostic = Object.freeze({ operation, errorName, verifiedOriginal,
+      category: category ?? (errorName === "QuotaExceededError" ? "quota" : errorName === "AbortError" ? "aborted"
+        : errorName === "TimeoutError" ? "timeout" : ["InvalidStateError", "NotFoundError", "SecurityError", "TransactionInactiveError"].includes(errorName) ? "unavailable" : "unknown") })
+  }
+}
+async function storageOperation<T>(operation: DeviceStorageOperation, action: () => Promise<T>, verifiedOriginal = false): Promise<T> {
+  try { return await action() }
+  catch (caught) {
+    if (caught instanceof DeviceStorageError) throw caught
+    throw new DeviceStorageError(undefined, operation, caught, undefined, verifiedOriginal)
   }
 }
 
 function openDatabase(): Promise<IDBDatabase> {
   if (database) return database
   database = new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === "undefined") { reject(new DeviceStorageError()); return }
+    if (typeof indexedDB === "undefined") { reject(new DeviceStorageError(undefined, "open", undefined, "unavailable")); return }
     let finished = false
-    const timer = setTimeout(() => { finished = true; reject(new DeviceStorageError()) }, 8_000)
-    const request = indexedDB.open(DATABASE, 2)
+    const timer = setTimeout(() => { finished = true; reject(new DeviceStorageError(undefined, "open", undefined, "timeout")) }, 8_000)
+    let request: IDBOpenDBRequest
+    try { request = indexedDB.open(DATABASE, 2) }
+    catch (caught) { clearTimeout(timer); reject(new DeviceStorageError(undefined, "open", caught)); return }
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE)) {
         const store = request.result.createObjectStore(STORE, { keyPath: "id" })
@@ -45,8 +75,8 @@ function openDatabase(): Promise<IDBDatabase> {
       }
       if (!request.result.objectStoreNames.contains(RUNTIME)) request.result.createObjectStore(RUNTIME, { keyPath: "key" })
     }
-    request.onerror = () => { clearTimeout(timer); reject(new DeviceStorageError()) }
-    request.onblocked = () => { clearTimeout(timer); finished = true; reject(new DeviceStorageError()) }
+    request.onerror = () => { clearTimeout(timer); reject(new DeviceStorageError(undefined, "open", request.error)) }
+    request.onblocked = () => { clearTimeout(timer); finished = true; reject(new DeviceStorageError(undefined, "open", undefined, "blocked")) }
     request.onsuccess = () => {
       clearTimeout(timer)
       if (finished) { request.result.close(); return }
@@ -54,7 +84,7 @@ function openDatabase(): Promise<IDBDatabase> {
       db.onversionchange = () => { db.close(); database = null }
       resolve(db)
     }
-  }).catch(error => { database = null; throw error })
+  }).catch(error => { database = null; throw error instanceof DeviceStorageError ? error : new DeviceStorageError(undefined, "open", error) })
   return database
 }
 
@@ -62,46 +92,60 @@ function transaction(db: IDBDatabase, mode: IDBTransactionMode, store = STORE) {
   try { return db.transaction(store, mode, { durability: "strict" }) }
   catch { return db.transaction(store, mode) }
 }
+function transactionError(tx: IDBTransaction, event: Event): unknown {
+  // Request errors bubble before tx.error is populated on some engines.
+  try { return (event.target as IDBRequest | null)?.error ?? tx.error } catch { return tx.error }
+}
 
 async function budget(scope: DeviceScope, value?: { failures: number; notBefore: number }) {
+  const operation = value ? "budget-write" : "budget-read"
+  return storageOperation(operation, async () => {
   const db = await openDatabase()
   return new Promise<{ failures: number; notBefore: number }>((resolve, reject) => {
     const tx = transaction(db, value ? "readwrite" : "readonly", RUNTIME)
     const store = tx.objectStore(RUNTIME)
     const request = value ? store.put({ key: scopeKey(scope), ...value }) : store.get(scopeKey(scope))
     tx.oncomplete = () => resolve(value ?? request.result ?? { failures: 0, notBefore: 0 })
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError())
+    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, operation, transactionError(tx, event)))
+  })
   })
 }
 
 // Verification occurs inside the transaction; the promise resolves only after
 // commit. Quota/abort/blocked failures never become a "saved" claim.
 async function persist(row: DeviceCapture, newCapture = false) {
+  const operation = newCapture ? "initial-write" : "capture-update"
+  return storageOperation(operation, async () => {
   const db = await openDatabase()
   await new Promise<void>((resolve, reject) => {
     const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
     let verified = false
-    tx.oncomplete = () => verified ? resolve() : reject(new DeviceStorageError(row))
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError(row))
+    let failure: unknown
+    let category: DeviceStorageDiagnostic["category"] | undefined
+    const failed = (originalError: unknown = tx.error) => new DeviceStorageError(undefined, operation, failure ?? originalError, category, !newCapture && row.localSaved)
+    tx.oncomplete = () => verified ? resolve() : reject(failed())
+    tx.onabort = tx.onerror = event => reject(failed(transactionError(tx, event)))
     const write = () => {
       try {
         const { photo: _photo, ...stored } = row
         const request = store.put({ ...stored, localSaved: true })
         request.onsuccess = () => {
-          const check = store.get(row.id)
-          check.onsuccess = () => {
-            const value = check.result as DeviceCapture | undefined
-            verified = !!value && sameScope(value, row) && value.blob instanceof Blob
-              && value.blob.size === row.blob.size && value.mimeType === row.mimeType
-            if (!verified) tx.abort()
-          }
+          try {
+            const check = store.get(row.id)
+            check.onsuccess = () => {
+              const value = check.result as DeviceCapture | undefined
+              verified = !!value && sameScope(value, row) && value.blob instanceof Blob
+                && value.blob.size === row.blob.size && value.mimeType === row.mimeType
+              if (!verified) tx.abort()
+            }
+          } catch (caught) { failure = caught; tx.abort() }
         }
-      } catch { tx.abort() }
+      } catch (caught) { failure = caught; tx.abort() }
     }
     const guarded = (existing?: DeviceCapture) => {
-      if (existing && existing.leaseOwner !== row.leaseOwner && (existing.leaseUntil ?? 0) > Date.now()) { tx.abort(); return }
+      if (existing && existing.leaseOwner !== row.leaseOwner && (existing.leaseUntil ?? 0) > Date.now()) { category = "conflict"; tx.abort(); return }
       if (existing && (!sameScope(existing, row) || existing.fileName !== row.fileName
-        || existing.albumId !== row.albumId || existing.blob.size !== row.blob.size || existing.mimeType !== row.mimeType)) { tx.abort(); return }
+        || existing.albumId !== row.albumId || existing.blob.size !== row.blob.size || existing.mimeType !== row.mimeType)) { category = "conflict"; tx.abort(); return }
       write()
     }
     if (!newCapture) {
@@ -114,36 +158,45 @@ async function persist(row: DeviceCapture, newCapture = false) {
       const rows = request.result as DeviceCapture[]
       const existing = rows.find(value => value.id === row.id)
       // Enqueue cannot reset an existing attempt/budget or replace its bytes.
-      if (existing) { tx.abort(); return }
+      if (existing) { category = "conflict"; tx.abort(); return }
       const others = rows.filter(value => value.id !== row.id)
-      if (others.length >= MAX_ITEMS || others.reduce((sum, value) => sum + value.blob.size, 0) + row.blob.size > MAX_BYTES) { tx.abort(); return }
+      if (others.length >= MAX_ITEMS || others.reduce((sum, value) => sum + value.blob.size, 0) + row.blob.size > MAX_BYTES) { category = "capacity"; tx.abort(); return }
       guarded(existing)
     }
   })
+  }, !newCapture && row.localSaved)
 }
 
 async function list(scope: DeviceScope): Promise<DeviceCapture[]> {
+  return storageOperation("capture-read", async () => {
   const db = await openDatabase()
   return new Promise((resolve, reject) => {
     const tx = transaction(db, "readonly")
     const request = tx.objectStore(STORE).index("scope").getAll(IDBKeyRange.only([scope.accountId, scope.companyId]))
     tx.oncomplete = () => resolve((request.result as DeviceCapture[]).filter(row => sameScope(row, scope)))
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError())
+    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "capture-read", transactionError(tx, event)))
+  })
   })
 }
 
 async function remove(scope: DeviceScope, id: string) {
+  return storageOperation("remove", async () => {
   const db = await openDatabase()
   return new Promise<void>((resolve, reject) => {
     const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
     const request = store.get(id)
-    request.onsuccess = () => { if (request.result && sameScope(request.result, scope)) store.delete(id) }
+    request.onsuccess = () => {
+      try { if (request.result && sameScope(request.result, scope)) store.delete(id) }
+      catch (caught) { reject(new DeviceStorageError(undefined, "remove", caught)); tx.abort() }
+    }
     tx.oncomplete = () => resolve()
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError())
+    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "remove", transactionError(tx, event)))
+  })
   })
 }
 
 async function claimLease(scope: DeviceScope, id: string, owner: string) {
+  return storageOperation("lease-claim", async () => {
   const db = await openDatabase()
   return new Promise<boolean>((resolve, reject) => {
     const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
@@ -152,32 +205,38 @@ async function claimLease(scope: DeviceScope, id: string, owner: string) {
     request.onsuccess = () => {
       const row = request.result as DeviceCapture | undefined
       if (!row || !sameScope(row, scope) || (row.leaseOwner !== owner && (row.leaseUntil ?? 0) > Date.now())) return
-      store.put({ ...row, leaseOwner: owner, leaseUntil: Date.now() + 20 * 60_000 })
-      claimed = true
+      try {
+        store.put({ ...row, leaseOwner: owner, leaseUntil: Date.now() + 20 * 60_000 })
+        claimed = true
+      } catch (caught) { reject(new DeviceStorageError(undefined, "lease-claim", caught)); tx.abort() }
     }
     tx.oncomplete = () => resolve(claimed)
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError())
+    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "lease-claim", transactionError(tx, event)))
+  })
   })
 }
 
 async function releaseLease(scope: DeviceScope, id: string, owner: string) {
+  return storageOperation("lease-release", async () => {
   const db = await openDatabase()
   await new Promise<void>((resolve, reject) => {
     const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
     const request = store.get(id)
     request.onsuccess = () => {
       const row = request.result as DeviceCapture | undefined
-      if (row && sameScope(row, scope) && row.leaseOwner === owner) store.put({ ...row, leaseOwner: undefined, leaseUntil: undefined })
+      try { if (row && sameScope(row, scope) && row.leaseOwner === owner) store.put({ ...row, leaseOwner: undefined, leaseUntil: undefined }) }
+      catch (caught) { reject(new DeviceStorageError(undefined, "lease-release", caught)); tx.abort() }
     }
     tx.oncomplete = () => resolve()
-    tx.onabort = tx.onerror = () => reject(new DeviceStorageError())
+    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "lease-release", transactionError(tx, event)))
+  })
   })
 }
 
 export type DeviceUploadQueue = ReturnType<typeof createQueue>
 const queues = new Map<string, DeviceUploadQueue>()
 export function getDeviceUploadQueue(scope: DeviceScope): DeviceUploadQueue {
-  if (!scope.accountId || !scope.companyId) throw new DeviceStorageError()
+  if (!scope.accountId || !scope.companyId) throw new DeviceStorageError(undefined, "scope")
   const key = scopeKey(scope)
   let queue = queues.get(key)
   if (!queue) { queue = createQueue(Object.freeze({ ...scope })); queues.set(key, queue) }
@@ -189,6 +248,8 @@ function createQueue(scope: DeviceScope) {
   const progress = new Map<string, MediaUploadProgress>()
   const listeners = new Set<(rows: DeviceCapture[]) => void>()
   const sessions = new Map<string, ReturnType<typeof createDashboardUploadSession>>()
+  const activeTransfers = new Set<string>()
+  let storageDiagnostic: DeviceStorageDiagnostic | null = null
   const owner = crypto.randomUUID()
   let ready = false, error: string | null = null, starts = 0, generation = 0
   let draining = false, signedOut = false, authorized = true, contextBlocked = false
@@ -197,10 +258,31 @@ function createQueue(scope: DeviceScope) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let channel: BroadcastChannel | undefined
   const eligible = () => starts > 0 && !signedOut && !contextBlocked && navigator.onLine !== false && document.visibilityState !== "hidden"
-  const snapshot = () => authorized ? [...cache.values()].map(row => ({ ...row, uploadProgress: progress.get(row.id) })).sort((a, b) => b.createdAt - a.createdAt) : []
-  const emit = () => { const rows = snapshot(); for (const listener of listeners) listener(rows) }
-  const broadcast = () => channel?.postMessage({ scope: scopeKey(scope) })
+  // Presentation only: an old durable "uploading" state is not a live transfer.
+  // Do not rewrite bytes, attempt counters or leases while storage is failing.
+  const snapshot = () => authorized ? [...cache.values()].map(row => ({ ...row,
+    ...(row.state === "uploading" && !activeTransfers.has(row.id)
+      ? { state: "waiting" as const, ...(contextBlocked && storageDiagnostic ? { error: STORAGE_PAUSED } : {}) } : {}),
+    uploadProgress: activeTransfers.has(row.id) ? progress.get(row.id) : undefined,
+  })).sort((a, b) => b.createdAt - a.createdAt) : []
+  const emit = () => {
+    const rows = snapshot()
+    for (const listener of listeners) { try { listener(rows) } catch { /* Observers cannot change persistence truth or stop other observers. */ } }
+  }
+  const broadcast = () => { try { channel?.postMessage({ scope: scopeKey(scope) }) } catch { /* Cross-tab notification is optional, never a failed save. */ } }
   const clearTimer = () => { if (timer) clearTimeout(timer); timer = undefined }
+  function publishStorageDiagnostic(diagnostic: DeviceStorageDiagnostic) {
+    storageDiagnostic = diagnostic
+  }
+  function storagePaused(caught: DeviceStorageError) {
+    const previouslyVerified = caught.diagnostic.verifiedOriginal || [...cache.values()].some(row => row.localSaved && row.state !== "uploaded")
+    publishStorageDiagnostic(Object.freeze({ ...caught.diagnostic, verifiedOriginal: previouslyVerified }))
+    error = STORAGE_PAUSED
+    contextBlocked = true
+    clearTimer()
+    for (const id of progress.keys()) if (!activeTransfers.has(id)) progress.delete(id)
+    emit()
+  }
   async function refresh() {
     const rows = await list(scope), ids = new Set(rows.map(row => row.id))
     for (const [id, row] of cache) if (row.localSaved && row.state !== "uploaded" && !ids.has(id)) cache.delete(id)
@@ -240,6 +322,7 @@ function createQueue(scope: DeviceScope) {
     await update(row)
     if (!eligible() || generation !== attemptGeneration) return
     let lastProgress = 0
+    let resumeStorageFailure: DeviceStorageError | undefined
     const session = createDashboardUploadSession(row.blob, { uploadId: row.id, accountId: scope.accountId,
       companyId: scope.companyId, endpoint: scope.endpoint, fileName: row.fileName, albumId: row.albumId,
       resumable: true, previousResumeInfo: row.resumeInfo,
@@ -248,7 +331,13 @@ function createQueue(scope: DeviceScope) {
         // This closure belongs to this attempt and its durable lease.
         if (signedOut || generation !== attemptGeneration) throw new DeviceStorageError()
         row = { ...row, resumeInfo: info }
-        await update(row, false)
+        try { await update(row, false) }
+        catch (caught) {
+          // The helper intentionally sanitizes callback failures; retain the
+          // stage locally so this storage failure cannot become an auth error.
+          if (caught instanceof DeviceStorageError) resumeStorageFailure = caught
+          throw caught
+        }
       },
       onProgress: value => {
         if (signedOut || generation !== attemptGeneration || cache.get(row.id)?.state !== "uploading") return
@@ -257,6 +346,8 @@ function createQueue(scope: DeviceScope) {
       },
     })
     sessions.set(row.id, session)
+    activeTransfers.add(row.id)
+    emit()
     try {
       const photo = await session.run()
       progress.delete(row.id)
@@ -271,6 +362,8 @@ function createQueue(scope: DeviceScope) {
       sessions.delete(row.id); emit(); broadcast()
     } catch (caught) {
       progress.delete(row.id)
+      if (resumeStorageFailure) throw resumeStorageFailure
+      if (caught instanceof DeviceStorageError) throw caught
       const failure = caught as { retryable?: boolean; category?: string; retryAfterMs?: number }
       const retryable = failure?.retryable === true
       const backoff = RETRY_MS[Math.min(row.attempts - 1, RETRY_MS.length - 1)]
@@ -278,6 +371,9 @@ function createQueue(scope: DeviceScope) {
       await update({ ...row, state: retryable ? "waiting" : "needs_attention", errorCategory: failure?.category ?? "unknown",
         error: retryable ? "Waiting to upload" : "Upload needs attention", nextAttemptAt: Date.now() + delay,
         leaseOwner: row.leaseOwner, leaseUntil: row.leaseUntil }, !signedOut && generation === attemptGeneration)
+    } finally {
+      activeTransfers.delete(row.id)
+      sessions.delete(row.id)
     }
   }
   async function withLock(id: string, action: () => Promise<void>) {
@@ -312,7 +408,7 @@ function createQueue(scope: DeviceScope) {
       if (context.companyId !== scope.companyId || context.accountId !== scope.accountId) {
         authorized = false; contextBlocked = true; error = "Return to the original account and business to finish uploading."; emit(); return
       }
-      authorized = true; error = null
+      authorized = true; error = null; storageDiagnostic = null
       if (contextFailures || contextNotBefore) await budget(scope, { failures: 0, notBefore: 0 })
       if (!eligible() || generation !== currentGeneration) return
       contextFailures = 0; contextNotBefore = 0
@@ -328,15 +424,18 @@ function createQueue(scope: DeviceScope) {
       }
     } catch (caught) {
       if (signedOut || generation !== currentGeneration) return
+      if (caught instanceof DeviceStorageError) { storagePaused(caught); return }
       const failure = caught as { retryable?: boolean }
-      error = caught instanceof DeviceStorageError ? caught.message : failure?.retryable ? "Waiting for a connection" : "Sign in to finish uploading."
+      error = failure?.retryable ? "Waiting for a connection" : "Sign in to finish uploading."
       if (!failure?.retryable) contextBlocked = true
       emit()
       if (failure?.retryable && eligible()) {
         const delay = contextFailures < RETRY_MS.length ? RETRY_MS[contextFailures++] : CYCLE_MS
         contextNotBefore = Date.now() + delay
         try { await budget(scope, { failures: contextFailures, notBefore: contextNotBefore }) }
-        catch { contextBlocked = true; error = "Device storage couldn’t update. Keep Found open."; emit() }
+        catch (caught) {
+          storagePaused(caught instanceof DeviceStorageError ? caught : new DeviceStorageError(undefined, "budget-write", caught))
+        }
         schedule(delay)
       }
     } finally {
@@ -351,12 +450,18 @@ function createQueue(scope: DeviceScope) {
   const pause = () => { clearTimer() }
   const signingOut = () => {
     signedOut = true; authorized = false; generation++; pause()
+    storageDiagnostic = null
     for (const session of sessions.values()) session.cancel?.()
     progress.clear(); emit()
   }
   return {
-    get ready() { return ready }, get error() { return error }, getSnapshot: snapshot,
-    subscribe(listener: (rows: DeviceCapture[]) => void) { listeners.add(listener); listener(snapshot()); return () => { listeners.delete(listener) } },
+    get ready() { return ready }, get error() { return error },
+    get storageDiagnostic() { return authorized && !signedOut ? storageDiagnostic : null }, getSnapshot: snapshot,
+    subscribe(listener: (rows: DeviceCapture[]) => void) {
+      listeners.add(listener)
+      try { listener(snapshot()) } catch { /* Keep the subscription without failing queue setup. */ }
+      return () => { listeners.delete(listener) }
+    },
     start() {
       starts++
       if (starts === 1) {
@@ -365,9 +470,18 @@ function createQueue(scope: DeviceScope) {
         document.addEventListener("visibilitychange", wake); window.addEventListener("found:signing-out", signingOut)
         if (typeof BroadcastChannel !== "undefined") {
           channel = new BroadcastChannel("found-device-captures-v1")
-          channel.onmessage = event => { if (event.data?.scope === scopeKey(scope)) { void refresh().then(wake).catch(() => {}) } }
+          channel.onmessage = event => {
+            if (event.data?.scope !== scopeKey(scope)) return
+            const refreshGeneration = generation
+            void refresh().then(wake).catch(caught => {
+              if (!signedOut && generation === refreshGeneration && caught instanceof DeviceStorageError) storagePaused(caught)
+            })
+          }
         }
-        void refresh().catch(() => { error = "Device storage couldn’t open. Keep Found open for new captures." }).finally(() => { ready = true; emit(); wake() })
+        const startGeneration = generation
+        void refresh().catch(caught => {
+          if (!signedOut && generation === startGeneration && caught instanceof DeviceStorageError) storagePaused(caught)
+        }).finally(() => { if (generation === startGeneration) { ready = true; emit(); wake() } })
         // Best effort only; a browser may deny persistence without a prompt.
         // Safari/Chromium decide silently; Firefox can prompt, so don't add a
         // storage-permission decision to every dashboard visit there.
@@ -378,6 +492,7 @@ function createQueue(scope: DeviceScope) {
         if (stopped) return; stopped = true; starts--
         if (starts) return
         generation++; pause(); channel?.close(); channel = undefined
+        storageDiagnostic = null
         for (const session of sessions.values()) session.cancel?.()
         progress.clear()
         window.removeEventListener("online", wake); window.removeEventListener("offline", pause)
@@ -390,13 +505,16 @@ function createQueue(scope: DeviceScope) {
         localSaved: true, state: "saved", attempts: 0, firstAttemptAt: null, nextAttemptAt: 0 }
       try {
         await persist(row, true)
-        cache.set(row.id, row); emit(); broadcast(); wake()
-        return row
-      } catch {
+      } catch (caught) {
         const failed: DeviceCapture = { ...row, localSaved: false, state: "needs_attention", error: "Couldn’t save on this device. Keep Found open.", errorCategory: "storage" }
+        const failure = caught instanceof DeviceStorageError ? caught : new DeviceStorageError(undefined, "initial-write", caught)
+        publishStorageDiagnostic(Object.freeze({ ...failure.diagnostic, verifiedOriginal: false }))
         cache.set(row.id, failed); emit()
-        throw new DeviceStorageError(failed)
+        throw new DeviceStorageError(failed, failure.diagnostic.operation, { name: failure.diagnostic.errorName }, failure.diagnostic.category, false)
       }
+      // Only persistence failure can classify an original as unsaved.
+      cache.set(row.id, row); emit(); broadcast(); wake()
+      return row
     },
     async retry(id: string) {
       const row = cache.get(id)

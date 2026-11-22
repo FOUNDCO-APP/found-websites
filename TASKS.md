@@ -2,6 +2,13 @@
 
 ## November 21 - Apple-Led Shared Store Preparation
 
+- [x] November22 latest actual iPhone warning: Shawn approves urgent precise local-save vs queue-maintenance error repair and sanitized diagnostics; preserve originals, no storage-full/network assumption or clearing. Team reviews recorded.
+- [x] Implement and independently review urgent save-state/empty-review correction;45storage error groups,29real-browser queue groups, camera/inline/privacy/capture regressions pass. Observer-after-commit false failure corrected; bytes/auth preserved.
+- [x] Final six-source frozen build passes TypeScript/all89pages; independent build condition satisfied.
+- [ ] Publish approved urgent repair and verify exact deployment/live sites. Actual iPhone cause/physical acceptance remains open.
+- [ ] Protect current-session originals before refreshing old client; Shawn asked whether Camera thumbnail still shows them. No storage clearing/signout.
+- [ ] Same pending repair includes empty Review error/hydration latch race confirmed by independent source review from1AF3F644 screenshots. Target precedence/late hydration/terminal/scope React regressions required; no loss conclusion from blank view.
+
 - [x] November22 actual iPhone follow-up: Shawn approves both status-noise/portrait corrections after visible design and recorder reviews.
 - [x] Implement one-owner/transient inline status, no-permission pending review, stable-ID selection/terminal races; direct portrait ideals and bounded live/decoded aspect checks with stale/control/late-frame guards. Browser/profile/persistence tests and role reviews pass; no queue/helper/API changes.
 - [x] Final follow-up build passes TypeScript/all89pages; seven application-file hashes unchanged, role-review build condition satisfied.

@@ -1,5 +1,105 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Urgent Save/Review Repair Release Preparation
+
+Shawn approved repair because customers are live, then instructed Continue. Parent
+is carrying the approved urgent repair through testing, independent review and
+publication; no additional product scope or destructive recovery authorized.
+
+Implemented: per-capture verified local save precedes queue-global error wording.
+Only genuinely unprotected originals say Keep this camera open. Saved originals
+with queue failures say Saved on this device / Upload paused, preserving auth and
+business guidance; no spinning when no local attempt runs. Empty Review hydration
+uses the current scoped capture ref and does not latch a pending target missing
+because queueError is present. Late target, terminal and account-switch paths stay
+safe; camera controls/status are inert/hidden behind review, inline host hides on
+review open. No new controls, scattered alerts, original deletion or byte rewrite.
+
+Queue author Einstein01a20020-c163-7592-8cfd-7ae292c33229 adds operation-specific
+storage failure classes and whitelisted browser-error categories (open/write/read/
+budget/update/lease/remove), scoped in-memory diagnostic getter. Persistence alone
+can classify enqueue unsaved. Independent reviewer Bernoulli01a20022-0015-70d1-
+9fc3-60bc033cf648 reproduced successful commit + throwing observer causing false
+save failure; corrected by isolating observer/broadcast failures from persistence
+and from healthy observers. Inactive stale uploading rows present as waiting,
+preserving durable counters, bytes and leases. Existing bounded retries unchanged;
+no assumed iPhone quota/network/closed-connection diagnosis or new reset loop.
+
+Design author Bohr01a20020-bfe9-70f2-9c49-01a576d7ec03 owns truthful provider/inline
+presentation and diagnostics handoff. Parent integrates camera/hydration and strict
+diagnostic bridge into existing Sentry. Whitelisted operation/category/errorName/
+verifiedOriginal only; ten reports/module lifetime, five-minute payload dedupe.
+Marked diagnostic events are reconstructed before sending, stripping user/request/
+URL/stack/breadcrumb/account/file/media/credential context. Other Sentry events stay
+unchanged; diagnostics cannot throw into media retention. Production DSN presence
+verified through Vercel metadata only, no secrets displayed or setting changes.
+
+Passing evidence:45sanitized storage error groups; privacy/dedupe/noncritical-report
+tests;5actual capture handler paths+3old-JPEG negative controls; full real React/
+Chromium/IndexedDB camera suite including pre-existing error+pending original,
+late hydration, scope switch, exact retained-row metadata and no camera acquisition;
+focused inline suite covers saved/unsaved/paused/auth/business state plus diagnostic
+scoping. Independent reviewer ran29real-browser queue groups, including post-save
+read/budget/update failures, nonactive spinner, subscriber/broadcast failures,
+retained original bytes, single cloud completion and preexisting isolation/recovery.
+Independent GO conditional final production build; build now exit0, TypeScript/
+all89pages pass, six app-source hashes unchanged through build. Build condition
+satisfied; publishing approved urgent repair. Real physical iPhone cause still
+unproven; not all capture/upload
+failures are certified fixed. No real client uploads, messages, billing or DB changes.
+
+Current-session safety: old open client code may still hold unverified originals
+in memory. Do not instruct refresh/storage clearing/signout until protected. Asked
+Shawn whether normal Camera > bottom-left thumbnail still shows originals, bypassing
+the known old Review entry race; answer pending. This does not block safe publication.
+
+## November 22, 2026 - New iPhone Save Warning Investigation
+
+Shawn now approved urgent repair because this is live for customers. Implementing
+the reviewed state/copy/diagnostic and empty-review correction, with final gates
+before release. Do not ask for duplicate implementation approval. Actual device
+storage failure cause remains unproven; no destructive recovery or data clearing.
+
+Additional actual screenshots1AF3F644: after closing camera, dashboard shows generic
+save warning/spinner/Review uploads; review displays only Done and same warning.
+Independent Einstein source review confirms a specific resolution-latch race:
+provider target row plus pre-existing queueError mounts with captures empty; row
+hydration effect schedules state, resolver still sees empty render and queueError
+forces initialReviewResolved permanently. Next render has captures but no selected
+index, yielding empty review. Not proof of deletion or phone storage root cause.
+This error-plus-hydration combination was missed in earlier narrow review/tests.
+Add to SAME pending repair: scoped available target takes precedence, do not latch
+unavailable while hydration outstanding, separate queue error from reviewability;
+retain uploaded/missing terminal and auth isolation. Actual React regressions must
+cover pre-existing error+target, delayed target after error, terminal cases and scope
+switch. No application edits, retries, deletion, private access or publication.
+This new evidence is included in the approved repair, not a separate scope.
+
+Shawn reports regular photo and video could not save; screenshot0BE352AC camera
+shows spinner with Couldnt save/Keep Found open and asks whether camera must remain
+open. Conservative guidance: keep camera open until that capture's local save is
+verified; verified device-saved captures can leave camera while provider uploads.
+No refresh, storage clearing, forced retry, private data access or app changes.
+
+Two read-only reviews ran: Einstein independent engineering and Bohr Jony/Steve-
+criteria design review. Confirmed ambiguity: DeviceStorageError conflates database
+open, initial Blob commit, read/budget/lease/update failures. Global queueNotice
+overrides individual verified localSaved truth; cached uploading spinner can remain
+when later persistence fails into pump global catch. Nonretryable storage errors
+block draining until existing controlled recovery. Screenshot does NOT establish
+initial-save failure, quota/full storage, network-only cause or lost media.
+
+Visible proposal: distinguish unsaved originals from saved originals with queue/
+cloud interruption; per-capture truth authoritative, preserve auth/business context;
+precise Keep this camera open only for unverified originals, saved/upload paused for
+verified captures, consistent spinner/attention state. Preserve all bytes, close
+guards, IDs, auth isolation and bounded recovery; no new alerts/buttons/retry loops.
+Sanitized diagnostic proposal: operation stage, browser-error category/name and
+verified-save/state flags only; no media, filenames, account IDs, credentials or raw
+provider text. Add initial-write versus post-save read/budget/update regressions.
+Root cause on this iPhone unproven. Shawn subsequently approved implementation
+and urgent customer-facing repair as noted above; verify before release.
+
 ## November 22, 2026 - Follow-Up Publication Approved
 
 Shawn explicitly instructed Push for tested3c921535d5082a2479ada7e9ebaf505a245e3b5b.

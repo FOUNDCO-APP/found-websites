@@ -2,6 +2,14 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 newest: regular photo/video save warning reported on iPhone. Read-only
+reviews confirm generic queue storage error can mask already-verified local saves;
+actual device cause unproven. Keep camera open for now, preserve originals. Scoped
+Shawn approved urgent customer-facing repair. Save/review/diagnostic changes pass
+independent29browser queue groups,45error groups, camera/inline/privacy tests and
+production build(TypeScript/89pages); six source hashes unchanged. Publishing
+approved repair; physical iPhone cause/current originals unresolved. See handoff.
+
 November22 latest feedback: actual iPhone shows persistent saved messages and wide
 Video preview despite Portrait. Acceptance remains open/failed for portrait. Two
 role reviews returned corrective proposals shown in chat; Shawn approved both.

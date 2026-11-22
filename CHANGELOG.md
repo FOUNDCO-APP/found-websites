@@ -1,3 +1,14 @@
+## November 22, 2026 - Urgent Save/Review Repair In Release Verification
+
+- Approved customer-facing repair distinguishes initial device save from later
+  queue maintenance, fixes empty Review hydration and false failure after a verified
+  commit/notification error. Original bytes and existing recovery remain protected.
+- Bounded, whitelisted diagnostics use existing monitoring without media/account/
+  file/request context. No new service, paid setting, schema or billing change.
+- Independent29browser queue groups,45error groups, camera/inline/capture/privacy
+  tests pass. Final build passes TypeScript/all89pages; six source hashes unchanged.
+  Approved urgent publication/live checks in progress in SESSION_HANDOFF.
+
 ## November 22, 2026 - Status And Portrait Follow-Up Released
 
 - Shawn approved actual-iPhone corrections. Floating saved toast replaced with one
