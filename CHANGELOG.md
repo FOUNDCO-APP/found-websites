@@ -1,4 +1,4 @@
-## November 22, 2026 - Urgent Save/Review Repair In Release Verification
+## November 22, 2026 - Urgent Save/Review Repair Released
 
 - Approved customer-facing repair distinguishes initial device save from later
   queue maintenance, fixes empty Review hydration and false failure after a verified
@@ -7,7 +7,9 @@
   file/request context. No new service, paid setting, schema or billing change.
 - Independent29browser queue groups,45error groups, camera/inline/capture/privacy
   tests pass. Final build passes TypeScript/all89pages; six source hashes unchanged.
-  Approved urgent publication/live checks in progress in SESSION_HANDOFF.
+  Approved urgent release6dfac5246cff839b00a8f266fbf472a5b5118dd6 live;
+  Vercel dpl_E1wpTdvwewKxam4BkuRJSfKyDUb4 READY/exactSHA and live dashboard/
+  auth/four-client checks pass. Actual iPhone failure cause remains unproven.
 
 ## November 22, 2026 - Status And Portrait Follow-Up Released
 

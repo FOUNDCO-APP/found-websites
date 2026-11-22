@@ -5,7 +5,7 @@
 - [x] November22 latest actual iPhone warning: Shawn approves urgent precise local-save vs queue-maintenance error repair and sanitized diagnostics; preserve originals, no storage-full/network assumption or clearing. Team reviews recorded.
 - [x] Implement and independently review urgent save-state/empty-review correction;45storage error groups,29real-browser queue groups, camera/inline/privacy/capture regressions pass. Observer-after-commit false failure corrected; bytes/auth preserved.
 - [x] Final six-source frozen build passes TypeScript/all89pages; independent build condition satisfied.
-- [ ] Publish approved urgent repair and verify exact deployment/live sites. Actual iPhone cause/physical acceptance remains open.
+- [x] Approved urgent repair6dfac52 live; VercelE1wpTdvwewKxam4BkuRJSfKyDUb4 READY/exactSHA; live dashboard/auth/context and four-client/HiramGallery checks pass. Actual iPhone cause/physical acceptance remains open.
 - [ ] Protect current-session originals before refreshing old client; Shawn asked whether Camera thumbnail still shows them. No storage clearing/signout.
 - [ ] Same pending repair includes empty Review error/hydration latch race confirmed by independent source review from1AF3F644 screenshots. Target precedence/late hydration/terminal/scope React regressions required; no loss conclusion from blank view.
 

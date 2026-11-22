@@ -1,6 +1,14 @@
 # SESSION_HANDOFF.md - Current Truth
 
-## November 22, 2026 - Urgent Save/Review Repair Release Preparation
+## November 22, 2026 - Urgent Save/Review Repair Released
+
+Released6dfac5246cff839b00a8f266fbf472a5b5118dd6 under approved urgent repair scope.
+Vercel dpl_E1wpTdvwewKxam4BkuRJSfKyDUb4 READY/exactSHA verified. Read-only live
+login/dashboard/Photos/context200; context original company/account binding and
+Cache-Control no-store; anonymous Photos/context401; wrong account409. Hiram Home/
+Gallery and Divine/MBJ/RC Home all200. No production capture/upload, customer email,
+billing, DNS/provider settings or database schema changes. Existing MDs updated
+for documentation-only closeout. This supersedes preparation language below.
 
 Shawn approved repair because customers are live, then instructed Continue. Parent
 is carrying the approved urgent repair through testing, independent review and
@@ -44,7 +52,7 @@ read/budget/update failures, nonactive spinner, subscriber/broadcast failures,
 retained original bytes, single cloud completion and preexisting isolation/recovery.
 Independent GO conditional final production build; build now exit0, TypeScript/
 all89pages pass, six app-source hashes unchanged through build. Build condition
-satisfied; publishing approved urgent repair. Real physical iPhone cause still
+satisfied; approved urgent repair published and checked above. Real physical iPhone cause still
 unproven; not all capture/upload
 failures are certified fixed. No real client uploads, messages, billing or DB changes.
 
