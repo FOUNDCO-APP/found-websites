@@ -1,3 +1,11 @@
+## November 22, 2026 - Camera/Resumable Upgrade Released
+
+- Shawn approved Push; b75306a4095fb9a44a11e67922c69fdbfb43439a published.
+  Vercel dpl_FT4vQRiUkHRMBoctHJP1ruy5gb4B READY/exact SHA verified.
+- Live read-only login/dashboard/Photos/context200, anonymous401, wrong-account409;
+  all four client Home pages and HiramGallery200. No client writes or billing changes.
+- Existing docs updated. Physical iPhone/Safari acceptance remains open.
+
 ## November 21, 2026 - Camera/Resumable Upgrade In Preparation
 
 - Approved dock/Format layout and measured video/resumable pipeline implemented;

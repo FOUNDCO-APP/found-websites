@@ -1,5 +1,20 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Camera Release Approved And Pushed
+
+Shawn explicitly instructed Push. Verified clean worktree and remote main ancestor;
+pushed b75306a4095fb9a44a11e67922c69fdbfb43439a without force or merge changes.
+Vercel deployment dpl_FT4vQRiUkHRMBoctHJP1ruy5gb4B READY/exact SHA verified.
+Live read-only checks pass: public /login200, authorized dashboard/Photos200,
+upload-context200 with expected account/company and Cache-Control no-store;
+anonymous PhotosGET/contextPOST401; explicit wrong-account context409 before
+storage. Hiram Home/Gallery, Divine, MBJ and RC Home all200. No customer media,
+messages, billing or provider settings changed. Initial verification used internal
+/dashboard/login on my-host and got404; corrected to public /login per middleware.
+This supersedes the prepared/not-published status in the historical section below.
+Existing briefs/task/change logs updated; documentation-only closeout follows.
+Physical iPhone save/reopen/weak-signal video playback acceptance remains open.
+
 ## November 21, 2026 - Fresh Camera Layout And Media Pipeline Review
 
 Approved implementation now prepared, not published. Latest application live is

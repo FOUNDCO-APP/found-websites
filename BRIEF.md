@@ -2,6 +2,11 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22: Shawn approved Push; tested shared camera/resumable release b75306a
+is live. Vercel FT4vQRiUkHRMBoctHJP1ruy5gb4B READY/exact SHA; read-only login,
+dashboard/Photos/context, auth isolation and four-client checks pass. Full evidence
+in SESSION_HANDOFF. Physical iPhone acceptance remains open; no background claim.
+
 November21 latest approval: prepare Jony-led/Steve-co-led camera/review layout and
 measured video/resumable upload upgrade. Preserve durable originals, account
 separation, old-tab compatibility and high-detail stills. Independent final review

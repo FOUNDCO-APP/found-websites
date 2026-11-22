@@ -8,7 +8,8 @@
 - [x] Implement scoped layout/Format, explicit best-effort recording profile and direct signed TUS with durable resume/transient progress; old tabs and originals protected.
 - [x] Real browser-to-Supabase8MiB upload/interruption/fresh-token resume/hash/exact cleanup confirmed; no client records/media/settings touched.
 - [x] Final build/evidence and actual role reviews completed;84helper/APIgroups,18queuegroups, HTTP/real-storage/recording/UI tests pass. Sole copy correction verified in emitted bundle.
-- [ ] Shawn final release approval, push, exact Vercel READY/SHA and live auth/four-client checks. Physical iPhone save/reopen/video/playback remains open.
+- [x] Shawn approves Push November22; b75306a live, Vercel FT4vQRiUkHRMBoctHJP1ruy5gb4B READY/exactSHA; public login/dashboard/Photos/context/auth isolation and four-client/HiramGallery checks pass.
+- [ ] Physical iPhone save/reopen/weak-signal video upload/playback acceptance; Chrome/storage proof does not certify Safari. Native background remains separate.
 - [ ] Separate pre-store triage of14pre-existing npm audit findings(6moderate/6high/2critical); new19upload dependencies had no reported advisories in current audit.
 
 - [x] Jony-led/Steve-co-led visible review; Shawn approves compact camera status correction without Hide/Dismiss/action stack.
