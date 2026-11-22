@@ -2,6 +2,27 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 newest: Shawn approved integrity-first repair and compression measurement.
+Implementation uses immutable binary payloads/separate metadata in existing DBv2,
+fresh committed byte/hash verification, verified legacy conversion, and truthful
+unreadable-media UI. Actual independent reviews found/fixed interrupted-conversion
+and old-tab lease/budget edge cases;29queue/15integrity browser groups, actual React
+UI suites and final production build(TypeScript/all89pages) pass. Three application
+source hashes unchanged through final build. Release prepared locally, not live.
+Compression benchmarks show promising full-resolution JPEG.85 /1080p3Mbps options,
+but current defaults remain until physical detail/playback comparison. No new paid
+service or customer data changes. Publication is not yet performed. See handoff.
+
+November22 follow-up: C6D4BCCD iPhone screenshots show two retained entries
+after reopening, but photo preview is broken and video unplayable. Actual sanitized
+Sentry event19:25:13Z reports capture-update / UnknownError / verifiedOriginaltrue.
+Verification currently checks Blob metadata, not complete readable bytes/playback.
+Independent engineering and design-role reviews recommend storage-integrity
+qualification first, then measured automatic compression optimization. New storage
+architecture/quality changes are proposals awaiting Shawn; no new app edits.
+See newest SESSION_HANDOFF section. Existing test captures are disposable per Shawn;
+no authorization to clear other captures or customer data.
+
 November22 newest: regular photo/video save warning reported on iPhone. Read-only
 reviews confirm generic queue storage error can mask already-verified local saves;
 actual device cause unproven. Keep camera open for now, preserve originals. Scoped

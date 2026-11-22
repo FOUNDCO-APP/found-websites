@@ -1,13 +1,32 @@
 # Found Task Board
 
+- [x] Shawn approves integrity-first device storage repair and measured compression
+  after visible actual independent engineering/design review.
+- [x] Finish final-source browser qualification/build and independent signoff for
+  immutable bytes/separate metadata, safe old-client conversion and unreadable UI.
+- [ ] Publish only after final tested release approval; physical iPhone weak-signal
+  capture/reopen/upload/playback remains an acceptance gate.
+- [x] Measure synthetic desktop encoding profiles; preserve production defaults.
+- [ ] Physically compare full-resolution JPEG.85 and1080p3Mbps against current
+  settings using labels/wiring/motion/low light before choosing automatic defaults.
+
+- [x] November22 reopened-media integrity: C6D4BCCD broken photo/unplayable video;
+  Sentry capture-update UnknownError after metadata-only verified save. Qualify
+  immutable payload/separate metadata, byte readback and real decode/reopen tests;
+  preserve legacy/old tabs/scopes. Shawn approved implementation; independent
+  29queue/15integrity browser groups pass. Build/publication/phone gates above.
+- [x] Benchmark automatic photo/video compression against detail, size and encode
+  cost; existing JPEG.92 and1080p5Mbps are already compression. Physical iPhone
+  comparison remains above; no hidden downgrade or existing-original rewrite.
+
 ## November 21 - Apple-Led Shared Store Preparation
 
 - [x] November22 latest actual iPhone warning: Shawn approves urgent precise local-save vs queue-maintenance error repair and sanitized diagnostics; preserve originals, no storage-full/network assumption or clearing. Team reviews recorded.
 - [x] Implement and independently review urgent save-state/empty-review correction;45storage error groups,29real-browser queue groups, camera/inline/privacy/capture regressions pass. Observer-after-commit false failure corrected; bytes/auth preserved.
 - [x] Final six-source frozen build passes TypeScript/all89pages; independent build condition satisfied.
 - [x] Approved urgent repair6dfac52 live; VercelE1wpTdvwewKxam4BkuRJSfKyDUb4 READY/exactSHA; live dashboard/auth/context and four-client/HiramGallery checks pass. Actual iPhone cause/physical acceptance remains open.
-- [ ] Protect current-session originals before refreshing old client; Shawn asked whether Camera thumbnail still shows them. No storage clearing/signout.
-- [ ] Same pending repair includes empty Review error/hydration latch race confirmed by independent source review from1AF3F644 screenshots. Target precedence/late hydration/terminal/scope React regressions required; no loss conclusion from blank view.
+- [x] Old-session question superseded: Shawn closed/reopened and says generic test captures are disposable. No broad storage clearing/signout authorized.
+- [x] Empty Review error/hydration latch race from1AF3F644 addressed in released6dfac52; target precedence/late hydration/terminal/scope regressions pass. New broken-media issue tracked above; blank view alone did not establish loss.
 
 - [x] November22 actual iPhone follow-up: Shawn approves both status-noise/portrait corrections after visible design and recorder reviews.
 - [x] Implement one-owner/transient inline status, no-permission pending review, stable-ID selection/terminal races; direct portrait ideals and bounded live/decoded aspect checks with stale/control/late-frame guards. Browser/profile/persistence tests and role reviews pass; no queue/helper/API changes.

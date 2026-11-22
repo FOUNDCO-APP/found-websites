@@ -1,5 +1,111 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Approved Integrity Implementation / Release Preparation
+
+Shawn approved the integrity-first repair then measured automatic compression.
+Main implements queue; actual independent reviewer Bernoulli owns browser integrity
+qualification, Bohr owns Jony/Steve-role UI plus tests, Herschel measures encoding
+then independently reviews queue source. These are AI review roles, not real people.
+
+New payloads are immutable ArrayBuffers with SHA256 verification after a fresh
+committed read, stored in namespaced runtime keys. Mutable metadata is separate;
+DB remainsversion2, old budgets unchanged. No Blob placeholders in legacy captures.
+Older tabs retain/drain legacy captures but cannot see new-format captures; rolling
+back to old app code would hide new-format pending work until the repair returns,
+not delete it. Do not certify an old-code rollback as a complete recovery strategy.
+
+Legacy migration prepares bytes first, verifies fresh readback, then atomically
+activates metadata/removes old representation. Missing source cannot resurrect a
+deleted capture; live old leases cannot be stolen. Readable prepared bytes can
+rescue unreadable backing only after verification. The verified immutable copy
+preserves actual original bytes; only then is old representation retired, so an
+old fallback tab cannot claim it alongside the new owner. Unreadable legacy without
+a verified backup stays untouched. Current committed activation returns latest
+legacy retry/resume/budget metadata; hydration cannot write stale prepared values
+back. Web Locks and fallback both use durable ownership. Active checksum failure
+cannot silently substitute an older duplicate. Orphan prepared bytes remain stored
+without activation/upload/deletion; a separate conservative cleanup is deferred.
+Runtime-only leaseMode distinguishes Web Locks from fallback ownership. Holding
+the real Web Lock permits reclaim of a former web-lock runtime owner after reload,
+never live fallback/unknown/legacy leases; owner-matched release clears the mode.
+Legacy records never acquire this marker. This fixes the modern-reopen20-minute
+delay caught by the full queue regression suite during qualification.
+
+UI: existing quiet status/review location; unreadable entries show Couldn’t read
+this capture / Preview unavailable, no misleading Keep-camera-open, Retry, Annotate
+or spinner. New unsaved in-memory captures keep real loss protection. Explicit
+existing Delete only removes UI after queue removal succeeds; no auto deletion.
+
+Synthetic desktop Chromium encoding benchmark (Herschel actual run): full4096x3072
+JPEG.92=3,044,804bytes; same dimensions.85=2,315,520(-24%),.80=1,956,800(-36%).
+3072x2304.85=1,113,407(-63%),2048x1536.85=504,764(-83%), with greater fine-detail
+loss from downscaling. Controlled1080p AVC/Opus four-second means:5Mbps2,607,242,
+3Mbps1,650,101(-37%),2Mbps1,051,477bytes. Static-detail PSNR40.37/37.94/36.59dB;
+720p3Mbps1,680,424bytes/21.04dB. Synthetic chart/static ROI is not real-camera/iPhone
+perceptual acceptance. Current helper emitted different codecs between runs;
+comparison pins one codec. Production settings unchanged pending actual phone
+small-label/wiring/tool-motion/low-light comparison. No original recompression.
+Artifacts ignored .billing-audits/media-encoding-2026-11-22T19-39-40-908Z/index.html.
+
+Independent queue source review (Herschel) boundedGO6c9fa4fc; independent executable
+qualification (Bernoulli)29/29queue and15/15integrity groups pass. Includes genuine
+JPEG/MediaRecorder decode+byte verification after reload, zero payload rewrites on
+metadata updates, same-size corruption, interrupted commits, actual old6dfac52
+coexistence, both lease modes, latest retry/resume/budget preservation and no deleted
+capture resurrection.45diagnostic error groups, privacy bridge,84upload recovery
+groups, recording/profile/orientation and capture persistence regressions pass.
+Final actual React camera and inline UI reruns pass (including progress/finalizing,
+recovery, responsive/enlarged text, checksum-damaged reopen and decode placeholders).
+One camera fixture was timing-sensitive under concurrent build load: explicitly
+request real canvas frames and verify encoded fixture decode before using it;
+no app onError was bypassed. Source hashes remain queue6c9fa4fc, Camera78c46a80,
+provider47988db0. Final frozen-source production build exits0: TypeScript and all89
+generated pages pass; three application-source hashes unchanged through build.
+Herschel sourceGO and Bernoulli executableGO build condition is satisfied. An earlier
+build passed but source changed for the discovered regression, so it is not the
+final release build evidence. No real client upload is used for these tests.
+Prepared source/tests/existing MDs are being saved in one local release commit;
+no push/deployment of this repair yet; live remains6dfac52. Physical Safari
+acceptance remains required. No real client media/uploads/emails/billing/provider
+settings/database schema changes in this preparation.
+
+## November 22, 2026 - Broken Reopened Media / Compression Review
+
+New C6D4BCCD screenshots: dashboard lists two saved/paused entries after reopening;
+Review now lists both, but image cannot decode and video cannot play. Shawn already
+closed/reopened and says his generic test captures are disposable. Earlier pending
+question about keeping that old session open is superseded; no broad data clearing.
+
+Sanitized production Sentry event2026-11-22T19:25:13.219Z: capture-update,
+UnknownError, verifiedOriginaltrue. This proves an update failure after prior
+metadata-level verification, not readable bytes, corruption cause, quota or network.
+Current queue rewrites native Blob within whole-row state/resume/lease updates.
+Initial verification checks Blob instance/size/type; no full byte/decode proof.
+Existing UI tests asserting image presence do not certify valid media decoding.
+
+Actual independent review: Bernoulli01a20022-0015-70d1-9fc3-60bc033cf648 recommends
+qualifying immutable media payload with separately mutable metadata, fresh-transaction
+byte verification and real media decode/reopen tests. ArrayBuffer is a candidate,
+not guaranteed Safari cure. Preserve legacy rows, stable IDs, scopes, retry budgets,
+resumable identities and old-tab compatibility; never overwrite unreadable originals.
+WebKit240216 reports related repeated-Blob-write unreadability with intact metadata:
+https://bugs.webkit.org/show_bug.cgi?id=240216 . Historical mechanism is a hypothesis,
+not confirmed diagnosis of Shawn's device. No architecture implementation yet.
+
+Actual design reviewer Bohr01a20020-bfe9-70f2-9c49-01a576d7ec03 applies Jony lead /
+Steve co-lead lenses in one review, not two independent people: capture automatically,
+no codec/quality choices, preserve job detail and truthful saving. Reliability first;
+compression tuning must not obscure storage failure. Engineering concurs on sequencing.
+
+Shawn asks about maximizing PWA compression. Current photos JPEGquality0.92 without
+separate pixel cap; video targets1080p30 /5Mbps+128kbps audio (browser actual varies).
+Already encoded/compressed, not raw. Proposed next scope: qualify storage integrity
+and backward compatibility, then benchmark automatic photo dimensions/quality and
+video profiles against bytes, encode time/memory, job detail and physical iPhone
+playback. No recompression of existing originals, paid service or native background
+promise. New product/architecture decisions await visible discussion and approval.
+No new application edits or release in this investigation; live app remains6dfac52.
+
 ## November 22, 2026 - Urgent Save/Review Repair Released
 
 Released6dfac5246cff839b00a8f266fbf472a5b5118dd6 under approved urgent repair scope.

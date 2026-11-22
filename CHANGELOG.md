@@ -1,3 +1,21 @@
+## November 22, 2026 - Device Media Integrity Repair Prepared (Not Published)
+
+- Approved immutable binary payloads with separate queue metadata and fresh
+  committed SHA256 readback. Verified legacy conversion preserves original bytes,
+  account scope, upload identity, retry budget and resumable state without DB upgrade.
+- Prevent deleted-source resurrection, stale budget restoration, mixed old-tab
+  ownership and checksum failure masked by duplicate legacy data. Runtime lease
+  modes preserve prompt Web-Lock reload recovery without stealing fallback leases.
+- Unreadable media uses the existing quiet status/placeholder instead of broken
+  previews or false camera-open guidance. No automatic deletion or new codec choices.
+- Independent29queue/15integrity browser groups,45sanitized error groups,84upload
+  recovery groups, actual React camera/inline UI and recording regressions pass.
+  Final frozen-source production build passes TypeScript/all89pages; three app
+  source hashes unchanged through build. Physical iPhone acceptance remains open.
+- Synthetic measurements support testing full-resolution JPEG.85 and1080p3Mbps;
+  production defaults and existing originals remain unchanged pending phone quality
+  acceptance. No new paid service, live client upload/email/billing/schema changes.
+
 ## November 22, 2026 - Urgent Save/Review Repair Released
 
 - Approved customer-facing repair distinguishes initial device save from later

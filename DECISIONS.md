@@ -1,3 +1,16 @@
+## November 22, 2026 - Media Integrity Before Encoding Tuning (Approved)
+
+Shawn approved the visible engineering/design recommendation: qualify reliable
+device storage first, then measure automatic compression without sacrificing job
+detail. Keep originals and account isolation. New payloads use immutable binary
+bytes with separate mutable metadata and fresh committed readback/checksum;
+legacy conversion is additive/verified before its atomic switch, not storage
+clearing. Existing database version remains2; older tabs keep their legacy work
+but cannot see new-format captures. Actual iPhone/Safari qualification remains
+required; desktop browser proof does not establish a universal Safari fix.
+Encoding measurements are approved, not an unmeasured quality reduction or
+recompression of existing originals. Final tested release publication is separate.
+
 ## November 22, 2026 - Status And Portrait Follow-Up Approved
 
 Shawn approved both visible-review corrections after actual iPhone feedback:

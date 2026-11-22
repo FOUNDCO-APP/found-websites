@@ -69,7 +69,18 @@ window.fixtureSceneReady=(async()=>{
 Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){window.fixtureSceneReady.then(()=>{this.dataset.fixtureStream='true';this.poster=window.fixtureScene.toDataURL();Object.defineProperty(this,'readyState',{value:2,configurable:true});Object.defineProperty(this,'videoWidth',{value:window.fixtureSettings.width,configurable:true});Object.defineProperty(this,'videoHeight',{value:window.fixtureSettings.height,configurable:true});this.dispatchEvent(new Event('loadedmetadata'))})}});
 const canvasContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(...args){const ctx=canvasContext.apply(this,args);const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(image,...values)=>draw(image instanceof HTMLVideoElement?window.fixtureScene:image,...values);return ctx};
 
-class Recorder{static isTypeSupported(){return true}state='inactive';constructor(stream,options={}){this.stream=stream;this.options=options;this.mimeType=options.mimeType||'video/mp4';this.videoBitsPerSecond=options.videoBitsPerSecond;this.audioBitsPerSecond=options.audioBitsPerSecond;window.recorders.push(this)}start(){this.state='recording'}stop(){this.state='inactive';window.finishRecording=()=>{this.ondataavailable({data:new Blob(['original-video'],{type:this.mimeType})});this.onstop()};if(!window.deferRecording)window.finishRecording()}}
+// Valid encoded fixture bytes keep ordinary recording tests distinct from the
+// dedicated unreadable-media tests. No device permission or network is needed.
+const NativeRecorder=window.MediaRecorder;
+window.fixtureVideoReady=window.fixtureSceneReady.then(()=>new Promise((resolve,reject)=>{
+ const stream=window.fixtureScene.captureStream(0),track=stream.getVideoTracks()[0],chunks=[],recorder=new NativeRecorder(stream,{mimeType:'video/webm'});
+ recorder.ondataavailable=event=>{if(event.data.size)chunks.push(event.data)};
+ recorder.onerror=()=>{stream.getTracks().forEach(track=>track.stop());reject(Error('Fixture recorder failed'))};
+ recorder.onstart=()=>{let frame=0;const draw=()=>{const ctx=window.fixtureScene.getContext('2d');ctx.save();ctx.fillStyle=frame%2?'#bba68a':'#bca78b';ctx.fillRect(0,0,2,2);ctx.restore();track.requestFrame();if(++frame<4)setTimeout(draw,75);else setTimeout(()=>recorder.stop(),100)};draw()};
+ recorder.onstop=()=>{stream.getTracks().forEach(track=>track.stop());const blob=new Blob(chunks,{type:'video/webm'}),video=document.createElement('video'),url=URL.createObjectURL(blob);let settled=false;const done=error=>{if(settled)return;settled=true;clearTimeout(timeout);video.removeAttribute('src');video.load();URL.revokeObjectURL(url);if(error)reject(error);else{window.fixtureVideoBlob=blob;window.fixtureVideoDecoded=true;resolve(blob)}};const timeout=setTimeout(()=>done(Error('Fixture WebM decode timed out')),10000);video.muted=true;video.preload='auto';video.onloadeddata=()=>done(video.videoWidth>0&&video.videoHeight>0?null:Error('Fixture video has no decoded frame'));video.onerror=()=>done(Error('Fixture WebM is not decodable'));video.src=url;video.load()};
+ recorder.start();
+}));
+class Recorder{static isTypeSupported(mime){return mime==='video/webm'}state='inactive';constructor(stream,options={}){this.stream=stream;this.options=options;this.mimeType=options.mimeType||'video/webm';this.videoBitsPerSecond=options.videoBitsPerSecond;this.audioBitsPerSecond=options.audioBitsPerSecond;window.recorders.push(this)}start(){this.state='recording'}stop(){this.state='inactive';window.finishRecording=async()=>{this.ondataavailable({data:await window.fixtureVideoReady});this.onstop()};if(!window.deferRecording)window.finishRecording()}}
 window.MediaRecorder=Recorder;
 const root=load(${client}).createRoot(document.getElementById('root'));new MutationObserver(()=>document.querySelectorAll('video').forEach(video=>{if(!video.poster)video.poster=window.fixtureScene.toDataURL()})).observe(document.getElementById('root'),{childList:true,subtree:true});
 function Harness(){const [open,setOpen]=R.useState(true);window.unmountCamera=()=>setOpen(false);window.openCamera=()=>setOpen(true);window.openReviewCamera=id=>{window.fixtureReviewId=id;setOpen(true)};window.uploadFixtureStatus=load(${provider}).useUploadStatus();return e(R.Fragment,null,e('header',{style:{height:60}},'FOUND'),e(load(${inlineHost}).default),open?e(load(${camera}).default,{pendingAlbumId:'job-a',initialReviewCaptureId:window.fixtureReviewId,onUploaded:photo=>window.uploaded.push(photo),onClose:()=>{window.fixtureClosed++;setOpen(false)}}):null)}
@@ -82,7 +93,7 @@ let page=await context.newPage()
 const screenshotDir=path.join(root,'.billing-audits/camera-upload');fs.mkdirSync(screenshotDir,{recursive:true});
 const errors=[];const attach=()=>{page.on('dialog',dialog=>dialog.accept());page.on('pageerror',e=>{errors.push(e.message);console.error('Browser error:',e.message)})};attach()
 const url='http://127.0.0.1:'+server.address().port
-const fresh=async(query='')=>{await context.close();context=await browser.newContext({viewport:{width:390,height:844}});page=await context.newPage();attach();await page.goto(url+query);await page.getByRole('button',{name:'Take photo',exact:true}).waitFor();await page.waitForFunction(()=>!document.querySelector('button[aria-label="Take photo"]').disabled && window.uploadFixtureStatus.queueReady)}
+const fresh=async(query='')=>{await context.close();context=await browser.newContext({viewport:{width:390,height:844}});page=await context.newPage();attach();await page.goto(url+query);await page.evaluate(()=>window.fixtureVideoReady);assert.equal(await page.evaluate(()=>window.fixtureVideoDecoded),true);await page.getByRole('button',{name:'Take photo',exact:true}).waitFor();await page.waitForFunction(()=>!document.querySelector('button[aria-label="Take photo"]').disabled && window.uploadFixtureStatus.queueReady)}
 const finish=async(index=0)=>{await page.waitForFunction(i=>typeof window.sessions[i]?.resolve==='function',index);return page.evaluate(i=>window.sessions[i].resolve({id:'photo-'+i,url:'test',storage_path:'test',for_website:false,for_social:false,in_gallery:false,website_section:null,album_id:'job-a',created_at:'test'}),index)}
 
 const bounds=async(locator)=>assert.equal(await locator.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=-0.5&&r.right<=innerWidth+0.5&&r.top>=0&&r.bottom<=innerHeight}),true)
@@ -113,7 +124,7 @@ const shots=async(name,review=false)=>{
 
 const takePhoto=async()=>{await page.getByRole('button',{name:'Take photo',exact:true}).click();await page.waitForFunction(()=>window.uploadFixtureStatus.queueRows.length>0)}
 const setOnline=async(value)=>page.evaluate(value=>{window.fixtureOnline=value;dispatchEvent(new Event(value?'online':'offline'))},value)
-const persisted=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('found-device-captures-v1');request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result,tx=db.transaction('captures','readonly'),read=tx.objectStore('captures').getAll();tx.oncomplete=()=>{resolve(read.result.map(row=>({id:row.id,localSaved:row.localSaved,bytes:row.blob.size})));db.close()}}}))
+const persisted=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const request=indexedDB.open('found-device-captures-v1');request.onerror=()=>reject(request.error);request.onsuccess=()=>{const db=request.result,tx=db.transaction(['captures','runtime'],'readonly'),legacy=tx.objectStore('captures').getAll(),runtime=tx.objectStore('runtime').getAll();tx.oncomplete=()=>{const rows=new Map(legacy.result.map(row=>[row.id,{id:row.id,localSaved:row.localSaved,bytes:row.blob.size}]));for(const row of runtime.result)if(String(row.key).startsWith('found:media:v1:metadata:')&&row.active)rows.set(row.id,{id:row.id,localSaved:row.localSaved,bytes:row.byteLength});resolve([...rows.values()]);db.close()}}}))
 const unloadBlocked=()=>page.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});dispatchEvent(e);return e.defaultPrevented})
 try{
  // Format is optional; preserve defaults and keep dismissal/focus predictable.
@@ -382,7 +393,7 @@ try{
  assert.equal(await unloadBlocked(),true)
  await page.evaluate(()=>window.finishRecording())
  await page.getByRole('status',{name:'Camera upload status'}).filter({hasText:'Saved on this device'}).waitFor()
- assert.equal((await persisted())[0].bytes,14)
+ assert.equal((await persisted())[0].bytes,await page.evaluate(()=>window.fixtureVideoBlob.size))
  assert.equal(await unloadBlocked(),false)
  await shots('durable-video-device-saved')
  await setOnline(true)
@@ -471,7 +482,7 @@ try{
  await page.getByRole('status',{name:'Camera upload status'}).filter({hasText:'Saved on this device'}).waitFor()
  await page.getByRole('button',{name:'Review captures'}).click()
  const selectedPreview=await page.locator('.camera-review-preview img').getAttribute('src')
- await page.evaluate(()=>window.uploadFixtureStatus.deviceQueue.enqueue(new Blob(['newer-video'],{type:'video/mp4'}),{fileName:'video-newer.mp4'}))
+ await page.evaluate(async()=>window.uploadFixtureStatus.deviceQueue.enqueue(await window.fixtureVideoReady,{fileName:'video-newer.webm'}))
  await page.waitForFunction(()=>window.uploadFixtureStatus.queueRows.length===2)
  await page.waitForFunction(()=>document.querySelectorAll('.picker-scroll button').length===2)
  assert.equal(await page.locator('.camera-review-preview img').getAttribute('src'),selectedPreview)
@@ -500,7 +511,7 @@ try{
  const delayedTarget='44444444-4444-4444-a444-444444444444'
  await page.evaluate(id=>window.openReviewCamera(id),delayedTarget)
  await page.getByRole('region',{name:'Upload review'}).getByRole('status').filter({hasText:'Upload paused.'}).waitFor()
- await page.evaluate(id=>window.uploadFixtureStatus.deviceQueue.enqueue(new Blob(['late-original'],{type:'image/jpeg'}),{id,fileName:'photo-late.jpg'}),delayedTarget)
+ await page.evaluate(async id=>window.uploadFixtureStatus.deviceQueue.enqueue(await new Promise(resolve=>window.fixtureScene.toBlob(resolve,'image/jpeg')),{id,fileName:'photo-late.jpg'}),delayedTarget)
  await page.locator('.camera-review-preview img').waitFor()
  assert.equal((await persisted())[0].id,delayedTarget)
  assert.equal(await page.getByText('This upload is no longer pending.',{exact:true}).count(),0)
@@ -512,7 +523,7 @@ try{
  await page.getByRole('region',{name:'Upload review'}).getByRole('status').filter({hasText:'Upload paused.'}).waitFor()
  await page.evaluate(()=>window.render({accountId:'account-b',companyId:'company-b'}))
  await page.waitForFunction(()=>window.uploadFixtureStatus.accountId==='account-b'&&window.uploadFixtureStatus.queueReady)
- await page.evaluate(id=>window.oldQueue.enqueue(new Blob(['original-account-only'],{type:'image/jpeg'}),{id,fileName:'photo-private.jpg'}),delayedTarget)
+ await page.evaluate(async id=>window.oldQueue.enqueue(await new Promise(resolve=>window.fixtureScene.toBlob(resolve,'image/jpeg')),{id,fileName:'photo-private.jpg'}),delayedTarget)
  assert.equal(await page.locator('.camera-review-preview img').count(),0)
  assert.equal(await page.evaluate(()=>window.uploadFixtureStatus.queueRows.length),0)
  assert.equal((await persisted())[0].id,delayedTarget)

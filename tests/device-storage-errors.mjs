@@ -32,7 +32,7 @@ function fixture(failureName = 'InvalidStateError', boundary = 'transaction') {
       queueMicrotask(() => request.onsuccess())
       return request
     } },
-    IDBKeyRange: { only: value => value },
+    IDBKeyRange: { only: value => value, bound: (lower, upper) => ({ lower, upper }) },
     require(id) { assert.equal(id, '@/lib/uploadDashboardMedia'); return {} },
   })
   return module.exports
@@ -55,7 +55,7 @@ for (const boundary of ['transaction', 'objectStore', 'request', 'request-event'
     await assert.rejects(() => api.boundaries[method](...args), error => {
       assert.ok(error instanceof api.DeviceStorageError)
       assert.equal(error.diagnostic.operation, boundary === 'open' ? 'open' : operation)
-      assert.equal(error.diagnostic.errorName, 'InvalidStateError')
+      assert.equal(error.diagnostic.errorName, 'InvalidStateError', `${boundary}/${method}`)
       assert.equal(error.diagnostic.category, 'unavailable')
       assert.equal(error.diagnostic.verifiedOriginal, boundary === 'open' ? false : verified)
       assert.doesNotMatch(error.message, /sign in|auth|PRIVATE/i)

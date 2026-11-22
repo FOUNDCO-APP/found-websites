@@ -1,3 +1,13 @@
+## November 22, 2026 - Unreadable Captures And Automatic Optimization (Approved)
+
+Shawn approved reliability-first, automatic photo/video handling after actual
+engineering and Jony-led/Steve-co-led role review. No codec/quality choices for
+owners. A reopened unreadable capture must not be celebrated as saved, rendered
+as a browser broken-image icon or given false Keep-camera-open recovery guidance.
+Preserve bytes, one quiet existing status location and explicit existing deletion;
+new unsaved in-memory originals retain their genuine loss protection. Compression
+defaults require measured detail/compatibility acceptance, including physical phone.
+
 ## November 22, 2026 - Save Truth And Reviewability (Approved)
 
 An error updating the queue is not evidence that a verified original failed saving.

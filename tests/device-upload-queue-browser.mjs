@@ -11,7 +11,7 @@ const code = ts.transpileModule(fs.readFileSync('src/lib/deviceUploadQueue.ts','
   module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,
 } }).outputText
 const script = `window.calls=[];window.attemptOptions=[];window.cancelCalls=0;window.capturePuts=0;window.mode='success';window.visibility='visible';window.connected=!location.search.includes('offline');
-const originalPut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='captures')window.capturePuts++;return originalPut.apply(this,args)};
+const originalPut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='captures'||(this.name==='runtime'&&String(args[0]?.key).startsWith('found:media:v1:metadata:')))window.capturePuts++;return originalPut.apply(this,args)};
 Object.defineProperty(navigator,'onLine',{get:()=>window.connected});Object.defineProperty(document,'visibilityState',{get:()=>window.visibility});
 window.scope={accountId:new URLSearchParams(location.search).get('account')||'account-a',companyId:'company-a'};window.context={...window.scope};window.contextCalls=0;
 if(location.search.includes('fallback'))Object.defineProperty(navigator,'locks',{value:undefined});
@@ -34,14 +34,14 @@ window.api=module.exports;window.queue=window.api.getDeviceUploadQueue(window.sc
 window.capture=(type='image/jpeg')=>window.queue.enqueue(new Blob([Uint8Array.from([9,8,7,6])],{type}),{fileName:type.startsWith('video')?'video.mp4':'photo.jpg',albumId:'album-a'});
 window.online=value=>{window.connected=value;dispatchEvent(new Event(value?'online':'offline'))};
 window.show=value=>{window.visibility=value?'visible':'hidden';document.dispatchEvent(new Event('visibilitychange'))};
-window.diskRows=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('found-device-captures-v1');r.onsuccess=()=>{const db=r.result,t=db.transaction('captures'),q=t.objectStore('captures').getAll();t.oncomplete=()=>{resolve(q.result);db.close()};t.onabort=()=>reject(Error('disk read failed'))}});
+window.diskRows=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('found-device-captures-v1');r.onsuccess=()=>{const db=r.result,t=db.transaction(['captures','runtime']),q=t.objectStore('captures').getAll(),v=t.objectStore('runtime').getAll();t.oncomplete=()=>{const rows=new Map(q.result.map(row=>[row.id,row]));for(const meta of v.result.filter(row=>String(row.key).startsWith('found:media:v1:metadata:')&&row.active)){const key='found:media:v1:payload:'+JSON.stringify([meta.accountId,meta.companyId,meta.id]);const payload=v.result.find(row=>row.key===key);rows.set(meta.id,{...meta,blob:new Blob([payload?.bytes||new ArrayBuffer(0)],{type:meta.mimeType})})}resolve([...rows.values()]);db.close()};t.onabort=()=>reject(Error('disk read failed'))}});
 window.injectStorageFailure=(target,errorName='InvalidStateError')=>{
  const prototype=target==='capture-read'?IDBIndex.prototype:IDBObjectStore.prototype;
  const method=target==='capture-read'?'getAll':target==='budget-read'?'get':'put';
  const original=prototype[method];
  prototype[method]=function(...args){
   const store=this.objectStore||this;
-  const match=target==='capture-read'?store.name==='captures':target==='budget-read'||target==='budget-write'?store.name==='runtime':store.name==='captures'&&args[0]?.state===(target==='waiting-update'?'waiting':'uploading');
+  const match=target==='capture-read'?store.name==='captures':target==='budget-read'||target==='budget-write'?store.name==='runtime'&&String(typeof args[0]==='string'?args[0]:args[0]?.key).startsWith('['):store.name==='runtime'&&String(args[0]?.key).startsWith('found:media:v1:metadata:')&&args[0]?.state===(target==='waiting-update'?'waiting':'uploading');
   if(match)throw new DOMException('PRIVATE filename account token',errorName);
   return original.apply(this,args);
  };
@@ -318,7 +318,7 @@ try{
   {
     const f=await fixture();await f.page.evaluate(()=>{
       const original=IDBObjectStore.prototype.put;
-      IDBObjectStore.prototype.put=function(...args){if(this.name==='captures')throw new DOMException('PRIVATE filename secret-token','QuotaExceededError');return original.apply(this,args)};
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='runtime'&&String(args[0]?.key).startsWith('found:media:'))throw new DOMException('PRIVATE filename secret-token','QuotaExceededError');return original.apply(this,args)};
       window.restoreStorage=()=>IDBObjectStore.prototype.put=original;
     })
     const result=await f.page.evaluate(async()=>{try{await capture('video/mp4');return null}catch(error){return {diagnostic:queue.storageDiagnostic,errorDiagnostic:error.diagnostic,saved:error.capture.localSaved,errorJSON:JSON.stringify(error),message:error.message}}})
@@ -346,7 +346,7 @@ try{
     const f=await fixture();await f.page.evaluate(async()=>{
       await capture('video/mp4');mode='resume-failure';
       const original=IDBObjectStore.prototype.put;
-      IDBObjectStore.prototype.put=function(...args){if(this.name==='captures'&&args[0]?.resumeInfo)throw new DOMException('PRIVATE token','InvalidStateError');return original.apply(this,args)};
+      IDBObjectStore.prototype.put=function(...args){if(this.name==='runtime'&&String(args[0]?.key).startsWith('found:media:v1:metadata:')&&args[0]?.resumeInfo)throw new DOMException('PRIVATE token','InvalidStateError');return original.apply(this,args)};
       window.restoreStorage=()=>IDBObjectStore.prototype.put=original;online(true)
     })
     await f.page.waitForFunction(()=>queue.error==='Uploads paused. Device storage needs attention.')

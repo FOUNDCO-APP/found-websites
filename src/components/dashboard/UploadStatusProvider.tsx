@@ -5,6 +5,7 @@ import { getDeviceUploadQueue, type DeviceCapture } from "@/lib/deviceUploadQueu
 import { reportMediaStorageDiagnostic } from "@/lib/mediaStorageDiagnostics"
 
 export function getUploadAttentionLabel(category?: string): string {
+  if (category === "integrity") return "Couldn’t read this capture."
   if (category === "auth") return "Sign in to finish uploading."
   if (category === "size") return "File too large to upload."
   if (category === "business") return "Return to the original business."
@@ -163,13 +164,15 @@ export default function UploadStatusProvider({ children, companyId = null, accou
   const waiting = queued.filter(row => row.localSaved && row.state !== "needs_attention" && row.state !== "uploading")
   const affected = attention[0] ?? queued[0]
   const queueLabel = getQueueErrorLabel(queueError)
-  const unverified = queued.filter(row => !row.localSaved)
-  const verified = queued.filter(row => row.localSaved)
+  const unreadable = queued.filter(row => row.errorCategory === "integrity")
+  const unverified = queued.filter(row => !row.localSaved && row.errorCategory !== "integrity")
+  const verified = queued.filter(row => row.localSaved && row.errorCategory !== "integrity")
   const savedPrefix = verified.length === 1 ? "Saved on this device" : `${verified.length} saved on this device`
   const queueBlocked = !!queueError
   let text: string | null = null
   if (queued.length || pending.length || failed.length || queueLabel) {
     if (unverified.length) text = "Couldn’t save on this device. Keep this camera open."
+    else if (unreadable.length) text = queued.length === 1 ? "Couldn’t read this capture." : "A capture needs attention."
     else if (queueLabel) text = verified.length ? `${savedPrefix} · ${queueLabel}` : queueLabel
     else if (queued.length === 1 && !pending.length && !failed.length) {
       const row = queued[0]
@@ -184,8 +187,8 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     }
   } else if (added.length || (queueSuccess?.scope === scope && queueSuccess.until > now)) text = "Uploaded"
   // File-picker uploads still rely on an open page; their existing guidance stays.
-  if (text && !unverified.length && !queueBlocked && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
-  const inlineStatus = !cameraCount && text ? { text, busy: !queueBlocked && !unverified.length && (pending.length > 0 || transferring.length > 0), captureId: affected?.id, legacyAttention: failed.length > 0 } : null
+  if (text && !unverified.length && !unreadable.length && !queueBlocked && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
+  const inlineStatus = !cameraCount && text ? { text, busy: !queueBlocked && !unverified.length && !unreadable.length && (pending.length > 0 || transferring.length > 0), captureId: affected?.id, legacyAttention: failed.length > 0 } : null
   return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, inlineStatus, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
     {children}
   </UploadStatusContext.Provider>

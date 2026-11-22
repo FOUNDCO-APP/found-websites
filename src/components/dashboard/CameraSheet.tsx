@@ -20,7 +20,7 @@ const RATIOS = [
 
 type UploadProgress = NonNullable<DeviceCapture["uploadProgress"]>
 
-type Capture = { playbackOrientation?: OrientationResult["status"]; savedAt?: number; uploadProgress?: UploadProgress; id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
+type Capture = { previewUnreadable?: boolean; playbackOrientation?: OrientationResult["status"]; savedAt?: number; uploadProgress?: UploadProgress; id: string; previewUrl: string; fileName: string; albumId: string | null; state: DeviceCapture["state"] | "saving" | "save_failed"; localSaved: boolean; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string; uploadError?: boolean; errorCategory?: string; startedAt?: number }
 
 // Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
@@ -122,13 +122,17 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     setReviewIndex(index)
   }
   const pendingCaptures = captures.filter(c => c.uploading || c.state === "saving")
-  const attentionCaptures = captures.filter(c => c.uploadError || c.state === "save_failed")
+  const attentionCaptures = captures.filter(c => c.uploadError || c.state === "save_failed" || c.previewUnreadable)
+  const unreadableCaptures = captures.filter(c => c.errorCategory === "integrity" || c.previewUnreadable)
   const deviceSavedCaptures = captures.filter(c => !c.photoId && c.localSaved && !c.uploading && c.state !== "needs_attention")
   const queueNotice = getQueueErrorLabel(uploadStatus.queueError)
   function captureLabel(capture: Capture): string {
+    if (capture.errorCategory === "integrity") return "Couldn’t read this capture."
+    if (capture.previewUnreadable && (capture.localSaved || capture.photoId)) return "Couldn’t read this capture."
     if (capture.photoId) return capture.playbackOrientation === "mismatch" ? "Uploaded · Check video framing" : "Uploaded"
     if (capture.state === "saving") return "Saving…"
     if (!capture.localSaved) return "Couldn’t save on this device. Keep this camera open."
+    if (capture.previewUnreadable) return "Couldn’t read this capture."
     if (queueNotice) return `Saved on this device · ${queueNotice}`
     if (capture.uploading) {
       const progress = capture.uploadProgress
@@ -141,8 +145,9 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     return statusNow - (capture.savedAt ?? 0) < 2600 ? "Saved on this device" : "1 waiting to upload"
   }
   const unfinished = captures.filter(c => !c.photoId)
-  const unprotected = unfinished.filter(c => !c.localSaved)
+  const unprotected = unfinished.filter(c => !c.localSaved && c.errorCategory !== "integrity")
   const localSummary = unprotected.length ? (unprotected.length === 1 ? captureLabel(unprotected[0]) : unprotected.some(c => c.state !== "saving") ? "Couldn’t save on this device. Keep this camera open." : "Saving…")
+    : unreadableCaptures.length ? "A capture needs attention."
     : unfinished.length && queueNotice ? `Saved on this device · ${queueNotice}`
     : unfinished.length === 1 ? captureLabel(unfinished[0]) : unfinished.length
     ? [pendingCaptures.length ? `${pendingCaptures.length} saving or uploading` : "", deviceSavedCaptures.length ? `${deviceSavedCaptures.length} waiting to upload` : "", attentionCaptures.length ? `${attentionCaptures.length} need attention` : ""].filter(Boolean).join(" · ")
@@ -186,10 +191,29 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     const previous = capturesRef.current.find(c => c.id === row.id || c.fileName === row.fileName)
     // Uploaded memory rows from an earlier camera opening are not new captures.
     if (!previous && row.state === "uploaded") return
-    const previewUrl = previous?.previewUrl ?? URL.createObjectURL(row.blob)
-    captureUrls.current.add(previewUrl)
-    const capture: Capture = { playbackOrientation: previous?.playbackOrientation, savedAt: previous?.savedAt ?? (row.localSaved ? previous?.state === "saving" ? Date.now() : row.createdAt : undefined), uploadProgress: row.uploadProgress, id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId, state: !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state, localSaved: row.localSaved, uploading: row.state === "uploading", isVideo: row.mimeType.startsWith("video/") || row.fileName.startsWith("video-"), photoId: row.state === "uploaded" ? row.photo?.id : undefined, storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined, uploadError: row.localSaved && row.state === "needs_attention", errorCategory: row.errorCategory, startedAt: previous?.state === row.state ? previous.startedAt : Date.now() }
-    if (!row.localSaved && row.state !== "uploaded" && !unsaved.current.has(row.id)) {
+    // Reopened unreadable rows are not new unsaved camera originals. Keep any
+    // real in-memory original on its existing save-failed path instead.
+    const integrity = row.errorCategory === "integrity" && !unsaved.current.has(row.id)
+    let previewUrl = previous?.previewUrl ?? ""
+    let previewUnreadable = previous?.previewUnreadable ?? false
+    if (!previewUrl && !integrity) {
+      try { previewUrl = URL.createObjectURL(row.blob) } catch { previewUnreadable = true }
+    }
+    if (previewUrl) captureUrls.current.add(previewUrl)
+    const capture: Capture = {
+      previewUnreadable, playbackOrientation: previous?.playbackOrientation,
+      savedAt: previous?.savedAt ?? (row.localSaved ? previous?.state === "saving" ? Date.now() : row.createdAt : undefined),
+      uploadProgress: row.uploadProgress, id: row.id, previewUrl, fileName: row.fileName, albumId: row.albumId,
+      state: integrity ? "needs_attention" : !row.localSaved && row.state !== "uploaded" ? "save_failed" : row.state,
+      localSaved: row.localSaved, uploading: !integrity && row.state === "uploading",
+      isVideo: row.mimeType.startsWith("video/") || row.fileName.startsWith("video-"),
+      photoId: row.state === "uploaded" ? row.photo?.id : undefined,
+      storagePath: row.state === "uploaded" ? row.photo?.storage_path : undefined,
+      uploadError: integrity || (row.localSaved && row.state === "needs_attention"),
+      errorCategory: row.errorCategory === "integrity" && !integrity ? "storage" : row.errorCategory,
+      startedAt: previous?.state === row.state ? previous.startedAt : Date.now(),
+    }
+    if (!integrity && !row.localSaved && row.state !== "uploaded" && !unsaved.current.has(row.id)) {
       unsaved.current.set(row.id, { blob: row.blob, fileName: row.fileName, albumId: row.albumId, saving: false })
     }
     if (row.localSaved || row.state === "uploaded") {
@@ -247,7 +271,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   async function retryCapture(id: string) {
     if (retrying.current.has(id)) return
     const capture = capturesRef.current.find(c => c.id === id)
-    if (!capture || capture.photoId || capture.uploading || ["auth", "size", "business"].includes(capture.errorCategory ?? "")) return
+    if (!capture || capture.photoId || capture.uploading || capture.previewUnreadable || ["auth", "size", "business", "integrity"].includes(capture.errorCategory ?? "")) return
     retrying.current.add(id)
     try {
       if (capture.state === "save_failed") await saveOnDevice(id)
@@ -529,7 +553,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   }
 
   async function deleteCapture(capture: Capture) {
-    if (!capture.photoId || unsaved.current.has(capture.id)) return
+    if (unsaved.current.has(capture.id)) return
+    const unreadable = capture.errorCategory === "integrity" || capture.previewUnreadable
+    if (!capture.photoId && unreadable) {
+      const queue = queueRef.current
+      if (!queue) return
+      try {
+        await queue.discard(capture.id)
+        if (queue.getSnapshot().some(row => row.id === capture.id)) return
+      } catch { return /* Preserve the entry and its bytes when deletion fails. */ }
+    } else if (!capture.photoId) return
     updateCaptures(prev => prev.filter(c => c.id !== capture.id))
     selectReview(null)
     setConfirmDelete(false)
@@ -542,6 +575,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         body: JSON.stringify({ id: capture.photoId, storage_path: capture.storagePath }),
       })
     }
+  }
+
+  function markPreviewUnreadable(id: string) {
+    if (!mounted.current || capturesRef.current.find(c => c.id === id)?.previewUnreadable) return
+    // Presentation only: do not mutate upload state, storage or original bytes.
+    updateCaptures(list => list.map(c => c.id === id ? { ...c, previewUnreadable: true } : c))
   }
 
   function handleShutter() {
@@ -699,7 +738,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       {/* Status reserves its own row, independent of thumbnail and shutter. */}
       <div className="camera-status-slot" data-camera-status-slot>
         {localSummary && !reviewOnly && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
-          {pendingCaptures.some(c => c.state === "saving" || (c.uploading && !queueNotice)) && spinner}<span>{localSummary}</span>
+          {(!unreadableCaptures.length || unprotected.length > 0) && pendingCaptures.some(c => c.state === "saving" || (c.uploading && !queueNotice)) && spinner}<span>{localSummary}</span>
         </div>}
       </div>
       <div className="camera-shutter-row" style={{
@@ -712,18 +751,18 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         {/* Last capture thumbnail â€” tap to review */}
         <button
           aria-label="Review captures"
-          onClick={() => captures.length > 0 ? selectReview(Math.max(0, captures.findIndex(c => c.uploadError || c.state === "save_failed"))) : undefined}
+          onClick={() => captures.length > 0 ? selectReview(Math.max(0, captures.findIndex(c => c.uploadError || c.state === "save_failed" || c.previewUnreadable))) : undefined}
           style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
         >
           {captures[0] ? (
             <div style={{ width: 58, height: 58, borderRadius: 12, overflow: "hidden", border: "2px solid rgba(255,255,255,0.75)", position: "relative", backgroundColor: "#111" }}>
-              {captures[0].isVideo ? (
+              {captures[0].errorCategory === "integrity" || captures[0].previewUnreadable ? <span aria-label="Preview unavailable" style={{ display: "grid", placeItems: "center", height: "100%", color: "#ccc" }}>!</span> : captures[0].isVideo ? (
                 <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 </div>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={captures[0].previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={captures[0].previewUrl} alt="" onError={() => markPreviewUnreadable(captures[0].id)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               )}
               {captures[0].uploading && (
                 <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -817,11 +856,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
 
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {/* Annotate */}
-                {!cap.isVideo && (
+                {!cap.isVideo && cap.errorCategory !== "integrity" && !cap.previewUnreadable && (
                   <button
                     aria-label="Annotate"
-                  disabled={!cap.photoId || cap.uploading}
-                    onClick={() => { if (cap.photoId && !unsaved.current.has(cap.id)) setAnnotating(true) }}
+                  disabled={!cap.photoId || cap.uploading || cap.errorCategory === "integrity" || cap.previewUnreadable}
+                    onClick={() => { if (cap.photoId && !cap.previewUnreadable && cap.errorCategory !== "integrity" && !unsaved.current.has(cap.id)) setAnnotating(true) }}
                     style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -834,8 +873,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
                 {/* Delete */}
                 <button
                   aria-label="Delete"
-                  disabled={!cap.photoId || cap.uploading}
-                  onClick={() => { if (cap.photoId && !unsaved.current.has(cap.id)) setConfirmDelete(true) }}
+                  disabled={(!cap.photoId && cap.errorCategory !== "integrity" && !cap.previewUnreadable) || cap.uploading || unsaved.current.has(cap.id)}
+                  onClick={() => { if ((cap.photoId || cap.errorCategory === "integrity" || cap.previewUnreadable) && !unsaved.current.has(cap.id)) setConfirmDelete(true) }}
                   style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -849,17 +888,18 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
             {/* â”€â”€ Main preview â”€â”€ */}
             <div className="camera-review-status" data-camera-review-status style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44, padding: "0 20px", color: "#ccc" }}>
               <span role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.9375rem", lineHeight: 1.45, minWidth: 0 }}>
-                {((cap.uploading && !queueNotice) || cap.state === "saving") && spinner}<span>{captureLabel(cap)}{cap.playbackOrientation === "mismatch" && !cap.photoId ? " · Check video framing" : ""}</span>
+                {!cap.previewUnreadable && cap.errorCategory !== "integrity" && ((cap.uploading && !queueNotice) || cap.state === "saving") && spinner}<span>{captureLabel(cap)}{cap.playbackOrientation === "mismatch" && !cap.photoId ? " · Check video framing" : ""}</span>
               </span>
-              {(cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
+              {!cap.previewUnreadable && cap.errorCategory !== "integrity" && (cap.state === "save_failed" || (cap.uploadError && !["auth", "size", "business"].includes(cap.errorCategory ?? ""))) && <button aria-label={cap.state === "save_failed" ? "Try saving again" : `Retry ${cap.isVideo ? "video" : "photo"}`} style={{ flexShrink: 0, minHeight: 44, padding: "8px 0 8px 12px", border: 0, background: "transparent", color: "white", fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer" }} onClick={() => { void retryCapture(cap.id) }}>{cap.state === "save_failed" ? "Try saving again" : "Try again"}</button>}
             </div>
             <div className="camera-review-preview" data-camera-review-preview style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, overflow: "hidden", minHeight: 120 }}>
               <div style={{ width: "100%", height: "100%", borderRadius: 0, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {cap.isVideo ? (
+                {cap.errorCategory === "integrity" || cap.previewUnreadable ? <p data-camera-unreadable style={{ margin: 0, padding: 24, color: "#aaa", fontSize: "0.9375rem", textAlign: "center" }}>Preview unavailable</p> : cap.isVideo ? (
                   <video
                     src={cap.previewUrl}
                     controls
                     playsInline
+                    onError={() => markPreviewUnreadable(cap.id)}
                     style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none" }}
                   />
                 ) : (
@@ -867,6 +907,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
                   <img
                     src={cap.previewUrl}
                     alt=""
+                    onError={() => markPreviewUnreadable(cap.id)}
                     style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                   />
                 )}
@@ -898,11 +939,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
                         backgroundColor: "#1A1A1A",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
-                        {c.isVideo ? (
+                        {c.errorCategory === "integrity" || c.previewUnreadable ? <span aria-label="Preview unavailable" style={{ color: "#ccc" }}>!</span> : c.isVideo ? (
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={c.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          <img src={c.previewUrl} alt="" onError={() => markPreviewUnreadable(c.id)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         )}
                         {(c.uploadError || c.state === "save_failed") && <span aria-hidden="true" style={{ position: "absolute", right: 4, top: 4, borderRadius: "50%", background: "#c69262", color: "#111", width: 18, height: 18, display: "grid", placeItems: "center", fontSize: "0.75rem", fontWeight: 800 }}>!</span>}
                         {c.uploading && (
@@ -939,7 +980,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
                   <p style={{ margin: "0 0 28px", fontSize: "0.875rem", color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
-                    This will permanently remove it from your account.
+                    {cap.photoId ? "This will permanently remove it from your account." : "This will permanently remove the stored capture from this device."}
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button

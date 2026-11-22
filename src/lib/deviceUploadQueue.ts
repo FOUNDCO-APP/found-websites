@@ -9,6 +9,7 @@ export type DeviceCapture = {
   photo?: DashboardMediaUpload; error?: string; errorCategory?: string
   attempts: number; firstAttemptAt: number | null; nextAttemptAt: number
   leaseOwner?: string; leaseUntil?: number
+  leaseMode?: "web-lock" | "fallback"
   resumeInfo?: ResumableMediaResumeInfo | null
   uploadProgress?: MediaUploadProgress
 }
@@ -21,7 +22,7 @@ const MAX_ITEMS = 50
 const CYCLE_MS = 15 * 60_000
 const RETRY_MS = [5_000, 15_000, 45_000]
 const scopeKey = (scope: DeviceScope) => JSON.stringify([scope.accountId, scope.companyId])
-const sameScope = (row: DeviceCapture, scope: DeviceScope) => row.accountId === scope.accountId && row.companyId === scope.companyId
+const sameScope = (row: DeviceScope, scope: DeviceScope) => row.accountId === scope.accountId && row.companyId === scope.companyId
 let database: Promise<IDBDatabase> | null = null
 
 export type DeviceStorageOperation = "open" | "scope" | "initial-write" | "capture-read" | "capture-update" | "budget-read" | "budget-write" | "lease-claim" | "lease-release" | "remove"
@@ -88,7 +89,7 @@ function openDatabase(): Promise<IDBDatabase> {
   return database
 }
 
-function transaction(db: IDBDatabase, mode: IDBTransactionMode, store = STORE) {
+function transaction(db: IDBDatabase, mode: IDBTransactionMode, store: string | string[] = STORE) {
   try { return db.transaction(store, mode, { durability: "strict" }) }
   catch { return db.transaction(store, mode) }
 }
@@ -111,71 +112,215 @@ async function budget(scope: DeviceScope, value?: { failures: number; notBefore:
   })
 }
 
-// Verification occurs inside the transaction; the promise resolves only after
-// commit. Quota/abort/blocked failures never become a "saved" claim.
+// Media is immutable binary data. Queue metadata lives separately in the
+// existing runtime store: no database upgrade and no Blob-shaped placeholders
+// that an older open tab could accidentally upload. Older tabs retain/drain
+// their legacy captures, but cannot see captures created by this format.
+type CaptureMetadata = Omit<DeviceCapture, "blob" | "photo" | "uploadProgress"> & {
+  key: string; format: 1; byteLength: number; digest: string; active: boolean
+  legacySource?: boolean
+}
+type CapturePayload = { key: string; format: 1; accountId: string; companyId: string; id: string; bytes: ArrayBuffer; digest: string }
+const META_PREFIX = "found:media:v1:metadata:"
+const PAYLOAD_PREFIX = "found:media:v1:payload:"
+const mediaKey = (prefix: string, row: DeviceScope & { id: string }) => prefix + JSON.stringify([row.accountId, row.companyId, row.id])
+const metadataKey = (row: DeviceScope & { id: string }) => mediaKey(META_PREFIX, row)
+const payloadKey = (row: DeviceScope & { id: string }) => mediaKey(PAYLOAD_PREFIX, row)
+const metadataRange = () => IDBKeyRange.bound(META_PREFIX, META_PREFIX + "\uffff")
+const metadata = (row: DeviceCapture, digest: string, active: boolean): CaptureMetadata => {
+  const { blob: _blob, photo: _photo, uploadProgress: _progress, ...values } = row
+  return { ...values, key: metadataKey(row), format: 1, byteLength: row.blob.size, digest, active, localSaved: true }
+}
+function requestValue<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+function committed(tx: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve()
+    tx.onabort = tx.onerror = event => reject(transactionError(tx, event))
+  })
+}
+async function boundedRead<T>(action: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try { return await Promise.race([action, new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new DOMException("Media read timed out", "TimeoutError")), 30_000)
+  })]) } finally { clearTimeout(timer) }
+}
+async function checksum(bytes: ArrayBuffer) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), value => value.toString(16).padStart(2, "0")).join("")
+}
+class UnreadableCaptureError extends Error {
+  constructor() { super("Unreadable media"); this.name = "DataCloneError" }
+}
+async function materialize(blob: Blob) {
+  let bytes: ArrayBuffer
+  try { bytes = await boundedRead(blob.arrayBuffer()) } catch { throw new UnreadableCaptureError() }
+  if (!bytes.byteLength || bytes.byteLength !== blob.size) throw new UnreadableCaptureError()
+  return { bytes, digest: await checksum(bytes) }
+}
+function validIdentity(stored: CaptureMetadata | DeviceCapture, row: DeviceCapture) {
+  return sameScope(stored, row) && stored.id === row.id && stored.fileName === row.fileName
+    && stored.albumId === row.albumId && stored.mimeType === row.mimeType
+    && ("byteLength" in stored ? stored.byteLength : stored.blob.size) === row.blob.size
+}
+const mutableMetadata = (row: DeviceCapture) => ({ state: row.state, attempts: row.attempts, firstAttemptAt: row.firstAttemptAt,
+  nextAttemptAt: row.nextAttemptAt, resumeInfo: row.resumeInfo, error: row.error, errorCategory: row.errorCategory,
+  leaseOwner: row.leaseOwner, leaseUntil: row.leaseUntil, leaseMode: row.leaseMode })
+async function readPayload(db: IDBDatabase, meta: CaptureMetadata): Promise<Blob> {
+  const tx = transaction(db, "readonly", RUNTIME), done = committed(tx)
+  const value = await Promise.all([requestValue(tx.objectStore(RUNTIME).get(payloadKey(meta))) as Promise<CapturePayload | undefined>, done]).then(values => values[0])
+  if (!value || value.format !== 1 || !sameScope(value, meta) || value.id !== meta.id
+    || !(value.bytes instanceof ArrayBuffer) || value.bytes.byteLength !== meta.byteLength
+    || value.digest !== meta.digest || await checksum(value.bytes) !== meta.digest) throw new UnreadableCaptureError()
+  return new Blob([value.bytes], { type: meta.mimeType })
+}
+// Prepared payloads survive interruption. Activation and legacy removal are one
+// atomic switch, only after full byte readback in a fresh committed transaction.
+async function activate(db: IDBDatabase, meta: CaptureMetadata) {
+  await readPayload(db, meta)
+  const tx = transaction(db, "readwrite", [STORE, RUNTIME]), done = committed(tx)
+  const legacy = tx.objectStore(STORE), runtime = tx.objectStore(RUNTIME)
+  let activated: CaptureMetadata | undefined
+  const check = runtime.get(metadataKey(meta))
+  check.onsuccess = () => {
+    try {
+    const current = check.result as CaptureMetadata | undefined
+    if (!current || current.digest !== meta.digest || !sameScope(current, meta)) { tx.abort(); return }
+    const old = legacy.get(meta.id)
+    old.onsuccess = () => {
+      try {
+      const row = old.result as DeviceCapture | undefined
+      // A concurrently leased legacy capture must remain under its owner.
+      if ((current.legacySource && !row) || (row && (!validIdentity(current, row) || (row.leaseUntil ?? 0) > Date.now()))) { tx.abort(); return }
+      // An older tab may have advanced retry/resume state while preparation was
+      // interrupted. Carry its latest metadata, never reset its durable budget.
+      const latest = row ? mutableMetadata(row) : {}
+      activated = { ...current, ...latest, active: true }
+      runtime.put(activated)
+      if (row) legacy.delete(meta.id)
+      } catch { tx.abort() }
+    }
+    } catch { tx.abort() }
+  }
+  await done
+  if (!activated) throw new DOMException("Activation incomplete", "AbortError")
+  return activated
+}
+
 async function persist(row: DeviceCapture, newCapture = false) {
   const operation = newCapture ? "initial-write" : "capture-update"
   return storageOperation(operation, async () => {
   const db = await openDatabase()
-  await new Promise<void>((resolve, reject) => {
-    const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
-    let verified = false
-    let failure: unknown
-    let category: DeviceStorageDiagnostic["category"] | undefined
-    const failed = (originalError: unknown = tx.error) => new DeviceStorageError(undefined, operation, failure ?? originalError, category, !newCapture && row.localSaved)
-    tx.oncomplete = () => verified ? resolve() : reject(failed())
-    tx.onabort = tx.onerror = event => reject(failed(transactionError(tx, event)))
-    const write = () => {
-      try {
-        const { photo: _photo, ...stored } = row
-        const request = store.put({ ...stored, localSaved: true })
-        request.onsuccess = () => {
-          try {
-            const check = store.get(row.id)
-            check.onsuccess = () => {
-              const value = check.result as DeviceCapture | undefined
-              verified = !!value && sameScope(value, row) && value.blob instanceof Blob
-                && value.blob.size === row.blob.size && value.mimeType === row.mimeType
-              if (!verified) tx.abort()
-            }
-          } catch (caught) { failure = caught; tx.abort() }
-        }
-      } catch (caught) { failure = caught; tx.abort() }
-    }
-    const guarded = (existing?: DeviceCapture) => {
-      if (existing && existing.leaseOwner !== row.leaseOwner && (existing.leaseUntil ?? 0) > Date.now()) { category = "conflict"; tx.abort(); return }
-      if (existing && (!sameScope(existing, row) || existing.fileName !== row.fileName
-        || existing.albumId !== row.albumId || existing.blob.size !== row.blob.size || existing.mimeType !== row.mimeType)) { category = "conflict"; tx.abort(); return }
-      write()
-    }
-    if (!newCapture) {
-      const request = store.get(row.id)
-      request.onsuccess = () => { if (!request.result) tx.abort(); else guarded(request.result) }
-      return
-    }
-    const request = store.getAll()
-    request.onsuccess = () => {
-      const rows = request.result as DeviceCapture[]
-      const existing = rows.find(value => value.id === row.id)
-      // Enqueue cannot reset an existing attempt/budget or replace its bytes.
-      if (existing) { category = "conflict"; tx.abort(); return }
-      const others = rows.filter(value => value.id !== row.id)
-      if (others.length >= MAX_ITEMS || others.reduce((sum, value) => sum + value.blob.size, 0) + row.blob.size > MAX_BYTES) { category = "capacity"; tx.abort(); return }
-      guarded(existing)
-    }
-  })
+  // Read/materialize before any legacy lease/state rewrite. Never re-store a
+  // rendered native Blob; every new payload is detached bytes written once.
+  const read = transaction(db, "readonly", RUNTIME), readDone = committed(read)
+  const existing = await Promise.all([requestValue(read.objectStore(RUNTIME).get(metadataKey(row))) as Promise<CaptureMetadata | undefined>, readDone]).then(values => values[0])
+  const binary = existing ? null : await materialize(row.blob)
+  if (existing && !existing.active && existing.digest !== (await materialize(row.blob)).digest)
+    throw new DeviceStorageError(undefined, operation, undefined, "conflict", false)
+  let prepared: CaptureMetadata | undefined
+  let failure: unknown
+  const tx = transaction(db, "readwrite", [STORE, RUNTIME]), done = committed(tx)
+  const runtime = tx.objectStore(RUNTIME), legacy = tx.objectStore(STORE)
+  const request = runtime.get(metadataKey(row))
+  request.onsuccess = () => {
+    try {
+      const current = request.result as CaptureMetadata | undefined
+      const oldRequest = legacy.get(row.id)
+      oldRequest.onsuccess = () => {
+        try {
+          const old = oldRequest.result as DeviceCapture | undefined
+          const conflictingLease = (value?: CaptureMetadata | DeviceCapture) => value && value.leaseOwner !== row.leaseOwner && (value.leaseUntil ?? 0) > Date.now()
+          if ((current && !validIdentity(current, row)) || (old && !validIdentity(old, row)) || conflictingLease(current) || conflictingLease(old)
+            || (newCapture && (current?.active || old))) throw new DeviceStorageError(undefined, operation, undefined, "conflict", !newCapture && row.localSaved)
+          if (current) {
+            const next = { ...metadata(row, current.digest, current.active), legacySource: current.legacySource }
+            runtime.put(next)
+            if (!current.active) prepared = next
+            return
+          }
+          if (!binary || (!newCapture && !old)) throw new DeviceStorageError(undefined, operation, undefined, "conflict", !newCapture && row.localSaved)
+          const write = () => {
+            const meta = { ...metadata(row, binary.digest, false), legacySource: !!old }
+            runtime.put({ key: payloadKey(row), format: 1, accountId: row.accountId, companyId: row.companyId, id: row.id, bytes: binary.bytes, digest: binary.digest } satisfies CapturePayload)
+            runtime.put(meta); prepared = meta
+          }
+          if (!newCapture) { write(); return }
+          const oldRows = legacy.getAll(), newRows = runtime.getAll(metadataRange())
+          let legacyRows: DeviceCapture[] | undefined, metas: CaptureMetadata[] | undefined
+          const capacity = () => {
+            if (!legacyRows || !metas) return
+            try {
+              const sizes = new Map<string, number>()
+              for (const value of legacyRows) sizes.set(value.id, value.blob.size)
+              for (const value of metas) sizes.set(value.id, value.byteLength)
+              if (sizes.size >= MAX_ITEMS || [...sizes.values()].reduce((sum, size) => sum + size, 0) + row.blob.size > MAX_BYTES)
+                throw new DeviceStorageError(undefined, operation, undefined, "capacity")
+              write()
+            } catch (caught) { failure = caught; tx.abort() }
+          }
+          oldRows.onsuccess = () => { legacyRows = oldRows.result; capacity() }
+          newRows.onsuccess = () => { metas = newRows.result; capacity() }
+        } catch (caught) { failure = caught; tx.abort() }
+      }
+    } catch (caught) { failure = caught; tx.abort() }
+  }
+  try { await done } catch (caught) { throw failure ?? caught }
+  if (prepared) await activate(db, prepared)
   }, !newCapture && row.localSaved)
 }
 
 async function list(scope: DeviceScope): Promise<DeviceCapture[]> {
   return storageOperation("capture-read", async () => {
   const db = await openDatabase()
-  return new Promise((resolve, reject) => {
-    const tx = transaction(db, "readonly")
-    const request = tx.objectStore(STORE).index("scope").getAll(IDBKeyRange.only([scope.accountId, scope.companyId]))
-    tx.oncomplete = () => resolve((request.result as DeviceCapture[]).filter(row => sameScope(row, scope)))
-    tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "capture-read", transactionError(tx, event)))
-  })
+  const tx = transaction(db, "readonly", [STORE, RUNTIME]), done = committed(tx)
+  const [legacy, all] = await Promise.all([
+    requestValue(tx.objectStore(STORE).index("scope").getAll(IDBKeyRange.only([scope.accountId, scope.companyId]))) as Promise<DeviceCapture[]>,
+    requestValue(tx.objectStore(RUNTIME).getAll(metadataRange())) as Promise<CaptureMetadata[]>, done,
+  ])
+  const rows = new Map<string, DeviceCapture>()
+  for (const row of legacy.filter(value => sameScope(value, scope))) {
+    try {
+      const { bytes } = await materialize(row.blob)
+      rows.set(row.id, { ...row, blob: new Blob([bytes], { type: row.mimeType }), localSaved: true })
+    } catch (caught) {
+      if (!(caught instanceof UnreadableCaptureError)) throw caught
+      rows.set(row.id, { ...row, localSaved: false, state: "needs_attention", errorCategory: "integrity", error: "Couldn’t read this capture." })
+    }
+  }
+  for (const meta of all.filter(value => sameScope(value, scope))) {
+    const original = rows.get(meta.id)
+    const legacyOriginal = legacy.find(value => value.id === meta.id && sameScope(value, scope))
+    // A deleted legacy original is not a new capture. Keep its prepared bytes
+    // untouched, but never resurrect or automatically upload that orphan.
+    if (meta.legacySource && !meta.active && !original) continue
+    // Healthy legacy migrations remain owned by the lock holder. A readable
+    // prepared backup may rescue unreadable legacy bytes. The same verified
+    // atomic switch retires the old representation, preventing an older fallback
+    // tab from independently leasing it after the new owner starts uploading.
+    if (!meta.active && original && original.errorCategory !== "integrity") continue
+    try {
+      const blob = await readPayload(db, meta)
+      // Preview a verified backup during an older tab's live lease, but never
+      // steal that lease by activating under its copied owner identifier.
+      const effective = !meta.active
+        ? legacyOriginal && (legacyOriginal.leaseUntil ?? 0) > Date.now()
+          ? { ...meta, ...mutableMetadata(legacyOriginal) }
+          : await activate(db, meta)
+        : meta
+      const { key: _key, format: _format, digest: _digest, byteLength: _length, active: _active, ...row } = effective
+      rows.set(meta.id, { ...row, blob, localSaved: true })
+    } catch (caught) {
+      if (!(caught instanceof UnreadableCaptureError)) throw caught
+      // An active payload is authoritative. Never silently substitute a legacy
+      // duplicate after its checksum fails; retain both for explicit recovery.
+      if (meta.active || !rows.has(meta.id)) rows.set(meta.id, { ...meta, blob: original?.blob ?? new Blob([], { type: meta.mimeType }), localSaved: false, state: "needs_attention", errorCategory: "integrity", error: "Couldn’t read this capture." })
+    }
+  }
+  return [...rows.values()]
   })
 }
 
@@ -183,10 +328,13 @@ async function remove(scope: DeviceScope, id: string) {
   return storageOperation("remove", async () => {
   const db = await openDatabase()
   return new Promise<void>((resolve, reject) => {
-    const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
+    const tx = transaction(db, "readwrite", [STORE, RUNTIME]), store = tx.objectStore(STORE), runtime = tx.objectStore(RUNTIME)
     const request = store.get(id)
     request.onsuccess = () => {
-      try { if (request.result && sameScope(request.result, scope)) store.delete(id) }
+      try {
+        if (request.result && sameScope(request.result, scope)) store.delete(id)
+        runtime.delete(metadataKey({ ...scope, id })); runtime.delete(payloadKey({ ...scope, id }))
+      }
       catch (caught) { reject(new DeviceStorageError(undefined, "remove", caught)); tx.abort() }
     }
     tx.oncomplete = () => resolve()
@@ -195,19 +343,32 @@ async function remove(scope: DeviceScope, id: string) {
   })
 }
 
-async function claimLease(scope: DeviceScope, id: string, owner: string) {
+async function claimLease(scope: DeviceScope, id: string, owner: string, webLockHeld = false) {
   return storageOperation("lease-claim", async () => {
   const db = await openDatabase()
   return new Promise<boolean>((resolve, reject) => {
-    const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
+    const tx = transaction(db, "readwrite", [STORE, RUNTIME]), store = tx.objectStore(STORE), runtime = tx.objectStore(RUNTIME)
     let claimed = false
-    const request = store.get(id)
+    const request = runtime.get(metadataKey({ ...scope, id }))
     request.onsuccess = () => {
-      const row = request.result as DeviceCapture | undefined
-      if (!row || !sameScope(row, scope) || (row.leaseOwner !== owner && (row.leaseUntil ?? 0) > Date.now())) return
       try {
-        store.put({ ...row, leaseOwner: owner, leaseUntil: Date.now() + 20 * 60_000 })
-        claimed = true
+        const meta = request.result as CaptureMetadata | undefined
+        const available = (value: DeviceCapture | CaptureMetadata) => sameScope(value, scope) && !(value.leaseOwner !== owner && (value.leaseUntil ?? 0) > Date.now())
+        const old = store.get(id)
+        old.onsuccess = () => {
+          try {
+            const row = old.result as DeviceCapture | undefined
+            if (row && !available(row)) return
+            if (meta?.active) {
+              // Holding the real Web Lock proves a former Web-Locks owner is
+              // gone after reload. Never override an unknown/fallback lease.
+              if (!available(meta) && !(webLockHeld && sameScope(meta, scope) && meta.leaseMode === "web-lock")) return
+              runtime.put({ ...meta, leaseOwner: owner, leaseUntil: Date.now() + 20 * 60_000, leaseMode: webLockHeld ? "web-lock" : "fallback" }); claimed = true
+            } else if (row && available(row)) {
+              store.put({ ...row, leaseOwner: owner, leaseUntil: Date.now() + 20 * 60_000 }); claimed = true
+            }
+          } catch (caught) { reject(new DeviceStorageError(undefined, "lease-claim", caught)); tx.abort() }
+        }
       } catch (caught) { reject(new DeviceStorageError(undefined, "lease-claim", caught)); tx.abort() }
     }
     tx.oncomplete = () => resolve(claimed)
@@ -220,12 +381,21 @@ async function releaseLease(scope: DeviceScope, id: string, owner: string) {
   return storageOperation("lease-release", async () => {
   const db = await openDatabase()
   await new Promise<void>((resolve, reject) => {
-    const tx = transaction(db, "readwrite"), store = tx.objectStore(STORE)
-    const request = store.get(id)
+    const tx = transaction(db, "readwrite", [STORE, RUNTIME]), store = tx.objectStore(STORE), runtime = tx.objectStore(RUNTIME)
+    const request = runtime.get(metadataKey({ ...scope, id }))
     request.onsuccess = () => {
-      const row = request.result as DeviceCapture | undefined
-      try { if (row && sameScope(row, scope) && row.leaseOwner === owner) store.put({ ...row, leaseOwner: undefined, leaseUntil: undefined }) }
-      catch (caught) { reject(new DeviceStorageError(undefined, "lease-release", caught)); tx.abort() }
+      try {
+        const meta = request.result as CaptureMetadata | undefined
+        if (meta && sameScope(meta, scope) && meta.leaseOwner === owner) runtime.put({ ...meta, leaseOwner: undefined, leaseUntil: undefined, leaseMode: undefined })
+        if (meta?.active) return
+        const old = store.get(id)
+        old.onsuccess = () => {
+          try {
+            const row = old.result as DeviceCapture | undefined
+            if (row && sameScope(row, scope) && row.leaseOwner === owner) store.put({ ...row, leaseOwner: undefined, leaseUntil: undefined })
+          } catch (caught) { reject(new DeviceStorageError(undefined, "lease-release", caught)); tx.abort() }
+        }
+      } catch (caught) { reject(new DeviceStorageError(undefined, "lease-release", caught)); tx.abort() }
     }
     tx.oncomplete = () => resolve()
     tx.onabort = tx.onerror = event => reject(new DeviceStorageError(undefined, "lease-release", transactionError(tx, event)))
@@ -284,7 +454,9 @@ function createQueue(scope: DeviceScope) {
     emit()
   }
   async function refresh() {
+    const refreshGeneration = generation
     const rows = await list(scope), ids = new Set(rows.map(row => row.id))
+    if (signedOut || generation !== refreshGeneration) return
     for (const [id, row] of cache) if (row.localSaved && row.state !== "uploaded" && !ids.has(id)) cache.delete(id)
     for (const row of rows) cache.set(row.id, row)
     emit()
@@ -378,19 +550,32 @@ function createQueue(scope: DeviceScope) {
   }
   async function withLock(id: string, action: () => Promise<void>) {
     const lockGeneration = generation
+    const leasedAction = async (webLockHeld = false) => {
+      // Use the durable protocol even with Web Locks, so an older fallback tab
+      // and a newer Web-Locks tab cannot both own the same upload.
+      const beforeLease = (await list(scope)).find(row => row.id === id)
+      if (!beforeLease || !eligible() || generation !== lockGeneration) return false
+      if (beforeLease.leaseOwner !== owner && (beforeLease.leaseUntil ?? 0) > Date.now()
+        && !(webLockHeld && beforeLease.leaseMode === "web-lock")) return false
+      // Convert readable legacy bytes before a lease write touches its Blob.
+      if (beforeLease.localSaved && beforeLease.errorCategory !== "integrity") await persist(beforeLease)
+      if (!eligible() || generation !== lockGeneration) return false
+      if (!await claimLease(scope, id, owner, webLockHeld)) return false
+      try { if (eligible() && generation === lockGeneration) await action() }
+      finally { await releaseLease(scope, id, owner) }
+      return true
+    }
     if (navigator.locks) {
       let acquired = false
       await navigator.locks.request(`found-upload:${id}`, { ifAvailable: true }, async lock => {
         if (!lock || !eligible() || generation !== lockGeneration) return
-        acquired = true; await action()
+        acquired = await leasedAction(true)
       })
       return acquired
     }
     // Older browsers: an atomic durable lease spans the request deadlines. A
     // crashed owner expires; modern Web Locks release immediately on tab death.
-    if (!await claimLease(scope, id, owner)) return false
-    try { if (eligible() && generation === lockGeneration) await action() } finally { await releaseLease(scope, id, owner) }
-    return true
+    return leasedAction()
   }
   async function pump() {
     if (draining || !eligible()) return
@@ -518,7 +703,7 @@ function createQueue(scope: DeviceScope) {
     },
     async retry(id: string) {
       const row = cache.get(id)
-      if (!row || row.state === "uploaded") return
+      if (!row || row.state === "uploaded" || row.errorCategory === "integrity") return
       contextBlocked = false
       if (!row.localSaved) {
         const next: DeviceCapture = { ...row, state: "saved", attempts: 0, firstAttemptAt: null, nextAttemptAt: 0, localSaved: true, error: undefined }
