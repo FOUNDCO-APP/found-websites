@@ -11,6 +11,7 @@ let now=10000;const events=[];const listeners=new Map()
 const window={dispatchEvent:e=>{events.push(e);listeners.get(e.type)?.(e)},addEventListener:(name,fn)=>listeners.set(name,fn)}
 class CustomEvent{constructor(type,options){this.type=type;this.detail=options.detail}}
 const api=load('src/lib/mediaStorageDiagnostics.ts',{window,CustomEvent,Date:{now:()=>now}})
+const uploadApi=load('src/lib/mediaUploadDiagnostics.ts',{window,CustomEvent,Date:{now:()=>now}})
 const value={operation:'capture-update',category:'quota',errorName:'QuotaExceededError',verifiedOriginal:true}
 const privateFields={filename:'PRIVATE.jpg',accountId:'PRIVATE',blob:new Blob(['PRIVATE']),token:'PRIVATE',message:'PRIVATE'}
 const clean=api.sanitizeMediaStorageDiagnostic({...value,...privateFields})
@@ -23,7 +24,7 @@ now+=5*60_000;api.reportMediaStorageDiagnostic(value);assert.equal(events.length
 for(let i=0;i<20;i++){now+=5*60_000;api.reportMediaStorageDiagnostic(value)}
 assert.equal(events.length,10)
 let config;const captures=[]
-load('src/instrumentation-client.ts',{window,process:{env:{NODE_ENV:'production'}},require:name=>name==='@sentry/nextjs'?{init:v=>config=v,captureEvent:v=>captures.push(v),captureRouterTransitionStart(){}}:api})
+load('src/instrumentation-client.ts',{window,process:{env:{NODE_ENV:'production'}},require:name=>name==='@sentry/nextjs'?{init:v=>config=v,captureEvent:v=>captures.push(v),captureRouterTransitionStart(){}}:name==='@/lib/mediaUploadDiagnostics'?uploadApi:api})
 window.dispatchEvent(new CustomEvent(api.MEDIA_STORAGE_DIAGNOSTIC_EVENT,{detail:{...value,...privateFields}}))
 assert.equal(captures.length,1)
 assert(!JSON.stringify(captures).includes('PRIVATE'))

@@ -1,5 +1,108 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Approved Anchored Retry Correction / PWA Context
+
+Shawn approves correction and adds Mexico weaker-carrier history. This can interrupt
+cloud transport and trigger recovery; it does not mean a PWA cannot save locally.
+No assumption that changed carrier proves the remaining photo's actual blocker.
+Main implements anchored cycle and queue diagnostic getter. Pasteur independently
+owns policy/browser regressions and source review. Meitner owns bounded telemetry
+module/provider/Sentry bridge and privacy/UI regression tests. These are actual AI
+reviews; Jony/Steve are role lenses, not real participants.
+
+Local policy: preserve actual future nextAttemptAt. Once expired, an aged valid
+firstAttemptAt resets the elapsed cycle and attempts in the SAMEpump. Exhausted
+nonexpired cycles keep count4 and wait until anchor+15minutes; malformed/no-anchor
+exhaustion establishes one durable cycle instead of granting extra retries. Fourth
+retryable failure records max(backoff/provider guidance,anchored cycle end), not a
+fresh15minute delay at a later recovery. Shared context budget, leases, immutable
+payloads, stable IDs, auth and media quality stay intact. Older-client future
+deadlines remain honored. No automatic storage clearing or original rewriting.
+
+Queue recoveryDiagnostic is mounted/authorized/pending-work scoped; bounded reason,
+attempt0..4,retryInSeconds0..1200,normalized category and ownership only. Reasons
+include capture/context cooldown, browser offline/background, lease/lock, auth,
+storage and attention. Emit context/lock updates so idle waits can be diagnosed.
+Module caps10reports/lifetime and5minute reason/count/category/ownership dedupe;
+countdown changes don't exhaust cap. Provider getter failures cannot interrupt
+recovery. Sentry rebuilds marked events to exclude user/request/URL/breadcrumb/
+stack/extra/customer/media contexts. Existing storage diagnostics and normal events
+remain unchanged. New message Found upload recovery waiting, context upload_recovery.
+
+Verified primary research for Shawn's question (Nov22): CompanyCam documents local
+offline capture queue and automatic reconnect upload, MOBILEAPPonly; this documents
+behavior, not its proprietary implementation:
+https://help.companycam.com/en/articles/6828443-using-offline-mode
+WebKit documents device IndexedDB/storage and HomeScreen app policy, including
+quota/eviction limits; browser storage is not the personal Photos library:
+https://webkit.org/blog/14403/updates-to-storage-policy/
+MDN current compatibility marks BackgroundSync/SyncManager unsupported on Safari/
+iOS; Found must recover foreground/on reopen rather than promise suspended-PWA sync:
+https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/SyncManager.json
+Apple documents file-based background URLSession upload support; it requires native
+integration/qualification, and wrapping the existing PWA alone does not add it:
+https://developer.apple.com/documentation/foundation/urlsessionuploadtask
+Native background scope and physical iPhone acceptance remain separate/open.
+
+Independent diagnostics/privacy, existing storage privacy, inline/camera React UI
+and TypeScript checks pass (Meitner). Main45storage-error groups and15actual-browser
+integrity groups pass. Pasteur independently reports sourceGO queue7bb238f4 and
+29existing/16new actual-browser recovery-policy groups pass, including actual
+97e4a4c negative control failing stale1attempt immediate recovery. Covers4attempt
+durable anchored cycles, oldfuturedeadlines, successful expiry, reopen/onlinebounded
+recovery, converted legacybudget/resume, leases, safe wait getter/scope suppression.
+Main reviews diagnostics bridge/privacy tests: marked payload reconstructed with
+only permitted fields; no changes to normal events, cameraUI, media/helper/API or
+backend. Final frozen-source build exits0: TypeScript/all89pages pass, four app
+hashes unchanged through build. Independent engineeringGO build condition satisfied.
+Prepared local release awaits publication approval; no new deployment yet. App
+source freeze: queue7bb238f4, diagnosticsec6727d2, instrumentation1ca13d49,
+provider68bc9571. Normal MD process/source/tests saved together; no new status MD.
+Read-only cloud metadata02:47Z stillshows16rows/latestphoto17:48UTC andvideo02:30;
+unknown whether phone remained foreground, so no root-cause conclusion from this.
+
+## November 22, 2026 - Home WiFi Upload Wait / Physical Acceptance Still Open
+
+Shawn corrects prior transcription: he said test, not rest; goal remains finish
+camera reliability before App Store submission. New3C19F39E screenshots show AudioPro
+on home USWiFi:1uploading+1waiting ->1waiting, Reviewphoto opens clearly. This proves
+that reviewed preview opens, not successful cloud upload or full device integrity.
+Read-only scoped app Photos metadata at02:32ZNov23 confirms video row created
+02:30:17.856336Z (19:30Phoenix), newest cloudphoto17:48:37Z (10:48Phoenix). No media
+opened server-side or mutated, and no real upload created by agent. Sanitized Sentry
+query latest remains Nov22 19:25:13Z capture-update/UnknownError/verifiedOriginaltrue;
+absence of a new storage diagnostic does not establish transport health/cause.
+
+Actual independent reviewer Pasteur01a2063f-30aa-7932-aeb1-216c48d647ee inspected
+queue, confirmed possible backoff5/15/45seconds, capture/context15minute cooldowns,
+fallback20minute lease, eligibility/storage/auth gates. Definite source edge: aged
+firstAttemptAt can impose a NEW15minute cooldown on return after hours even with
+only1priorattempt. Explicit Retry does not reset shared context cooldown. Existing
+tests inspect cooldown suppression but not every successful cooldown exit. Exact
+phone cause remains unknown; async duration/new-versus-old-photo answer pending.
+Independent reproduction and Jony/Steve-role product/design review requested;
+new automatic retry policy/diagnostic changes require visible review/approval.
+No new app edits or deployment in this investigation. Do not clear device storage.
+
+Pasteur executed3/3deterministic actual-queue/Chromium/IDB/WebLocks groups with
+controlled time and synthetic transport. A row with1attempt at01:00, recovered
+03:00.100, made0uploadcalls and received NEW03:15.100 deadline. Online did not clear
+it; at03:15.300 it uploaded exactly once. Exhausted4attempt cycle also uploaded at
+full15minute cooldown expiry. Fresh0attempt capture was blocked by persisted shared
+context cooldown, then uploaded/clearedbudget on expiry. Ignored evidence:
+.billing-audits/review-cooldown.mjs and review-cooldown-evidence.json. These prove
+source behavior, not this phone's actual blocker. Successful video's context check
+would clear shared cooldown, but a subsequent context failure could create another.
+
+Independent Meitner01a20641-20bb-7120-b029-0b888a3d3ea9 applies Jony-led/Steve-co-led
+lenses in ONEactualreview: recommends narrow automatic-recovery correction, no new
+banner or normal manual Retry. Proposed scope: anchor capture-cycle expiry to its
+durable start instead of adding15minutes on recovery; honor actualfuture deadlines,
+at most4attempts percycle and existing context/lease/auth bounds. Add whitelisted,
+bounded wait/failure diagnostics without media, IDs, credentials or raw provider
+errors. Quiet existing status remains truthful. Shawn approval is required for
+this new retry-policy/diagnostic implementation; no app source edited.
+
 ## November 22, 2026 - Media Integrity Repair Released
 
 Shawn explicitly instructs Push so he can rest; publication approval is complete.

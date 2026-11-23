@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { getDeviceUploadQueue, type DeviceCapture } from "@/lib/deviceUploadQueue"
 import { reportMediaStorageDiagnostic } from "@/lib/mediaStorageDiagnostics"
+import { reportMediaUploadDiagnostic } from "@/lib/mediaUploadDiagnostics"
 
 export function getUploadAttentionLabel(category?: string): string {
   if (category === "integrity") return "Couldn’t read this capture."
@@ -83,6 +84,12 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     const endpoint = window.location.pathname.startsWith("/dashboard") ? "/dashboard/api/photos" : "/api/photos"
     const controller = getDeviceUploadQueue({ accountId, companyId, endpoint })
     let alive = true
+    const reportRecovery = () => {
+      try {
+        // The queue getter enforces authorization, mounted state and pending work.
+        reportMediaUploadDiagnostic(controller.recoveryDiagnostic)
+      } catch { /* A diagnostic getter/observer cannot interrupt queue updates. */ }
+    }
     const notified = new Set<string>()
     const observed = new Set<string>()
     const pendingSeen = new Set<string>()
@@ -90,6 +97,7 @@ export default function UploadStatusProvider({ children, companyId = null, accou
       if (!alive || currentScope.current !== scope) return
       const scoped = rows.filter(row => row.accountId === accountId && row.companyId === companyId)
       reportMediaStorageDiagnostic(controller.storageDiagnostic)
+      reportRecovery()
       for (const row of scoped) {
         if (row.state !== "uploaded") pendingSeen.add(row.id)
         if (row.localSaved && !observed.has(row.id)) {
@@ -115,6 +123,7 @@ export default function UploadStatusProvider({ children, companyId = null, accou
     if (alive && currentScope.current === scope) {
       const rows = controller.getSnapshot().filter(row => row.accountId === accountId && row.companyId === companyId)
       reportMediaStorageDiagnostic(controller.storageDiagnostic)
+      reportRecovery()
       setQueueBinding({ scope, controller, rows, ready: controller.ready, error: controller.error })
     }
     return () => { alive = false; unsubscribe(); stop() }

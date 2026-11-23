@@ -1,3 +1,20 @@
+## November 22, 2026 - Anchored Automatic Retry And Private Wait Diagnostics (Approved)
+
+Shawn approves the independently reviewed correction after home-WiFi field feedback,
+and supplies prior weak Mexico carrier context. Count time closed/offline toward
+the existing capture cycle; an aged start must not impose a new15minute penalty.
+At most4attempts per durable15minute cycle; keep actual future deadlines, shared
+context bounds, account checks, originals and ownership protection. A fourth
+retryable failure schedules no earlier than the anchored cycle end and existing
+backoff/provider guidance. Expired cycles may attempt in the same pump; no infinite
+reset by reopening. Existing old-client future cooldowns remain honored.
+
+Add bounded, strictly whitelisted private wait diagnostics through existing Sentry,
+not new owner-facing controls/banners. Reasons/counts/bounded remaining seconds/
+normalized category/ownership only; no media, hashes, IDs, customer details, URLs,
+provider messages or credentials. Native filesystem/background transfer remains a
+separate reviewed scope. App Store packaging alone does not confer native recovery.
+
 ## November 22, 2026 - Media Integrity Before Encoding Tuning (Approved)
 
 Publication approved by Shawn's explicit Push instruction; appdcf7abd released,

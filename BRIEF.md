@@ -2,6 +2,26 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 current: Shawn APPROVES anchored retry-clock correction/private wait
+diagnostics and supplies weak Mexico carrier context. Local implementation counts
+time closed/offline toward existing15minute cycle while preserving4attempt bound,
+future deadlines/auth/leases. Safe wait diagnostics use existing monitoring; no new
+UI controls. Independent29queue/16policy/15integrity groups, privacy/UI tests and
+final production build(TypeScript/all89pages) pass; four app hashes unchanged.
+Prepared locally, no new release yet. PWA DOES store privately on iPhone; native background upload is a
+separate capability, not an automatic benefit of wrapping for stores. See handoff.
+
+November22 latest physical feedback (3C19F39E): home USWiFi, AudioPro shows1uploading+
+1waiting then1waiting; reviewed photo is readable. Cloud metadata confirms video
+arrived19:30Phoenix (Nov23 02:30:17Z), latest photo earlier10:48Phoenix. No newer
+sanitized storage diagnostic than prior19:25UTC event. Overall iPhone upload
+acceptance is NOT passed. Independent engineering confirms aged firstAttemptAt can
+start a fresh15minute cooldown after long closure; specific phone cause unproven.
+Waiting duration/new-versus-old capture question pending; read-only reproduction
+passes3/3actual-browser groups, design/product review supports narrow automatic
+retry-clock correction plus safe wait diagnostics. Proposal awaits Shawn approval;
+specific phone cause still unproven. No new application changes authorized here.
+
 November22 release: Shawn explicitly approved Push. Tested media-integrity repair
 dcf7abdbd1bd2dcf2360f00a35558fcb0e4a7bcb is live; Vercel deployment
 dpl_CTzCp3LGMVwfLtkQfPGoAcjjnBSF READY/exactSHA verified. Read-only live login,

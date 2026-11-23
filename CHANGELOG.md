@@ -1,3 +1,20 @@
+## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Prepared
+
+- Shawn approves correction after home-WiFi feedback and adds Mexico carrier
+  context. Recovered captures count offline/closed time toward their anchored
+  cycle; no new15minute penalty just for reopening an old failed capture.
+- Preserve4attempt cycle bound, actual future deadlines, shared context budget,
+  ownership, original media and account isolation. No new banners/manual controls.
+- Bounded whitelisted existing-monitoring diagnostics explain capture/context wait,
+  lock/lease, authorization, storage and eligibility without customer/media details.
+- Independent29queue/16newpolicy groups and actual old-release negative control
+  pass.15integrity groups,45storage error groups, both privacy bridges, React
+  inline/camera UI and TypeScript pass. Final frozen-source build passes all89pages;
+  four application hashes unchanged through build. Prepared locally, not published.
+- Primary CompanyCam/WebKit/MDN/Apple research documents local-first queued recovery
+  and PWA/native background distinction; native upload integration is separate.
+  No deployment or claim of actual iPhone resolution yet.
+
 ## November 22, 2026 - Device Media Integrity Repair Released
 
 - Shawn approves Push; appdcf7abdbd1bd2dcf2360f00a35558fcb0e4a7bcb published.

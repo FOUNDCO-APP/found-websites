@@ -32,6 +32,12 @@ export type DeviceStorageDiagnostic = Readonly<{
   errorName: "QuotaExceededError" | "InvalidStateError" | "NotFoundError" | "SecurityError" | "AbortError" | "UnknownError" | "DataCloneError" | "TransactionInactiveError" | "TimeoutError"
   verifiedOriginal: boolean
 }>
+export type DeviceUploadRecoveryDiagnostic = Readonly<{
+  reason: "capture-backoff" | "cycle-cooldown" | "context-backoff" | "lock-busy" | "lease-held" | "storage-paused" | "authorization" | "needs-attention" | "browser-offline" | "backgrounded"
+  attempts: number; retryInSeconds: number
+  category: "none" | "connection" | "timeout" | "transient" | "auth" | "business" | "validation" | "size" | "unknown" | "storage" | "integrity"
+  ownership: "none" | "own" | "other"
+}>
 const STORAGE_PAUSED = "Uploads paused. Device storage needs attention."
 const STORAGE_UNSAVED = "Couldn’t save on this device. Keep Found open."
 export class DeviceStorageError extends Error {
@@ -419,11 +425,13 @@ function createQueue(scope: DeviceScope) {
   const listeners = new Set<(rows: DeviceCapture[]) => void>()
   const sessions = new Map<string, ReturnType<typeof createDashboardUploadSession>>()
   const activeTransfers = new Set<string>()
+  const blockedLocks = new Set<string>()
   let storageDiagnostic: DeviceStorageDiagnostic | null = null
   const owner = crypto.randomUUID()
   let ready = false, error: string | null = null, starts = 0, generation = 0
   let draining = false, signedOut = false, authorized = true, contextBlocked = false
   let contextFailures = 0, contextNotBefore = 0
+  let contextCategory: DeviceUploadRecoveryDiagnostic["category"] = "none"
   const resumedAttention = new Set<string>()
   let timer: ReturnType<typeof setTimeout> | undefined
   let channel: BroadcastChannel | undefined
@@ -444,6 +452,33 @@ function createQueue(scope: DeviceScope) {
   function publishStorageDiagnostic(diagnostic: DeviceStorageDiagnostic) {
     storageDiagnostic = diagnostic
   }
+  function recoveryDiagnostic(): DeviceUploadRecoveryDiagnostic | null {
+    if (!authorized || signedOut || !starts) return null
+    const row = snapshot().filter(value => value.state !== "uploaded" && !(value.state === "uploading" && activeTransfers.has(value.id)))
+      .sort((a, b) => a.createdAt - b.createdAt)[0]
+    if (!row) return null
+    const now = Date.now()
+    const seconds = (deadline: number) => Math.min(1200, Math.max(0, Math.ceil((deadline - now) / 1000)))
+    const categories = ["none", "connection", "timeout", "transient", "auth", "business", "validation", "size", "unknown", "storage", "integrity"]
+    const category = (categories.includes(row.errorCategory ?? "none") ? row.errorCategory ?? "none" : "unknown") as DeviceUploadRecoveryDiagnostic["category"]
+    const liveLease = !!row.leaseOwner && (row.leaseUntil ?? 0) > now
+    const ownership = !liveLease ? "none" : row.leaseOwner === owner ? "own" : "other"
+    const base = { attempts: Math.min(4, Math.max(0, Math.floor(row.attempts))), category, ownership } as const
+    const result = (reason: DeviceUploadRecoveryDiagnostic["reason"], retryInSeconds = 0, failure = category): DeviceUploadRecoveryDiagnostic => ({ ...base, reason, retryInSeconds, category: failure })
+    if (contextBlocked && storageDiagnostic) return result("storage-paused", 0, "storage")
+    if (contextBlocked) return result("authorization", 0, contextCategory)
+    if (navigator.onLine === false) return result("browser-offline")
+    if (document.visibilityState === "hidden") return result("backgrounded")
+    if (contextNotBefore > now) return result("context-backoff", seconds(contextNotBefore), contextCategory)
+    if (row.state === "needs_attention") return result(["auth", "business"].includes(category) ? "authorization" : category === "storage" ? "storage-paused" : "needs-attention")
+    if (row.nextAttemptAt > now) {
+      const legacyCooldown = row.state === "waiting" && row.attempts === 0 && row.firstAttemptAt === null
+      return result(row.attempts >= 4 || legacyCooldown || row.nextAttemptAt - now > 60_000 ? "cycle-cooldown" : "capture-backoff", seconds(row.nextAttemptAt))
+    }
+    if (ownership === "other") return result("lease-held", seconds(row.leaseUntil ?? now))
+    if (blockedLocks.has(row.id)) return result("lock-busy", 5)
+    return null
+  }
   function storagePaused(caught: DeviceStorageError) {
     const previouslyVerified = caught.diagnostic.verifiedOriginal || [...cache.values()].some(row => row.localSaved && row.state !== "uploaded")
     publishStorageDiagnostic(Object.freeze({ ...caught.diagnostic, verifiedOriginal: previouslyVerified }))
@@ -457,6 +492,7 @@ function createQueue(scope: DeviceScope) {
     const refreshGeneration = generation
     const rows = await list(scope), ids = new Set(rows.map(row => row.id))
     if (signedOut || generation !== refreshGeneration) return
+    for (const id of blockedLocks) if (!ids.has(id)) blockedLocks.delete(id)
     for (const [id, row] of cache) if (row.localSaved && row.state !== "uploaded" && !ids.has(id)) cache.delete(id)
     for (const row of rows) cache.set(row.id, row)
     emit()
@@ -486,8 +522,17 @@ function createQueue(scope: DeviceScope) {
     }
     const now = Date.now()
     if (row.nextAttemptAt > now || row.state === "needs_attention") return
-    if (row.attempts >= 4 || (row.firstAttemptAt && now - row.firstAttemptAt >= CYCLE_MS)) {
-      await update({ ...row, state: "waiting", attempts: 0, firstAttemptAt: null, nextAttemptAt: now + CYCLE_MS })
+    // Time closed/offline counts toward the existing cycle. Never start a fresh
+    // 15-minute penalty merely because an old original is being recovered now.
+    const started = row.firstAttemptAt
+    if (started !== null && Number.isFinite(started) && now - started >= CYCLE_MS) {
+      row = { ...row, attempts: 0, firstAttemptAt: null, nextAttemptAt: 0 }
+      await update(row)
+      if (!eligible() || generation !== attemptGeneration) return
+    } else if (row.attempts >= 4) {
+      const anchor = started !== null && Number.isFinite(started) ? started : now
+      await update({ ...row, state: "waiting", firstAttemptAt: anchor,
+        nextAttemptAt: Math.max(row.nextAttemptAt, anchor + CYCLE_MS) })
       return
     }
     row = { ...row, state: "uploading", attempts: row.attempts + 1, firstAttemptAt: row.firstAttemptAt ?? now, error: undefined }
@@ -540,8 +585,10 @@ function createQueue(scope: DeviceScope) {
       const retryable = failure?.retryable === true
       const backoff = RETRY_MS[Math.min(row.attempts - 1, RETRY_MS.length - 1)]
       const delay = Math.max(backoff + Math.floor(Math.random() * 1_000), Math.min(failure?.retryAfterMs ?? 0, 60_000))
+      const retryAt = Date.now() + delay
+      const cycleEnd = row.firstAttemptAt !== null && Number.isFinite(row.firstAttemptAt) ? row.firstAttemptAt + CYCLE_MS : retryAt
       await update({ ...row, state: retryable ? "waiting" : "needs_attention", errorCategory: failure?.category ?? "unknown",
-        error: retryable ? "Waiting to upload" : "Upload needs attention", nextAttemptAt: Date.now() + delay,
+        error: retryable ? "Waiting to upload" : "Upload needs attention", nextAttemptAt: retryable && row.attempts >= 4 ? Math.max(retryAt, cycleEnd) : retryAt,
         leaseOwner: row.leaseOwner, leaseUntil: row.leaseUntil }, !signedOut && generation === attemptGeneration)
     } finally {
       activeTransfers.delete(row.id)
@@ -556,11 +603,12 @@ function createQueue(scope: DeviceScope) {
       const beforeLease = (await list(scope)).find(row => row.id === id)
       if (!beforeLease || !eligible() || generation !== lockGeneration) return false
       if (beforeLease.leaseOwner !== owner && (beforeLease.leaseUntil ?? 0) > Date.now()
-        && !(webLockHeld && beforeLease.leaseMode === "web-lock")) return false
+        && !(webLockHeld && beforeLease.leaseMode === "web-lock")) { blockedLocks.add(id); emit(); return false }
       // Convert readable legacy bytes before a lease write touches its Blob.
       if (beforeLease.localSaved && beforeLease.errorCategory !== "integrity") await persist(beforeLease)
       if (!eligible() || generation !== lockGeneration) return false
       if (!await claimLease(scope, id, owner, webLockHeld)) return false
+      blockedLocks.delete(id)
       try { if (eligible() && generation === lockGeneration) await action() }
       finally { await releaseLease(scope, id, owner) }
       return true
@@ -568,7 +616,8 @@ function createQueue(scope: DeviceScope) {
     if (navigator.locks) {
       let acquired = false
       await navigator.locks.request(`found-upload:${id}`, { ifAvailable: true }, async lock => {
-        if (!lock || !eligible() || generation !== lockGeneration) return
+        if (!lock) { if (!signedOut && generation === lockGeneration) { blockedLocks.add(id); emit() }; return }
+        if (!eligible() || generation !== lockGeneration) return
         acquired = await leasedAction(true)
       })
       return acquired
@@ -579,7 +628,7 @@ function createQueue(scope: DeviceScope) {
   }
   async function pump() {
     if (draining || !eligible()) return
-    if (contextNotBefore > Date.now()) { schedule(contextNotBefore - Date.now()); return }
+    if (contextNotBefore > Date.now()) { emit(); schedule(contextNotBefore - Date.now()); return }
     draining = true
     const currentGeneration = generation
     let waitForLock = false
@@ -587,7 +636,8 @@ function createQueue(scope: DeviceScope) {
       const savedBudget = await budget(scope)
       if (!eligible() || generation !== currentGeneration) return
       contextFailures = savedBudget.failures; contextNotBefore = savedBudget.notBefore
-      if (contextNotBefore > Date.now()) { schedule(contextNotBefore - Date.now()); return }
+      if (contextFailures && contextCategory === "none") contextCategory = "unknown"
+      if (contextNotBefore > Date.now()) { emit(); schedule(contextNotBefore - Date.now()); return }
       const context = await readDashboardUploadContext(scope.endpoint)
       if (!eligible() || generation !== currentGeneration) return
       if (context.companyId !== scope.companyId || context.accountId !== scope.accountId) {
@@ -596,7 +646,7 @@ function createQueue(scope: DeviceScope) {
       authorized = true; error = null; storageDiagnostic = null
       if (contextFailures || contextNotBefore) await budget(scope, { failures: 0, notBefore: 0 })
       if (!eligible() || generation !== currentGeneration) return
-      contextFailures = 0; contextNotBefore = 0
+      contextFailures = 0; contextNotBefore = 0; contextCategory = "none"
       await refresh()
       for (const row of snapshot().filter(item => item.localSaved && item.state !== "uploaded").sort((a, b) => a.createdAt - b.createdAt)) {
         if (!eligible() || generation !== currentGeneration) break
@@ -611,6 +661,9 @@ function createQueue(scope: DeviceScope) {
       if (signedOut || generation !== currentGeneration) return
       if (caught instanceof DeviceStorageError) { storagePaused(caught); return }
       const failure = caught as { retryable?: boolean }
+      const category = (caught as { category?: string })?.category
+      contextCategory = ["connection", "timeout", "transient", "auth", "business", "validation", "size"].includes(category ?? "")
+        ? category as DeviceUploadRecoveryDiagnostic["category"] : "unknown"
       error = failure?.retryable ? "Waiting for a connection" : "Sign in to finish uploading."
       if (!failure?.retryable) contextBlocked = true
       emit()
@@ -621,6 +674,7 @@ function createQueue(scope: DeviceScope) {
         catch (caught) {
           storagePaused(caught instanceof DeviceStorageError ? caught : new DeviceStorageError(undefined, "budget-write", caught))
         }
+        emit()
         schedule(delay)
       }
     } finally {
@@ -636,12 +690,14 @@ function createQueue(scope: DeviceScope) {
   const signingOut = () => {
     signedOut = true; authorized = false; generation++; pause()
     storageDiagnostic = null
+    blockedLocks.clear()
     for (const session of sessions.values()) session.cancel?.()
     progress.clear(); emit()
   }
   return {
     get ready() { return ready }, get error() { return error },
     get storageDiagnostic() { return authorized && !signedOut ? storageDiagnostic : null }, getSnapshot: snapshot,
+    get recoveryDiagnostic() { return recoveryDiagnostic() },
     subscribe(listener: (rows: DeviceCapture[]) => void) {
       listeners.add(listener)
       try { listener(snapshot()) } catch { /* Keep the subscription without failing queue setup. */ }
@@ -678,6 +734,7 @@ function createQueue(scope: DeviceScope) {
         if (starts) return
         generation++; pause(); channel?.close(); channel = undefined
         storageDiagnostic = null
+        blockedLocks.clear()
         for (const session of sessions.values()) session.cancel?.()
         progress.clear()
         window.removeEventListener("online", wake); window.removeEventListener("offline", pause)

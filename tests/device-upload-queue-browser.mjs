@@ -143,7 +143,7 @@ try{
     await f.page.reload();await f.page.waitForFunction(()=>queue.ready)
     await f.page.evaluate(()=>online(true));await f.page.waitForFunction(()=>rows[0]?.attempts===4&&rows[0]?.nextAttemptAt>Date.now())
     await f.page.clock.fastForward(60000)
-    await f.page.waitForFunction(()=>rows[0]?.attempts===0&&rows[0]?.nextAttemptAt>Date.now())
+    await f.page.waitForFunction(()=>rows[0]?.attempts===4&&rows[0]?.nextAttemptAt>Date.now())
     assert.equal(await f.page.evaluate(()=>calls.length),0)
     await f.page.evaluate(()=>{for(let i=0;i<10;i++){online(false);online(true)}})
     await f.page.clock.fastForward(10000);assert.equal(await f.page.evaluate(()=>calls.length),0)

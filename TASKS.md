@@ -1,5 +1,25 @@
 # Found Task Board
 
+- [x] Shawn approves anchored retry correction/private wait diagnostics after actual
+  engineering and Jony/Steve-role reviews; weak Mexico carrier context recorded.
+- [x] Finish policy/integrity browser regressions, independent source review and
+  final frozen build; preserve future deadlines, bounds, ownership and original bytes.
+- [x] Independent29queue/16policy groups, actual old-release negative control,
+ 15integrity groups,45storage error groups, privacy/UI/TypeScript pass. SourceGO
+ queue7bb238f4; final frozen production build passes TypeScript/all89pages, four app hashes unchanged.
+- [ ] Obtain final publication approval for tested correction; then physical phone
+  capture/reopen/cloud verification. No native background-upload promise.
+- [ ] Separate native app-owned file/background transfer design and device tests;
+  store wrapping alone does not add it. Research sources recorded in handoff.
+
+- [ ] HomeWiFi field follow-up3C19F39E: readable reviewed photo still waiting;
+  video cloudarrival19:30 confirmed. Physical upload acceptance remains open.
+  Reproduce aged-cycle fresh15minute delay and successful cooldown exit; review
+  bounded automatic recovery/diagnostic proposal before implementation. No clearing.
+- [x] Independent actual-browser reproduction3/3: aged1attempt addsnew15minute wait;
+  capture and sharedcontext cooldowns eventually succeed. Independent design supports
+  bounded automatic clock correction/safe diagnostics; implementation approval pending.
+
 - [x] Shawn approves integrity-first device storage repair and measured compression
   after visible actual independent engineering/design review.
 - [x] Finish final-source browser qualification/build and independent signoff for

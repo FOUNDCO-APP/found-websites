@@ -1,3 +1,12 @@
+## November 22, 2026 - Recovery Remains Automatic (Approved)
+
+After Meitner's independent Jony-led/Steve-co-led role review, Shawn approves narrow
+retry timing repair/private wait diagnostics. Keep the existing compact status
+surface; no additional banner, normal manual Retry, codec selector or client-facing
+debugging choices. Preserve actual unsaved/unreadable guidance and explicit actions.
+PWA foreground/reopen recovery and a separately engineered native background
+uploader are distinct; do not imply a store wrapper removes that distinction.
+
 ## November 22, 2026 - Unreadable Captures And Automatic Optimization (Approved)
 
 Shawn approved reliability-first, automatic photo/video handling after actual
