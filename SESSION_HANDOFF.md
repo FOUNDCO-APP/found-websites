@@ -1,5 +1,26 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Released
+
+Shawn explicitly instructs Push. App e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95
+published; Vercel dpl_5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY and exact tested SHA verified.
+Read-only live login/dashboard/Photos/upload-context200; expected company/account
+and no-store assertions pass, anonymous Photos/context401, wrong-account409.
+Hiram Home/Gallery and Divine/MBJ/RC Home all200. No production media upload,
+customer message, billing action, provider setting or database schema mutation.
+Reviewed source/tests/normal MDs pushed; final release closeout is documentation only.
+
+Next phone check: close/reopen Found on homeWiFi, leave the dashboard open, check
+whether queued photo reaches cloud Photos and opens there. Do not delete pending
+captures or clear device storage. Actual iPhone acceptance and fresh diagnostic
+delivery are NOT yet verified. New Sentry event Found upload recovery waiting /
+context upload_recovery reports only whitelisted reason/count/bounded remaining
+seconds/category/ownership; no capture IDs/account/media/URLs/provider text.
+Use its actual event timestamp/normalized blocker to guide any subsequent change;
+do not infer the remaining photo's cause from general retry reproduction alone.
+Native background transfer and compression default changes remain separate/open.
+This verified release status supersedes local preparation statements below.
+
 ## November 22, 2026 - Approved Anchored Retry Correction / PWA Context
 
 Shawn approves correction and adds Mexico weaker-carrier history. This can interrupt

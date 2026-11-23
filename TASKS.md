@@ -7,8 +7,10 @@
 - [x] Independent29queue/16policy groups, actual old-release negative control,
  15integrity groups,45storage error groups, privacy/UI/TypeScript pass. SourceGO
  queue7bb238f4; final frozen production build passes TypeScript/all89pages, four app hashes unchanged.
-- [ ] Obtain final publication approval for tested correction; then physical phone
-  capture/reopen/cloud verification. No native background-upload promise.
+- [x] Shawn approves Push; retry/diagnostic repaire588d10 live, Vercel
+  5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA and live dashboard/auth/four-client checks pass.
+- [ ] Physical phone queued-photo cloud completion/playback and fresh private
+  diagnostic delivery after reopening. No native background-upload promise.
 - [ ] Separate native app-owned file/background transfer design and device tests;
   store wrapping alone does not add it. Research sources recorded in handoff.
 

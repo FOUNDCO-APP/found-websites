@@ -2,6 +2,15 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 latest release: Shawn explicitly approves Push. Retry/diagnostic repair
+e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95 is LIVE, Vercel
+dpl_5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA verified. Read-only live dashboard/
+Photos/context/login and four-client/HiramGallery checks pass; anonymous401,
+wrong-account409 and scoped no-store assertions pass. Existing MD release closeout
+saved/pushed. Actual phone photo/cloud acceptance and live diagnostic delivery
+remain to test; no claim the particular phone blocker is proven fixed. No new
+native background capability, media-quality or provider/schema/billing changes.
+
 November22 current: Shawn APPROVES anchored retry-clock correction/private wait
 diagnostics and supplies weak Mexico carrier context. Local implementation counts
 time closed/offline toward existing15minute cycle while preserving4attempt bound,

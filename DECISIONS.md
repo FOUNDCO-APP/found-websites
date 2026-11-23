@@ -1,5 +1,8 @@
 ## November 22, 2026 - Anchored Automatic Retry And Private Wait Diagnostics (Approved)
 
+Shawn's explicit Push authorizes publication; app e588d10 is live with Vercel
+READY/exactSHA and read-only checks verified. Actual phone acceptance remains open.
+
 Shawn approves the independently reviewed correction after home-WiFi field feedback,
 and supplies prior weak Mexico carrier context. Count time closed/offline toward
 the existing capture cycle; an aged start must not impose a new15minute penalty.

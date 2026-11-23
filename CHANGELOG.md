@@ -1,4 +1,12 @@
-## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Prepared
+## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Released
+
+- Shawn explicitly approves Push; app e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95
+  published. Vercel dpl_5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA verified;
+  live read-only dashboard/Photos/context/login/auth and four-client/HiramGallery
+  checks pass. No live upload/email/billing/provider/schema change used for checks.
+  Physical phone cloud completion and fresh diagnostic delivery remain open.
+
+### Prepared and reviewed scope
 
 - Shawn approves correction after home-WiFi feedback and adds Mexico carrier
   context. Recovered captures count offline/closed time toward their anchored
