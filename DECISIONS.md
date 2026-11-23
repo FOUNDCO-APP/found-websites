@@ -1,5 +1,9 @@
 ## November 22, 2026 - Media Integrity Before Encoding Tuning (Approved)
 
+Publication approved by Shawn's explicit Push instruction; appdcf7abd released,
+VercelREADY/exactSHA and read-only live checks verified. Physical device and
+compression default acceptance remain separate; see newest SESSION_HANDOFF.
+
 Shawn approved the visible engineering/design recommendation: qualify reliable
 device storage first, then measure automatic compression without sacrificing job
 detail. Keep originals and account isolation. New payloads use immutable binary

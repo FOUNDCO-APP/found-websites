@@ -1,4 +1,13 @@
-## November 22, 2026 - Device Media Integrity Repair Prepared (Not Published)
+## November 22, 2026 - Device Media Integrity Repair Released
+
+- Shawn approves Push; appdcf7abdbd1bd2dcf2360f00a35558fcb0e4a7bcb published.
+  Verceldpl_CTzCp3LGMVwfLtkQfPGoAcjjnBSF READY/exactSHA verified. Live read-only
+  dashboard/Photos/context/login and four-client/HiramGallery checks pass;
+  anonymous401/wrong-account409/scoped no-store assertions pass. No live uploads,
+  customer messages, billing or database/provider settings changed for checks.
+  Physical iPhone acceptance remains open; compression defaults unchanged.
+
+### Prepared and reviewed scope
 
 - Approved immutable binary payloads with separate queue metadata and fresh
   committed SHA256 readback. Verified legacy conversion preserves original bytes,

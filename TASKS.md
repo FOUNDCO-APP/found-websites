@@ -4,8 +4,10 @@
   after visible actual independent engineering/design review.
 - [x] Finish final-source browser qualification/build and independent signoff for
   immutable bytes/separate metadata, safe old-client conversion and unreadable UI.
-- [ ] Publish only after final tested release approval; physical iPhone weak-signal
-  capture/reopen/upload/playback remains an acceptance gate.
+- [x] Shawn approves Push; repairdcf7abd live, VercelCTzCp3LGMVwfLtkQfPGoAcjjnBSF
+  READY/exactSHA and dashboard/auth/four-client checks pass.
+- [ ] Physical iPhone weak-signal capture/reopen/upload/playback acceptance after
+  Shawn rests; desktop browser qualification does not certify Safari.
 - [x] Measure synthetic desktop encoding profiles; preserve production defaults.
 - [ ] Physically compare full-resolution JPEG.85 and1080p3Mbps against current
   settings using labels/wiring/motion/low light before choosing automatic defaults.

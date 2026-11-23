@@ -2,7 +2,15 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
-November22 newest: Shawn approved integrity-first repair and compression measurement.
+November22 release: Shawn explicitly approved Push. Tested media-integrity repair
+dcf7abdbd1bd2dcf2360f00a35558fcb0e4a7bcb is live; Vercel deployment
+dpl_CTzCp3LGMVwfLtkQfPGoAcjjnBSF READY/exactSHA verified. Read-only live login,
+dashboard/Photos/upload-context and four-client/HiramGallery checks pass; anonymous
+access rejected401, wrong-account409, scoped context no-store. Existing MDs updated
+for release closeout. Physical iPhone acceptance and compression comparison remain
+open; no real client uploads/emails/billing or provider/schema settings changed.
+
+November22 preparation: Shawn approved integrity-first repair and compression measurement.
 Implementation uses immutable binary payloads/separate metadata in existing DBv2,
 fresh committed byte/hash verification, verified legacy conversion, and truthful
 unreadable-media UI. Actual independent reviews found/fixed interrupted-conversion

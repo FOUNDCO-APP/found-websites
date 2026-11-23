@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Media Integrity Repair Released
+
+Shawn explicitly instructs Push so he can rest; publication approval is complete.
+Released app dcf7abdbd1bd2dcf2360f00a35558fcb0e4a7bcb, Vercel
+dpl_CTzCp3LGMVwfLtkQfPGoAcjjnBSF READY and exact githubCommitSha verified.
+No app changes after the reviewed frozen-source build. Read-only live login,
+dashboard, Photos and upload-context200; scoped context company/account/no-store
+assertions pass, anonymous Photos/context401 and wrong account409. Hiram Home/
+Gallery, Divine, MBJ and RC Home all200. No live capture/upload, customer email,
+billing, provider setting or database schema change used for checks. Source/tests
+and normal MD process saved/pushed; this release closeout is documentation only.
+
+Physical iPhone weak-signal capture/reopen/upload/playback acceptance remains open;
+Shawn may test after resting. No clearing old captures or client device storage.
+Compression defaults unchanged; full-resolution JPEG.85 /1080p3Mbps candidates need
+physical detail/motion/low-light comparison. Older code cannot see new-format pending
+captures, so do not blindly roll back to an older queue if an issue appears.
+Preparation history below is superseded by this verified release status.
+
 ## November 22, 2026 - Approved Integrity Implementation / Release Preparation
 
 Shawn approved the integrity-first repair then measured automatic compression.
