@@ -1,5 +1,9 @@
 ## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Released
 
+- Physical follow-up: Shawn confirms uploading -> uploaded -> status cleared and
+  actual photo visible in Photos on iPhone/homeWiFi. Queued-photo completion/status
+  acceptance passes; video playback/repeat weak-signal recovery remain separate.
+
 - Shawn explicitly approves Push; app e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95
   published. Vercel dpl_5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA verified;
   live read-only dashboard/Photos/context/login/auth and four-client/HiramGallery

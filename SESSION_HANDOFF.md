@@ -1,5 +1,17 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 22, 2026 - Queued Photo Cloud Completion Confirmed On iPhone
+
+After publishede588d10, Shawn reports status became uploading, then uploaded, then
+all statuses disappeared. The actual photo is visible in Photos. Record PASS for
+this homeWiFi queued-photo cloud completion and successful status cleanup, based
+on direct user observation. No extra agent upload, deletion or app change.
+Do not promote this to a proven diagnosis of the old blocker, universal weak-signal
+reliability, full-size cloud detail verification or App Store readiness. Uploaded
+video full playback and repeat interrupted/offline-to-good-connection recovery
+remain separate checks. Fresh private diagnostic delivery is not yet inspected.
+This supersedes the pending queued-photo visibility check in release history below.
+
 ## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Released
 
 Shawn explicitly instructs Push. App e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95

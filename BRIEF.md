@@ -2,6 +2,13 @@
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
 
+November22 latest physical result: Shawn confirms uploading -> uploaded -> all
+statuses cleared, and the actual queued photo is visible in Photos aftere588d10.
+HomeWiFi queued-photo cloud completion/status cleanup PASSES by user observation.
+This does not establish every prior failure's cause or full store readiness.
+Video full playback, repeat weak/offline recovery and diagnostic delivery remain
+separate/unverified. See latest handoff; no new app changes for this acceptance.
+
 November22 latest release: Shawn explicitly approves Push. Retry/diagnostic repair
 e588d102ee235f3d3dbbba4f9fc9d0f8aab58d95 is LIVE, Vercel
 dpl_5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA verified. Read-only live dashboard/

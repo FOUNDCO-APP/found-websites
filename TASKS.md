@@ -9,18 +9,20 @@
  queue7bb238f4; final frozen production build passes TypeScript/all89pages, four app hashes unchanged.
 - [x] Shawn approves Push; retry/diagnostic repaire588d10 live, Vercel
   5ttkiV5qF3KUe8mvDMZhLNQy4Cn3 READY/exactSHA and live dashboard/auth/four-client checks pass.
-- [ ] Physical phone queued-photo cloud completion/playback and fresh private
-  diagnostic delivery after reopening. No native background-upload promise.
+- [x] Shawn confirms iPhone queued-photo uploading -> uploaded -> statuses cleared,
+  actual photo visible in Photos aftere588d10. HomeWiFi photo recovery/status pass.
+- [ ] Confirm video plays fully from Photos; repeat interrupted/offline recovery
+  and inspect fresh private diagnostic delivery. No native background-upload promise.
 - [ ] Separate native app-owned file/background transfer design and device tests;
   store wrapping alone does not add it. Research sources recorded in handoff.
 
-- [ ] HomeWiFi field follow-up3C19F39E: readable reviewed photo still waiting;
-  video cloudarrival19:30 confirmed. Physical upload acceptance remains open.
+- [x] HomeWiFi field follow-up3C19F39E: queued-photo completion/status cleanup
+  confirmed by Shawn aftere588d10; video cloudarrival19:30 previously confirmed.
   Reproduce aged-cycle fresh15minute delay and successful cooldown exit; review
-  bounded automatic recovery/diagnostic proposal before implementation. No clearing.
+  bounded automatic recovery/diagnostic correction implemented/released. No clearing.
 - [x] Independent actual-browser reproduction3/3: aged1attempt addsnew15minute wait;
   capture and sharedcontext cooldowns eventually succeed. Independent design supports
-  bounded automatic clock correction/safe diagnostics; implementation approval pending.
+  bounded automatic clock correction/safe diagnostics; subsequently approved/releasede588d10.
 
 - [x] Shawn approves integrity-first device storage repair and measured compression
   after visible actual independent engineering/design review.
