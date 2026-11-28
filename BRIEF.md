@@ -1,5 +1,19 @@
 # BRIEF.md - Found Co. / found-websites
 
+## November 27, 2026 - Shared UI released
+
+Shawn approved Push. App commit 88f3afb3a6139fd0b23b2f02559792b34b41fb3e is live.
+Vercel dpl_FAyvR3bBBcfGQxtsQUQfASmMuhW5 is READY with that exact SHA.
+Read-only production checks pass: login/dashboard/Photos, authorized upload context
+and no-store response, anonymous denial, wrong-account rejection, all four client
+homepages and Hiram gallery. No test uploads, customer messages or billing changes.
+
+Next: Shawn tests physical iPhone selection visibility and the Home status row's
+existing pending Review. Browser/source/build checks passed; physical UI acceptance
+and complete video playback/repeated weak-signal recovery remain open. Baseline
+normal-mode gallery control crowding remains a separate documented follow-up.
+
+
 ## November 27, 2026 - Approved shared UI: verification and release preparation
 
 The approved implementation is local, not published. Routine Home upload status is

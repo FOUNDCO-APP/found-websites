@@ -7,7 +7,8 @@
   review, camera recovery UI and Pro/Home regressions with real Chromium.
 - [x] Complete final production build and renewed independent source/visual review.
 - [x] Save tested release and existing MD records in local Git.
-- [ ] Obtain final publication approval, then verify live.
+- [x] Shawn approves Push; 88f3afb live, exact-SHA READY deployment and read-only
+  dashboard/auth/four-client checks pass.
 - [ ] Physical iPhone acceptance: below-action status/Review and video selection.
 - [ ] Separate follow-up: baseline normal-mode gallery overlay crowding at narrow
   widths/enlarged text; not changed by this bounded selection repair.
