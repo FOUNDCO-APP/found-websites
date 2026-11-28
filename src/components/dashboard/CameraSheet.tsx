@@ -60,6 +60,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   const retrying = useRef(new Set<string>())
   const mounted = useRef(true)
   const encoding = useRef(0)
+  const [encodingBusy, setEncodingBusy] = useState(false)
+  const requestedMode = useRef<CameraMode | null>(null)
+  const [pendingMode, setPendingMode] = useState<CameraMode | null>(null)
+  const [captureError, setCaptureError] = useState<string | null>(null)
+  const [profileError, setProfileError] = useState(false)
+  const [cameraRestart, setCameraRestart] = useState(0)
   const profileGuard = useRef(createCameraProfileGuard())
   const profileAvailable = useRef(false)
   const [profileBusy, setProfileBusy] = useState(false)
@@ -175,6 +181,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     window.addEventListener("beforeunload", warn)
     return () => {
       mounted.current = false
+      requestedMode.current = null
+      profileGuard.current.invalidate()
       orientationGeneration.current++; orientationAbort.current?.abort()
       window.removeEventListener("beforeunload", warn)
       if (timerRef.current) clearInterval(timerRef.current)
@@ -319,7 +327,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
       hwZoomRef.current = false
-      setReady(false); setError(null); setTorchOn(false); setTorchOk(false)
+      setReady(false); setError(null); setProfileError(false); setTorchOn(false); setTorchOk(false)
 
       // Proactive check where supported (Chrome/Android) â€” skips straight to
       // guidance instead of showing a dead black screen if already blocked.
@@ -374,7 +382,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
-  }, [facing, reviewOnly])
+  }, [facing, reviewOnly, cameraRestart])
 
   // Keep capture blocked while the browser changes the sensor profile. Stills
   // regain their original detail ideals when returning from Video to Photo.
@@ -383,9 +391,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     if (!ready || !track) return
     let active = true
     profileAvailable.current = false
+    setProfileError(false)
     setProfileBusy(true)
     void profileGuard.current.request(track, mode, portrait, () => active && mounted.current && streamRef.current?.getVideoTracks()[0] === track)
       .then(async result => {
+        if (result.status === "timeout" && active && mounted.current && streamRef.current?.getVideoTracks()[0] === track) {
+          setProfileBusy(false); setProfileError(true)
+          return
+        }
         if (result.isCurrent()) {
           profileAvailable.current = true; setProfileBusy(false); setZoom(1); setTorchOn(false); hwZoomRef.current = false
           if (mode === "video") await checkPreviewOrientation(track)
@@ -408,9 +421,32 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     return () => { video.removeEventListener("resize", resized); video.removeEventListener("loadeddata", resized); video.removeEventListener("canplay", resized) }
   }, [mode, portrait, facing])
 
-  function changeMode(next: CameraMode) {
-    if (recording || encoding.current || next === mode) return
+  function applyMode(next: CameraMode) {
     profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setMode(next)
+  }
+  function changeMode(next: CameraMode) {
+    if (recording) return
+    setCaptureError(null)
+    // The last request wins; tapping the current mode cancels a queued switch.
+    if (encoding.current) {
+      requestedMode.current = next === mode ? null : next
+      setPendingMode(requestedMode.current)
+      return
+    }
+    requestedMode.current = null; setPendingMode(null)
+    if (next !== mode) applyMode(next)
+  }
+  function beginEncoding() {
+    encoding.current++
+    if (mounted.current) setEncodingBusy(true)
+  }
+  function finishEncoding() {
+    encoding.current = Math.max(0, encoding.current - 1)
+    if (!mounted.current || encoding.current) return
+    setEncodingBusy(false)
+    const next = requestedMode.current
+    requestedMode.current = null; setPendingMode(null)
+    if (next) applyMode(next)
   }
 
   async function applyZoom(level: ZoomLevel) {
@@ -419,6 +455,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     if (!track) return
     profileAvailable.current = false; setProfileBusy(true)
     const result = await profileGuard.current.request(track, mode, portrait, () => mounted.current && streamRef.current?.getVideoTracks()[0] === track, { zoom: level, ...(torchOk ? { torch: torchOn } : {}) } as MediaTrackConstraintSet)
+    if (result.status === "timeout" && mounted.current && streamRef.current?.getVideoTracks()[0] === track) { setProfileBusy(false); setProfileError(true); return }
     if (!result.isCurrent()) return
     hwZoomRef.current = result.status === "applied"
     setZoom(result.status === "applied" || mode === "photo" ? level : 1)
@@ -432,6 +469,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     const next = !torchOn
     profileAvailable.current = false; setProfileBusy(true)
     const result = await profileGuard.current.request(track, mode, portrait, () => mounted.current && streamRef.current?.getVideoTracks()[0] === track, { torch: next, ...(hwZoomRef.current ? { zoom } : {}) } as MediaTrackConstraintSet)
+    if (result.status === "timeout" && mounted.current && streamRef.current?.getVideoTracks()[0] === track) { setProfileBusy(false); setProfileError(true); return }
     if (!result.isCurrent()) return
     if (result.status === "applied") setTorchOn(next)
     profileAvailable.current = true; setProfileBusy(false)
@@ -463,15 +501,28 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     setTimeout(() => setFlash(false), 120)
     const video = videoRef.current
     const canvas = canvasRef.current
-    const { sx, sy, sw, sh } = getCrop(video.videoWidth, video.videoHeight, currentR.w, currentR.h, zoom)
-    canvas.width = sw; canvas.height = sh
-    canvas.getContext("2d")!.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh)
-    encoding.current++
-    canvas.toBlob(blob => {
-      encoding.current--
-      if (blob) retainCapture(blob, `photo-${crypto.randomUUID()}.jpg`)
-      else if (mounted.current) setCloseNotice("Photo couldn’t be captured. Please try again.")
-    }, "image/jpeg", 0.92)
+    setCaptureError(null)
+    beginEncoding()
+    let finished = false
+    const finish = () => { if (!finished) { finished = true; finishEncoding() } }
+    try {
+      const { sx, sy, sw, sh } = getCrop(video.videoWidth, video.videoHeight, currentR.w, currentR.h, zoom)
+      canvas.width = sw; canvas.height = sh
+      const context = canvas.getContext("2d")
+      if (!context) throw new Error("Canvas unavailable")
+      context.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh)
+      canvas.toBlob(blob => {
+        if (finished) return
+        try {
+          if (!mounted.current) return
+          if (blob) retainCapture(blob, `photo-${crypto.randomUUID()}.jpg`)
+          else setCaptureError("Photo couldn’t be taken. Try again.")
+        } finally { finish() }
+      }, "image/jpeg", 0.92)
+    } catch {
+      if (mounted.current) setCaptureError("Photo couldn’t be taken. Try again.")
+      finish()
+    }
   }
 
   function startRecording() {
@@ -518,7 +569,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
             setCloseNotice("Video format needs attention. Keep Found open while saving.")
           }
         } else setCloseNotice("Video couldn’t be saved. Please record it again.")
-      } finally { encoding.current = Math.max(0, encoding.current - 1) }
+      } finally { finishEncoding() }
     }
     recorderRef.current = mr
     try { mr.start(250) }
@@ -530,7 +581,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
 
   function stopRecording() {
     if (recorderRef.current?.state !== "recording") return
-    encoding.current++
+    beginEncoding()
     recorderRef.current?.stop()
     if (timerRef.current) clearInterval(timerRef.current)
     setRecording(false)
@@ -624,6 +675,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     : orientation.status === "verified" && orientation.requested === (portrait ? "portrait" : "landscape") ? portrait ? "Portrait" : "Landscape"
     : orientation.status === "mismatch" ? `${portrait ? "Portrait" : "Landscape"} unavailable` : "Couldn’t check orientation"
 
+  const readinessLabel = captureError ?? (profileError ? "Camera isn’t ready. Try restarting it."
+    : encodingBusy ? mode === "photo" ? "Finishing photo…" : "Finishing video…"
+    : profileBusy ? mode === "video" ? "Preparing video…" : "Preparing camera…"
+    : mode === "video" && !orientation ? "Checking video frame…"
+    : mode === "video" && orientation?.status === "mismatch" ? "Video frame doesn’t match. Choose another frame."
+    : mode === "video" && orientation?.status === "unavailable" ? "Couldn’t check the video frame. Choose another frame." : null)
+  // Actual unsaved-original guidance always takes priority over camera readiness.
+  const cameraSummary = unprotected.length ? localSummary : readinessLabel ?? localSummary
+
   function fmtTime(s: number) {
     return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
   }
@@ -698,12 +758,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
               <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "white", fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>{fmtTime(recSecs)}</span>
             </div>
           ) : (
-            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} videoOrientationLabel={videoOrientationLabel} disabled={recording || profileBusy || encoding.current > 0} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setPortrait(next) }} />
+            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} videoOrientationLabel={videoOrientationLabel} disabled={recording || profileBusy || encodingBusy || profileError} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setPortrait(next) }} />
           )}
         </div>
 
         {/* Flash */}
-        <button aria-label="Toggle flashlight" aria-pressed={torchOn} onClick={toggleTorch} disabled={!torchOk || profileBusy} style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, backgroundColor: torchOn ? "rgba(255,215,0,0.3)" : "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "none", cursor: torchOk ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", opacity: torchOk ? 1 : 0 }}>
+        <button aria-label="Toggle flashlight" aria-pressed={torchOn} onClick={toggleTorch} disabled={!torchOk || profileBusy || encodingBusy || recording || profileError} style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, backgroundColor: torchOn ? "rgba(255,215,0,0.3)" : "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "none", cursor: torchOk ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", opacity: torchOk ? 1 : 0 }}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill={torchOn ? "#FFD700" : "none"} stroke={torchOn ? "#FFD700" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
@@ -721,13 +781,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         {!recording && (
           <div style={{ display: "flex", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
             {([1, 2, 3] as ZoomLevel[]).map(z => (
-              <button key={z} aria-pressed={zoom === z} onClick={() => applyZoom(z)} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}x</button>
+              <button key={z} aria-pressed={zoom === z} onClick={() => applyZoom(z)} disabled={profileBusy || encodingBusy || profileError} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}x</button>
             ))}
           </div>
         )}
 
         {/* Photo / Video mode */}
-        <div style={{ display: "flex", gap: 2, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+        <div aria-busy={pendingMode !== null} style={{ display: "flex", gap: 2, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
           {(["photo", "video"] as CameraMode[]).map(m => (
             <button key={m} aria-pressed={mode === m} disabled={recording} onClick={() => changeMode(m)} style={{ padding: "5px 22px", borderRadius: 100, border: "none", cursor: recording ? "default" : "pointer", fontSize: "0.75rem", fontWeight: 700, textTransform: "capitalize", letterSpacing: "0.04em", backgroundColor: mode === m ? "white" : "transparent", color: mode === m ? "#000" : "rgba(255,255,255,0.5)", transition: "all 0.15s ease" }}>{m}</button>
           ))}
@@ -737,8 +797,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
       {/* â”€â”€ Bottom bar â”€â”€ */}
       {/* Status reserves its own row, independent of thumbnail and shutter. */}
       <div className="camera-status-slot" data-camera-status-slot>
-        {localSummary && !reviewOnly && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
-          {(!unreadableCaptures.length || unprotected.length > 0) && pendingCaptures.some(c => c.state === "saving" || (c.uploading && !queueNotice)) && spinner}<span>{localSummary}</span>
+        {cameraSummary && !reviewOnly && reviewIndex === null && <div aria-label="Camera upload status" role="status" aria-live="polite" aria-atomic="true" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", color: "#eee", fontSize: "0.9375rem", lineHeight: 1.45 }}>
+          {(!unreadableCaptures.length || unprotected.length > 0) && pendingCaptures.some(c => c.state === "saving" || (c.uploading && !queueNotice)) && !readinessLabel && spinner}<span>{cameraSummary}</span>{profileError && !encodingBusy && !unprotected.length && <button type="button" onClick={() => { requestedMode.current = null; setPendingMode(null); profileGuard.current.invalidate(); profileAvailable.current = false; setProfileError(false); setCameraRestart(n => n + 1) }} style={{ minHeight: 44, padding: "8px", border: 0, background: "transparent", color: "white", font: "inherit", textDecoration: "underline", cursor: "pointer" }}>Restart camera</button>}
         </div>}
       </div>
       <div className="camera-shutter-row" style={{
@@ -782,7 +842,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         <button
           aria-label={mode === "photo" ? "Take photo" : recording ? "Stop recording" : "Record video"}
           onClick={handleShutter}
-          disabled={!ready || (!recording && (profileBusy || (mode === "video" && (orientation?.status !== "verified" || orientation.requested !== (portrait ? "portrait" : "landscape")))))}
+          disabled={!ready || (!recording && (profileBusy || profileError || encodingBusy || (mode === "video" && (orientation?.status !== "verified" || orientation.requested !== (portrait ? "portrait" : "landscape")))))}
           style={{
             width: 78, height: 78, borderRadius: "50%",
             border: `4px solid ${mode === "video" ? (recording ? "#FF3B30" : "rgba(255,50,50,0.7)") : "rgba(255,255,255,0.9)"}`,
@@ -807,7 +867,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
 
         {/* Flip â€” disabled while recording */}
         <button
-          aria-label="Switch camera" disabled={recording || profileBusy}
+          aria-label="Switch camera" disabled={recording || profileBusy || encodingBusy || profileError}
           onClick={() => { if (!recording && !profileBusy && !encoding.current) { profileGuard.current.invalidate(); profileAvailable.current = false; setFacing(f => f === "environment" ? "user" : "environment") } }}
           style={{ width: 58, height: 58, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.14)", border: "none", cursor: recording ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: recording ? 0.3 : 1, transition: "opacity 0.2s" }}
         >

@@ -1,5 +1,24 @@
 # Found Task Board
 
+- [x] Finish approved readiness repair qualification: eight actual browser groups,
+  profile/handler/timeout suite, camera upload UI regressions and frozen build pass.
+- [x] Prepare, visually inspect and save interactive vertical/horizontal camera
+  mockups at docs/camera-design-review.html.
+- [ ] Shawn reviews mockups before any layout rebuild; rotation policy unresolved.
+- [ ] Obtain final publication approval for tested repair; verify BOTH GitHub
+  Actions build and Vercel deployment, then physical iPhone test.
+- [ ] Separate build reliability follow-up: 88f3afb GitHub next/font failure; same
+  application code passed in da27bde. Do not ignore future CI alerts.
+
+## November 27 - Camera field failure takes priority
+
+- [x] Complete visible independent camera design/product/engineering discussion;
+  Shawn approves focused readiness repair and design mockups. Photo-to-Video dropped-tap path
+  confirmed in source; exact iPhone cause and framing/rotation behavior unresolved.
+- [ ] Qualify retained mode intent, bounded readiness feedback and actual framing
+  against physical iPhone capture/playback, preserving originals and shared queue.
+
+
 ## November 27 - Approved shared UI release preparation
 
 - [x] Implement approved selection clarity and contextual Home upload status.

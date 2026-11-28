@@ -1,5 +1,84 @@
 # BRIEF.md - Found Co. / found-websites
 
+## November 27, 2026 - Camera repair qualified locally (not published)
+
+Approved focused repair is complete. Eight actual React/Chromium readiness groups
+pass: delayed still encoding and immediate mode request, real Record/Stop after
+switch with both originals durably retained and hashed, cancelling/replacing mode
+intent, protected close, late callback after unmount, keyed account/company change,
+encoder exception recovery, and bounded camera-settings timeout/fresh-track restart.
+Mocks replace media devices/backend transport; this is not physical iPhone proof.
+
+Profile suite passes enqueue deadlines, hung-lane retirement, no overlapping
+constraints, late resolve/reject, invalidation/close and fresh-track recovery;
+existing recording/MIME/orientation/control-handler groups also pass. Full camera
+upload UI regression passes device save/reopen/recovery, quota/permanent errors,
+video finalization, terminal hydration, scoped review and retained originals across
+320/390 portrait, 844 landscape and enlarged text. The finalization test now
+asserts disabled Record plus Finishing video instead of clicking an inert control.
+
+Independent Zeno engineering review found no concrete blocker. Production build
+passes compilation (78 seconds), TypeScript and all 89 pages. Reviewed application
+SHA256 prefixes unchanged through build: CameraSheet 84fb4f5fd9a6c173; profile
+guard 190fdcfb90cf24c5. Full values are in the verification tool output.
+
+No queue, media-quality, codec, billing, public website or orientation-policy change.
+No physical playback/weak-signal success or App Store readiness claim. Existing
+explicit orientation selection remains; device rotation policy and full layout
+rebuild are unapproved. Final publication approval remains required.
+
+
+## November 27, 2026 - Camera readiness repair and mockups approved
+
+Shawn approves the visible team's staged direction: focused reliability repair plus
+camera design mockups. No layout rebuild, automatic rotation policy, quality/codec
+change or production release is included. Photo formats and explicit orientation
+selection remain authoritative for this repair; physical acceptance is still open.
+
+Implementation in progress: remember latest Photo/Video intent during encoding,
+allow cancellation, finish still preparation before applying the switch, reactive
+readiness feedback in the existing status slot, encoder-exception cleanup. Bound
+camera-settings requests at eight seconds; permanently retire the timed-out track
+inside its guard without releasing/overlapping the unresolved operation. Restart
+camera reacquires a fresh track; late settlements cannot authorize capture.
+
+Independent Zeno engineering source review found no concrete blocker. New actual
+React/browser tests, existing camera regressions and final build remain pending.
+Device queue, stored originals, account/job scope and upload/retry behavior remain
+unchanged. Mockups are separate proposals and require Shawn review before layout
+implementation. Phone-led automatic orientation remains an unresolved decision.
+
+
+## November 27, 2026 - New iPhone camera failure / visible team review
+
+Shawn reports: took a still, then Photo to Video appeared stuck; portrait/landscape
+control or behavior also feels incorrect. He requests a Jony-led / Steve-co-led
+camera UI/UX review. Physical acceptance remains FAILED/OPEN; do not treat previous
+browser/build/release checks as evidence this iPhone sequence works.
+
+Read-only source confirms two distinct paths: mode taps silently return while
+encoding.current is nonzero although the mode button is only disabled during
+recording; a selected Video mode separately blocks recording until the requested
+frame aspect is verified. Neither establishes which happened on Shawn's phone.
+Questions pending: did Photo remain selected or did Video select with an inert
+record button; was orientation changed through Format, physical rotation or both?
+
+Independent AI roles: Jony design review recommends coherent stable preview/control
+layout and clearer framing; Steve/Angela review recommends focused interaction
+repair first and remembering mode intent until processing safely finishes. Actual
+scope tension is visible in chat, not unanimous approval. Engineering reproduced the dropped tap using actual extracted handlers, plus
+encoder-exception cleanup failure; unresolved applyConstraints can block readiness.
+These are code-path reproductions, not a diagnosis of the particular iPhone event.
+Existing profile tests passed; current UI tests miss photo-then-immediate-mode-tap.
+Jony cross-review accepts focused repair first plus portrait/landscape mockups
+before layout implementation. Orientation policy remains unresolved: phone-led
+automatic versus explicit frame selection. New conversion is not approved. No app edits or release authorized for this report. Proposed next approval covers
+mode-intent/encoding cleanup/bounded camera-readiness repair and design mockups;
+physical-rotation policy, final layout and publication need their own review.
+Preserve originals, quality, device storage, queue and account/job isolation. New
+orientation policy or conversion must not be inferred from a cosmetic UI change.
+
+
 ## November 27, 2026 - Shared UI released
 
 Shawn approved Push. App commit 88f3afb3a6139fd0b23b2f02559792b34b41fb3e is live.

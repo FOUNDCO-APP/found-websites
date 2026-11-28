@@ -6,7 +6,7 @@ import ts from 'typescript'
 const module = { exports: {} }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/cameraRecordingProfile.ts', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText, { module, exports: module.exports })
+}).outputText, { module, exports: module.exports, setTimeout, clearTimeout })
 const { cameraProfileConstraints: constraints, createProfiledRecorder, recordingMime, recordingMeasurement, createCameraProfileGuard } = module.exports
 const plain = value => JSON.parse(JSON.stringify(value))
 assert.deepEqual(plain(constraints('photo', true)), { width: { ideal: 4096 }, height: { ideal: 3072 } })
@@ -75,6 +75,64 @@ assert.equal(accepted.isCurrent(), false)
 assert.equal((await guard.request({ ...track, applyConstraints: async () => { throw Error('unsupported') } }, 'video', false, () => true)).status, 'fallback')
 assert.equal((await guard.request({ ...track, readyState: 'ended' }, 'video', false, () => true)).status, 'stale')
 assert.equal((await guard.request(track, 'video', false, () => false)).status, 'stale')
+
+// Deterministic deadline tests: production policy stays eight seconds; no sleeps.
+const deadlineModule = { exports: {} }
+let clock = 0, timerId = 0
+const deadlines = new Map()
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/cameraRecordingProfile.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { module: deadlineModule, exports: deadlineModule.exports,
+  setTimeout(fn, delay) { const id = ++timerId; deadlines.set(id, { at: clock + delay, fn }); return id },
+  clearTimeout(id) { deadlines.delete(id) },
+})
+assert.equal(deadlineModule.exports.CAMERA_PROFILE_WAIT_MS, 8000)
+const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve() }
+const advance = async ms => {
+  clock += ms
+  for (const [id, task] of [...deadlines]) if (task.at <= clock) { deadlines.delete(id); task.fn() }
+  await flush()
+}
+for (const settle of ['resolve', 'reject', 'never']) {
+  for (const invalidated of [false, true]) {
+    const boundedGuard = deadlineModule.exports.createCameraProfileGuard()
+    let finish, fail, calls = 0, inFlight = 0, maximum = 0, active = true
+    const hungTrack = { readyState: 'live', applyConstraints() {
+      calls++; maximum = Math.max(maximum, ++inFlight)
+      return new Promise((resolve, reject) => { finish = () => { inFlight--; resolve() }; fail = () => { inFlight--; reject(Error('late failure')) } })
+    } }
+    const pending = boundedGuard.request(hungTrack, 'photo', true, () => active)
+    await flush()
+    await advance(1000)
+    const queued = boundedGuard.request(hungTrack, 'video', true, () => active)
+    if (invalidated) { active = false; boundedGuard.invalidate() } // close/invalidate while pending
+    await advance(7000)
+    const timedOut = await pending
+    assert.equal(timedOut.status, 'timeout')
+    assert.equal(timedOut.isCurrent(), false)
+    await advance(1000)
+    const queuedTimeout = await queued
+    assert.equal(queuedTimeout.status, 'timeout', 'queued request has its own enqueue deadline')
+    assert.equal(queuedTimeout.isCurrent(), false)
+    assert.equal(calls, 1, 'queued work never overlaps hung browser operation')
+    assert.equal((await boundedGuard.request(hungTrack, 'photo', true, () => true)).status, 'timeout')
+    const freshTrack = { readyState: 'live', applyConstraints: async () => {} }
+    const recovered = await boundedGuard.request(freshTrack, 'video', false, () => true)
+    assert.equal(recovered.status, 'applied', 'fresh track recovers despite unresolved old lane')
+    assert.equal(recovered.isCurrent(), true)
+    if (settle === 'resolve') finish()
+    if (settle === 'reject') fail()
+    await flush()
+    assert.equal(timedOut.isCurrent(), false, 'late settlement cannot authorize timed-out capture')
+    assert.equal(queuedTimeout.isCurrent(), false)
+    assert.equal(recovered.isCurrent(), true, 'late old completion cannot revoke fresh authorization')
+    assert.equal((await boundedGuard.request(hungTrack, 'video', false, () => true)).status, 'timeout', 'poisoned track never reused even after settlement')
+    assert.equal(calls, 1)
+    assert.equal(maximum, 1)
+    assert.equal(deadlines.size, 0, 'settled caller deadlines are cleaned up')
+  }
+}
+console.log('PASS bounded profile wait: enqueue deadlines, hung queue, no overlap, permanent track retirement, late resolve/reject/close and fresh-track recovery')
 
 // Execute the current CameraSheet acquisition block, rather than a copy of it.
 // This release preserves audio-at-open, including photo mode, with silent fallback.
@@ -182,6 +240,7 @@ function recordingHarness({ mime = 'video/webm', retentionThrows = false, startT
   const scope = {
     Blob, crypto: { randomUUID: () => 'fixture-uuid' },
     profileAvailable: { current: true }, encoding: { current: 0 }, mounted: { current: true },
+    requestedMode: { current: null }, setEncodingBusy() {}, setPendingMode() {},
     portrait: true, orientationRef: { current: { status: 'verified', requested: 'portrait' } },
     videoRef: { current: { readyState: 2, videoWidth: 1080, videoHeight: 1920 } },
     checkPreviewOrientation() { previewChecks++ },
@@ -203,7 +262,7 @@ function recordingHarness({ mime = 'video/webm', retentionThrows = false, startT
     setInterval() { timer = true; return 1 }, clearInterval() { timer = false },
   }
   vm.createContext(scope)
-  vm.runInContext(ts.transpileModule(['startRecording', 'stopRecording', 'uploadVideo'].map(extractFunction).join('\n'), {
+  vm.runInContext(ts.transpileModule(['startRecording', 'stopRecording', 'uploadVideo', 'beginEncoding', 'finishEncoding'].map(extractFunction).join('\n'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText, scope)
   return { scope, mr, retained, notices, playbackChecks, captureRows, previewChecks: () => previewChecks, start: () => scope.startRecording(), stop: () => scope.stopRecording(),
@@ -380,6 +439,12 @@ function controlHarness() {
     profileAvailable: { current: true }, orientationGeneration: { current: 0 },
     orientationAbort: { current: null }, orientationRef: { current: null },
     mounted: { current: true }, encoding: { current: 0 }, hwZoomRef: { current: false },
+    requestedMode: { current: null }, captureError: 'prior error', pendingMode: null,
+    encodingBusy: false, profileError: false, invalidations: 0,
+    setCaptureError(value) { scope.captureError = value },
+    setPendingMode(value) { scope.pendingMode = value },
+    setEncodingBusy(value) { scope.encodingBusy = value },
+    setProfileError(value) { scope.profileError = value },
     profileBusy: false, recording: false, mode: 'video', portrait: true, zoom: 1, torchOk: true, torchOn: false,
     setProfileBusy(value) { scope.profileBusy = value }, setZoom(value) { scope.zoom = value },
     setTorchOn(value) { scope.torchOn = value }, setOrientation(value) { scope.observed = value },
@@ -389,12 +454,12 @@ function controlHarness() {
       return new Promise(resolve => checks.push({ resolve, options }))
     },
     profileGuard: { current: {
-      invalidate() {},
+      invalidate() { scope.invalidations++ },
       request() { return new Promise(resolve => { finishConstraint = resolve }) },
     } },
   }
   vm.createContext(scope)
-  vm.runInContext(ts.transpileModule(['checkPreviewOrientation', 'applyZoom', 'toggleTorch', 'changeMode'].map(extractFunction).join('\n'), {
+  vm.runInContext(ts.transpileModule(['checkPreviewOrientation', 'applyZoom', 'toggleTorch', 'changeMode', 'applyMode', 'beginEncoding', 'finishEncoding'].map(extractFunction).join('\n'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText, scope)
   return { scope, checks, currentTrack, finishConstraint: (status = 'applied', current = true) => finishConstraint({ status, isCurrent: () => current }) }
@@ -434,13 +499,60 @@ for (const control of ['applyZoom', 'toggleTorch']) {
   cancelled.finishConstraint('applied', false)
   await staleAction
   assert.equal(cancelled.checks.length, 0, 'stale control completion cannot start verification')
+  for (const lifecycle of ['current', 'closed', 'replaced']) {
+    const timed = controlHarness()
+    const timeoutAction = timed.scope[control](2)
+    if (lifecycle === 'closed') timed.scope.mounted.current = false
+    if (lifecycle === 'replaced') timed.scope.streamRef.current = { getVideoTracks: () => [{}] }
+    timed.finishConstraint('timeout', false)
+    await timeoutAction
+    assert.equal(timed.scope.profileError, lifecycle === 'current', `${control}: timeout error only for mounted current track`)
+    assert.equal(timed.scope.profileAvailable.current, false)
+    assert.equal(timed.checks.length, 0, 'timeout never begins verification')
+    if (lifecycle === 'current') assert.equal(timed.scope.profileBusy, false)
+  }
 }
 const modeCancellation = controlHarness()
 const beforeMode = modeCancellation.scope.checkPreviewOrientation(modeCancellation.currentTrack)
 modeCancellation.scope.changeMode('photo')
+assert.equal(modeCancellation.scope.mode, 'photo', 'actual applyMode executes')
+assert.equal(modeCancellation.scope.invalidations, 1)
+assert.equal(modeCancellation.scope.profileAvailable.current, false)
+assert.equal(modeCancellation.scope.profileBusy, true)
+assert.equal(modeCancellation.scope.captureError, null)
+assert.equal(modeCancellation.scope.requestedMode.current, null)
+assert.equal(modeCancellation.scope.pendingMode, null)
 assert.equal(modeCancellation.checks[0].options.signal.aborted, true)
 modeCancellation.checks[0].resolve({ status: 'verified', requested: 'portrait' })
 await beforeMode
 assert.equal(modeCancellation.scope.orientationRef.current, null)
 assert.equal(modeCancellation.scope.observed, null, 'mode switch prevents obsolete UI result')
+for (const outcome of ['switch', 'cancel', 'close']) {
+  const deferred = controlHarness()
+  const observation = deferred.scope.checkPreviewOrientation(deferred.currentTrack)
+  deferred.scope.beginEncoding()
+  deferred.scope.changeMode('photo')
+  assert.equal(deferred.scope.requestedMode.current, 'photo')
+  assert.equal(deferred.scope.pendingMode, 'photo')
+  assert.equal(deferred.scope.mode, 'video', 'mode stays unchanged during encoding')
+  assert.equal(deferred.scope.encodingBusy, true)
+  assert.equal(deferred.scope.invalidations, 0)
+  if (outcome === 'cancel') deferred.scope.changeMode('video')
+  if (outcome === 'close') deferred.scope.mounted.current = false
+  deferred.scope.finishEncoding()
+  assert.equal(deferred.scope.encoding.current, 0)
+  assert.equal(deferred.scope.mode, outcome === 'switch' ? 'photo' : 'video')
+  assert.equal(deferred.scope.invalidations, outcome === 'switch' ? 1 : 0)
+  if (outcome !== 'close') {
+    assert.equal(deferred.scope.encodingBusy, false)
+    assert.equal(deferred.scope.requestedMode.current, null)
+    assert.equal(deferred.scope.pendingMode, null)
+  }
+  assert.equal(deferred.checks[0].options.signal.aborted, outcome === 'switch')
+  deferred.checks[0].resolve({ status: 'verified', requested: 'portrait' })
+  await observation
+  assert.equal(deferred.scope.orientationRef.current?.status, outcome === 'cancel' ? 'verified' : undefined,
+    'actual deferred switch/close suppresses old observation; cancelled switch preserves valid observation')
+}
 console.log('PASS actual zoom/torch race: applied/fallback retry without resize, old-result suppression, stale controls and mode cancellation')
+console.log('PASS actual mode helper chain: observable setters, deferred switch, cancel, close, orientation invalidation and zoom/torch timeout lifecycle')

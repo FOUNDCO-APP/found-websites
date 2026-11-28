@@ -1,3 +1,20 @@
+## November 27, 2026 - Focused camera readiness repair and mockups (Approved)
+
+Shawn approves staged work after visible independent design/product/engineering
+review: preserve mode intent during encoding, reactive preparation feedback,
+exception cleanup and bounded profile readiness, plus separate design mockups.
+Use the existing quiet status slot, not another toast/banner. Unsafe original
+save guidance outranks readiness. Latest mode intent wins and can be cancelled;
+never switch in the middle of capture processing or discard that original.
+
+Profile timeout is eight seconds from enqueue. Affected track is permanently
+retired within the guard; an unresolved operation never releases the same-track
+lane or authorizes capture. Explicit exceptional Restart camera gets a fresh
+track while preserving saved captures. No queue, codec, quality or orientation
+policy changes. Mockups require Shawn review before any layout rebuild; automatic
+phone-led framing remains an unresolved product decision. iPhone playback and
+repeated photo-to-video acceptance remain required.
+
 ## November 22, 2026 - Selection Clarity And Contextual Upload Status (Approved)
 
 Shawn approves after visible Jony-led/Steve-co-led independent discussion and his

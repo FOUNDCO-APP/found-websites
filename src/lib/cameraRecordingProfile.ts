@@ -17,20 +17,44 @@ export function cameraProfileConstraints(mode: CameraProfileMode, portrait = fal
   }
 }
 
-/** Serialize per-stream changes. Call invalidate synchronously on mode/stream/close
- * changes. A stale in-flight browser operation cannot be cancelled, but cannot
- * authorize capture; a queued latest request runs after it. Keep shutter/flip/
- * zoom/torch disabled while awaiting request, and check isCurrent after awaits.
+export const CAMERA_PROFILE_WAIT_MS = 8000
+export type CameraProfileResult = {
+  status: "stale" | "applied" | "fallback" | "timeout"
+  isCurrent: () => boolean
+}
+
+/** Serialize changes per track, with an eight-second deadline from enqueue.
+ * Browser operations cannot be cancelled. A timeout permanently retires that
+ * track within this guard, even after late settlement; use a fresh track to
+ * recover. Never release the underlying per-track queue on timeout. Different
+ * tracks have independent queues. Invalidate synchronously on mode/stream/close
+ * changes and check isCurrent after awaits; timeout can never authorize capture.
  */
 export function createCameraProfileGuard() {
   let generation = 0
-  let tail: Promise<unknown> = Promise.resolve()
+  const tracks = new WeakMap<MediaStreamTrack, { tail: Promise<unknown>; poisoned: boolean }>()
   return {
     invalidate() { generation++ },
-    request(track: MediaStreamTrack, mode: CameraProfileMode, portrait: boolean, isActive: () => boolean, advanced?: MediaTrackConstraintSet) {
+    request(track: MediaStreamTrack, mode: CameraProfileMode, portrait: boolean, isActive: () => boolean, advanced?: MediaTrackConstraintSet): Promise<CameraProfileResult> {
       const token = ++generation
-      const isCurrent = () => token === generation && track.readyState === "live" && isActive()
-      const result = tail.then(async () => {
+      let state = tracks.get(track)
+      if (!state) {
+        state = { tail: Promise.resolve(), poisoned: false }
+        tracks.set(track, state)
+      }
+      const lane = state
+      let expired = false
+      const isCurrent = () => !expired && !lane.poisoned && token === generation && track.readyState === "live" && isActive()
+      if (lane.poisoned) return Promise.resolve({ status: "timeout", isCurrent })
+      let timer: ReturnType<typeof setTimeout>
+      const timeout = new Promise<CameraProfileResult>(resolve => {
+        timer = setTimeout(() => {
+          expired = true
+          lane.poisoned = true
+          resolve({ status: "timeout", isCurrent })
+        }, CAMERA_PROFILE_WAIT_MS)
+      })
+      const operation = lane.tail.then(async (): Promise<CameraProfileResult> => {
         if (!isCurrent()) return { status: "stale" as const, isCurrent }
         let caps: ProfileCapabilities = {}
         try { caps = track.getCapabilities?.() ?? {} } catch { /* Older engines. */ }
@@ -38,8 +62,8 @@ export function createCameraProfileGuard() {
         try { await track.applyConstraints({ ...cameraProfileConstraints(mode, portrait, caps), ...(advanced ? { advanced: [advanced] } : {}) }); applied = true } catch { /* Ideals are best effort. */ }
         return { status: !isCurrent() ? "stale" as const : applied ? "applied" as const : "fallback" as const, isCurrent }
       })
-      tail = result.catch(() => undefined)
-      return result
+      lane.tail = operation.catch(() => undefined)
+      return Promise.race([operation, timeout]).finally(() => clearTimeout(timer))
     },
   }
 }

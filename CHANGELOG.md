@@ -1,3 +1,14 @@
+## November 27, 2026 - Camera readiness repair prepared (not published)
+
+- Preserve latest Photo/Video intent while finishing a capture; support cancelling
+  that intent. Preparation and recording-finalization states are visible.
+- Release encoding guards after canvas/encoder failure. Bound camera settings to
+  eight seconds; retire unsafe timed-out tracks and recover with a fresh stream.
+- Preserve original media, durable upload recovery, quality and orientation policy.
+- Eight actual browser readiness groups, profile/handler suite, camera upload UI
+  regressions and frozen production build pass. Independent engineering review
+  found no blocker. Physical iPhone acceptance and publication remain pending.
+
 ## November 27, 2026 - Shared UI released
 
 Shawn approved Push. App commit 88f3afb3a6139fd0b23b2f02559792b34b41fb3e is live.
