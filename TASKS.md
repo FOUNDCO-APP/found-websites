@@ -5,8 +5,9 @@
 - [x] Prepare, visually inspect and save interactive vertical/horizontal camera
   mockups at docs/camera-design-review.html.
 - [ ] Shawn reviews mockups before any layout rebuild; rotation policy unresolved.
-- [ ] Obtain final publication approval for tested repair; verify BOTH GitHub
-  Actions build and Vercel deployment, then physical iPhone test.
+- [x] Shawn approves Push: 2e3353f live, exact-SHA Vercel READY, GitHub Build
+  run46109912929 SUCCESS and live read-only dashboard/auth/four-client checks pass.
+- [ ] Physical iPhone photo-to-immediate-Video recording/playback acceptance.
 - [ ] Separate build reliability follow-up: 88f3afb GitHub next/font failure; same
   application code passed in da27bde. Do not ignore future CI alerts.
 

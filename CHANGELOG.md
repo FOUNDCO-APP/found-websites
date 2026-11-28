@@ -1,3 +1,18 @@
+## November 27, 2026 - Camera readiness repair released
+
+Shawn explicitly approves Push. App commit 2e3353f511b9e0e42b960dd84cb07ae2329418be
+is live. Vercel dpl_DwiaGx54nFJbE8FbsnknVuwMFwEQ READY/exact SHA verified;
+GitHub Actions Build run46109912929 completed SUCCESS for the same commit.
+Read-only live checks pass: login/dashboard/Photos, authorized no-store upload
+context, anonymous denial, wrong-account rejection, all four client homepages and
+Hiram gallery. No uploads, customer messages, billing or provider settings changed.
+
+Next physical iPhone test: take a photo then immediately tap Video, record/stop,
+verify both captures and full video playback. Also test requested framing against
+saved playback. Browser qualification does not prove the actual phone defect fixed.
+Mockup source is saved in docs/camera-design-review.html for discussion only. No
+camera layout rebuild or automatic-rotation policy is included in this release.
+
 ## November 27, 2026 - Camera readiness repair prepared (not published)
 
 - Preserve latest Photo/Video intent while finishing a capture; support cancelling
