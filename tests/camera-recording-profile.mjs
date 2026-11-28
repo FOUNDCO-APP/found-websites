@@ -11,11 +11,14 @@ const { cameraProfileConstraints: constraints, createProfiledRecorder, recording
 const plain = value => JSON.parse(JSON.stringify(value))
 assert.deepEqual(plain(constraints('photo', true)), { width: { ideal: 4096 }, height: { ideal: 3072 } })
 const caps = { width: { min: 1, max: 4096 }, height: { min: 1, max: 3072 }, aspectRatio: { min: .5, max: 2 } }
-assert.equal(constraints('video', true, caps).aspectRatio.ideal, 9 / 16)
-assert.equal(constraints('video', false, caps).width.ideal, 1920)
-assert.equal(constraints('video', true).height.ideal, 1920)
-assert.equal(constraints('video', true, { ...caps, height: { max: 1080 } }).aspectRatio.ideal, 9 / 16)
-assert.equal(constraints('video', true, { ...caps, aspectRatio: { min: 1 } }).width.ideal, 1080)
+const normalizedVideoProfile = { width: { ideal: 1920 }, height: { ideal: 1080 }, aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: 30 } }
+const sensorCaps = { width: { min: 640, max: 1920 }, height: { min: 480, max: 1080 }, aspectRatio: { min: 1, max: 2 } }
+for (const portrait of [true, false]) {
+  for (const metadata of [undefined, {}, caps, sensorCaps]) {
+    assert.deepEqual(plain(constraints('video', portrait, metadata)), normalizedVideoProfile,
+      'primary-orientation request stays normalized independently of selected output and capability metadata')
+  }
+}
 assert.equal(constraints('video').frameRate.ideal, 30)
 assert.ok(!JSON.stringify(constraints('video')).match(/exact|min|max/))
 
@@ -196,7 +199,7 @@ const advancedTrack = { ...track, applyConstraints(value) {
 const zoomRequest = advancedGuard.request(advancedTrack, 'video', true, () => true, { zoom: 2, torch: false })
 await Promise.resolve()
 assert.deepEqual(advancedCalls[0].advanced, [{ zoom: 2, torch: false }])
-assert.equal(advancedCalls[0].height.ideal, 1920)
+assert.equal(advancedCalls[0].height.ideal, 1080)
 const torchRequest = advancedGuard.request(advancedTrack, 'photo', false, () => true, { torch: true })
 assert.equal(advancedCalls.length, 1, 'advanced changes are serialized')
 finishAdvanced()
@@ -376,6 +379,55 @@ class OrientationVideo extends EventTarget {
   remove() { this.removed = true }
 }
 const shortWait = { timeoutMs: 400, minWaitMs: 100, settleMs: 50 }
+// Output dimensions are independent fixture inputs, never copied from ideals.
+// W3C primary-orientation constraints do not promise a delivered orientation.
+// These are behavioral simulations, not physical iPhone qualification.
+for (const metadata of ['missing', 'sensor']) {
+  for (const portrait of [true, false]) {
+    for (const delivered of ['portrait', 'landscape']) {
+      const profileGuard = createCameraProfileGuard()
+      const requests = []
+      const sensorTrack = {
+        readyState: 'live',
+        ...(metadata === 'sensor' ? { getCapabilities: () => sensorCaps } : {}),
+        getSettings: () => ({ width: 1920, height: 1080 }),
+        async applyConstraints(value) { requests.push(plain(value)) },
+      }
+      const appliedProfile = await profileGuard.request(sensorTrack, 'video', portrait, () => true)
+      assert.equal(appliedProfile.status, 'applied')
+      assert.equal(appliedProfile.isCurrent(), true)
+      assert.deepEqual(requests, [normalizedVideoProfile])
+      const deliveredVideo = new OrientationVideo()
+      if (delivered === 'landscape') { deliveredVideo.videoWidth = 1920; deliveredVideo.videoHeight = 1080 }
+      const observed = await verifyCameraOrientation(deliveredVideo, sensorTrack, portrait,
+        { ...shortWait, isCurrent: appliedProfile.isCurrent })
+      assert.equal(observed.status, portrait === (delivered === 'portrait') ? 'verified' : 'mismatch',
+        `${metadata}/${portrait}/${delivered}: accepted normalized profile cannot certify output shape`)
+      assert.equal(observed.track.width, 1920)
+      assert.equal(observed.frame.width, delivered === 'portrait' ? 1080 : 1920)
+      assert.equal(observed.uprightContentVerified, false)
+      profileGuard.invalidate()
+      assert.equal(appliedProfile.isCurrent(), false)
+      assert.equal((await verifyCameraOrientation(deliveredVideo, sensorTrack, portrait,
+        { ...shortWait, isCurrent: appliedProfile.isCurrent })).reason, 'stale')
+    }
+  }
+}
+// First-frame settings can change after acquisition (WebKit 323550 comment 6).
+const settlingGuard = createCameraProfileGuard()
+let deliveredSettings = { width: 1920, height: 1080 }
+const settlingTrack = { readyState: 'live', getSettings: () => deliveredSettings,
+  async applyConstraints(value) { assert.deepEqual(plain(value), normalizedVideoProfile) } }
+const settlingProfile = await settlingGuard.request(settlingTrack, 'video', true, () => true)
+const settlingVideo = new OrientationVideo()
+settlingVideo.readyState = 0
+setTimeout(() => { deliveredSettings = { width: 1080, height: 1920 }; settlingVideo.readyState = 2 }, 70)
+const settledDelivery = await verifyCameraOrientation(settlingVideo, settlingTrack, true,
+  { ...shortWait, minWaitMs: 180, isCurrent: settlingProfile.isCurrent })
+assert.equal(settledDelivery.status, 'verified')
+assert.equal(settledDelivery.track.width, 1080)
+assert.equal(settledDelivery.uprightContentVerified, false)
+console.log('PASS normalized profile: both selections, absent/sensor capabilities, independent delivered matches/mismatches, first-frame settings change and stale suppression; no device-cause claim')
 const orientationTrack = { readyState: 'live', getSettings: () => ({ width: 1920, height: 1080, deviceId: 'PRIVATE' }) }
 const deliveredPortrait = await verifyCameraOrientation(new OrientationVideo(), orientationTrack, true, shortWait)
 assert.equal(deliveredPortrait.status, 'verified', 'delivered frame, not sensor orientation, determines result')

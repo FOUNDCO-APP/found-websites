@@ -1,3 +1,13 @@
+## November 27 - Primary-orientation video request correction (Approved)
+
+After physical Video selected / Portrait unavailable failure, Shawn approves the
+bounded normalized video request:1920x1080,16/9,30fps for both output selections.
+Selected shape remains an expectation verified against delivered frames; no
+silent horizontal fallback, cosmetic rotation, unverified record enablement or
+new stream-reacquisition policy. Keep existing capture quality and queue behavior.
+Independent primary-orientation research and test evidence are in handoff. Actual
+iPhone upright preview and saved playback remain the physical acceptance gate.
+
 ## November 27, 2026 - Focused camera readiness repair and mockups (Approved)
 
 Shawn approves staged work after visible independent design/product/engineering

@@ -1,5 +1,100 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 27 - Normalized video profile qualified; publication pending
+
+Shawn approved the bounded correction. One application file changes: video ideals
+are1920x1080,16/9,30fps for either selected output shape. Photo profile and all
+CameraSheet, queue, codec/bitrate and saved-original behavior are unchanged.
+
+Actual Chromium/React qualification passes12readiness groups: photo then immediate
+Video Record/Stop, both originals committed/hash-checked, cancellation/replacement,
+close/late callback/scoped identity, encoder failure, independent delivered portrait
+versus sensor settings, wide mismatch blocking, delayed frame settling, stale
+observations, timeout recovery and original-file playback mismatch warning.
+Full camera upload UI suite passes. Complete old swapped-tuple negative control
+correctly reproduces blocked recording under an explicitly synthetic iOS preset
+trap; this is a test control, not an actual iPhone reproduction.
+
+Full profile suite passes including8independent guard/helper delivered-orientation
+combinations, ignored ideals, settings/frame disagreement, late/stale/race cases.
+Independent Zeno engineering and Jony-role scope reviews found no source blocker.
+Final frozen build exits0: compilation39.7s, TypeScript49s, all89pages. Profilehash
+prefixb5434487b95752fb and unchangedCameraSheet84fb4f5fd9a6c173 match pre-build.
+
+Tested source, checks and normal MDs are saved in this local release commit. Publication requires final
+approval and BOTH GitHub Actions and exact-SHA Vercel READY checks. Physical iPhone
+upright preview plus full original playback remains open. If normalized profile
+still fails there, compare same-profile fresh acquisition separately before changing
+stream-restart or fallback policy. Do not claim the field failure is proven fixed.
+
+
+## November 27 - Primary-orientation correction qualification
+
+Independent Zeno engineering review found no application-code blocker; Jony-role
+review supports only the approved normalized request, preserving mismatch blocking.
+Only cameraRecordingProfile.ts changes in the app; CameraSheet, photo profile,
+recording bitrates, stored originals and upload queue are unchanged.
+
+Profile suite passed eight independently delivered shape/guard combinations plus
+missing/sensor-capability cases. Opposite delivered shape mismatches despite a
+successful constraint request; sensor/settings and preview can disagree. Delayed
+first-frame settings and stale authorization remain covered. Existing recording,
+MIME, microphone, timeout poisoning/no-overlap/fresh-track, mode and zoom/torch
+regressions pass. These are synthetic scenarios, not physical iPhone proof.
+
+Final frozen build passed compilation39.7s, TypeScript49s and all89pages; final
+packaging and actual React browser/negative-control results remain pending. Physical
+upright preview AND full original-file playback remain open after publication.
+
+
+## November 27, 2026 - Primary-orientation profile correction approved
+
+Shawn approves targeted framing correction after visible independent reviews and
+physical463FFFD3 failure. One application file changes: video ideals now request
+1920x1080,16/9,30fps regardless of selected output shape. Portrait/Landscape remains
+an output expectation checked against delivered frames. No guard removal, CSS
+rotation, silent horizontal substitution, fresh-stream policy or camera redesign.
+Photo4096x3072 ideals, quality, bitrate, storage and upload behavior are unchanged.
+
+Review/test qualification in progress. Browser fixtures are being decoupled from
+requested ideals; portrait/wide/delayed/settings-frame/playback outcomes must be
+controlled independently. Previous mocks echoing requests were insufficient.
+Frozen application build started with profile SHA256 prefixb5434487b95752fb and
+unchanged CameraSheet84fb4f5fd9a6c173. Physical iPhone upright preview AND original
+saved-video playback remain mandatory; this is a candidate fix, not cause proof.
+
+
+## November 27, 2026 - Physical video framing failure after readiness release
+
+New iPhone screenshot463FFFD3: still photo works; Video is selected; top Portrait
+unavailable, wide contained preview, Video frame does not match guidance and blocked
+recording. This narrows the observed problem to video preparation/frame mismatch,
+not the previously ignored mode tap. It does not establish saved playback because
+recording is blocked. Physical video acceptance remains failed/open.
+
+Current code requests1080x1920 and aspect9/16 when portrait=true. Primary research:
+W3C Media Capture and Streams sections4.3.9/11.1 state width/height/aspect constraints
+remain in the system primary orientation while delivered settings may rotate;
+https://www.w3.org/TR/mediacapture-streams/ . WebKit report323550 describes upright
+iPhone15/iOS26.6 request1080x1920 yielding wide delivered/playback frames, while
+1920x1080 yielded portrait. It is a reporter observation, not proof of Shawn's exact
+OS/device/cause: https://bugs.webkit.org/show_bug.cgi?id=323550 . Normalizing video
+profile constraints is a candidate correction; retain actual-frame/playback checks.
+
+Independent Jony-role review rejects asking users to solve technical framing,
+cosmetic rotation, disabling the guard, or silent horizontal substitution. Explicit
+fallback/automatic orientation/native capture policies remain unapproved. Engineering
+review supports qualifying normalized1920x1080/16:9 video ideals first on the
+existing stream, keeping the selected shape as an expectation and actual mismatch
+blocking. Only compare fresh acquisition separately if needed; do not change both
+variables blindly. WebKit comment3 corrects the initial metadata diagnosis, so do
+not repeat the bug title as established cause. Existing mocks copy request ideals
+into delivered dimensions; replace with independently delivered orientation cases
+and physical original-file upright playback qualification. No new app edit or
+release made for this field failure. The previous
+reliability release is live but does not close this framing issue.
+
+
 ## November 27, 2026 - Camera readiness repair released
 
 Shawn explicitly approves Push. App commit 2e3353f511b9e0e42b960dd84cb07ae2329418be

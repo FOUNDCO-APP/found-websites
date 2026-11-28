@@ -23,6 +23,7 @@ function bundle(file, name) {
   if (seen.has(key)) return seen.get(key)
   const id = modules.length; seen.set(key, id); modules.push(null)
   let code = name && overrides[name] ? overrides[name] : fs.readFileSync(file, 'utf8')
+  if (process.env.FOUND_CAMERA_SWAPPED_NEGATIVE && file.endsWith('cameraRecordingProfile.ts')) code=code.replace('width: { ideal: 1920 }, height: { ideal: 1080 },', 'width: { ideal: _portrait ? 1080 : 1920 }, height: { ideal: _portrait ? 1920 : 1080 },').replace('aspectRatio: { ideal: 16 / 9 }','aspectRatio: { ideal: _portrait ? 9 / 16 : 16 / 9 }')
   if (/\.tsx?$/.test(file) && !(name && overrides[name])) code = ts.transpileModule(code, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
     jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true,
@@ -47,7 +48,15 @@ const provider = bundle(path.join(root, 'src/components/dashboard/UploadStatusPr
 const inlineHost = bundle(path.join(root, 'src/components/dashboard/UploadStatusInline.tsx'))
 const script = `const process={env:{NODE_ENV:"production"}};const modules={${modules.join(',')}},cache={};function load(id){if(cache[id])return cache[id].exports;const module=cache[id]={exports:{}};const [fn,deps]=modules[id];fn(name=>load(deps[name]),module,module.exports);return module.exports;}const R=load(${react}),e=R.createElement;window.sessions=[];window.uploaded=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureOnline=true;Object.defineProperty(navigator,'onLine',{get:()=>window.fixtureOnline});window.fixtureClosed=0;window.permission=new URLSearchParams(location.search).has('denied')?'denied':'granted';window.mediaError=new URLSearchParams(location.search).has('device')?'NotFoundError':null;window.recorders=[];
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>({state:window.permission})}});
-window.profileConstraints=[];window.fixtureSettings={width:4096,height:3072,frameRate:30};window.syncFixtureDimensions=()=>document.querySelectorAll('video[data-fixture-stream]').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.fixtureSettings[key],configurable:true});v.dispatchEvent(new Event('resize'))});const track={readyState:'live',stop(){},getCapabilities(){return {}},async applyConstraints(value){window.profileConstraints.push(value);window.fixtureSettings={width:value.width?.ideal||4096,height:value.height?.ideal||3072,frameRate:value.frameRate?.ideal||30};if(window.ignorePortraitConstraints&&window.fixtureSettings.height>window.fixtureSettings.width)window.fixtureSettings={width:1920,height:1080,frameRate:30};window.syncFixtureDimensions()},getSettings(){return {...window.fixtureSettings}}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
+// Delivered settings, preview and physical pose are independent fixture inputs.
+window.profileConstraints=[];window.fixtureSettings={width:1920,height:1080,frameRate:30};window.fixtureFrames={width:1080,height:1920};window.physicalPortrait=true;
+window.syncFixtureDimensions=()=>document.querySelectorAll('video[data-fixture-stream]').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.fixtureFrames[key],configurable:true});v.dispatchEvent(new Event('resize'))});
+window.deliverFrame=(frame,settings)=>{window.fixtureFrames={...frame};if(settings)window.fixtureSettings={...settings};window.syncFixtureDimensions()};
+const track={readyState:'live',stop(){},getCapabilities(){return {}},getSettings(){return {...window.fixtureSettings}},async applyConstraints(value){window.profileConstraints.push(value);
+ // Explicit synthetic iOS preset trap: swapped ideals select a wide crop.
+ // Otherwise dimensions come only from the controlled physical/frame inputs.
+ if(value.width?.ideal===1080&&value.height?.ideal===1920)window.deliverFrame({width:1920,height:1080});
+ window.syncFixtureDimensions()}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
 window.mediaRequests=0;Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.mediaRequests++;if(window.mediaError)throw new DOMException('test',window.mediaError);return stream}}});
 // A real local photo may be supplied for visual review; otherwise draw a textured room.
 window.fixtureScene=document.createElement('canvas');window.fixtureScene.width=720;window.fixtureScene.height=960;
@@ -66,7 +75,7 @@ window.fixtureSceneReady=(async()=>{
    for(let i=0;i<20000;i++){scene.fillStyle=i%2?'#ffffff0b':'#0000000b';scene.fillRect((i*137)%720,(i*277)%960,2,2)}
  }
 })();
-Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){window.fixtureSceneReady.then(()=>{this.dataset.fixtureStream='true';this.poster=window.fixtureScene.toDataURL();Object.defineProperty(this,'readyState',{value:2,configurable:true});Object.defineProperty(this,'videoWidth',{value:window.fixtureSettings.width,configurable:true});Object.defineProperty(this,'videoHeight',{value:window.fixtureSettings.height,configurable:true});this.dispatchEvent(new Event('loadedmetadata'))})}});
+Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){window.fixtureSceneReady.then(()=>{this.dataset.fixtureStream='true';this.poster=window.fixtureScene.toDataURL();Object.defineProperty(this,'readyState',{value:2,configurable:true});Object.defineProperty(this,'videoWidth',{value:window.fixtureFrames.width,configurable:true});Object.defineProperty(this,'videoHeight',{value:window.fixtureFrames.height,configurable:true});this.dispatchEvent(new Event('loadedmetadata'))})}});
 const canvasContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(...args){const ctx=canvasContext.apply(this,args);const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(image,...values)=>draw(image instanceof HTMLVideoElement?window.fixtureScene:image,...values);return ctx};
 
 // Valid encoded fixture bytes keep ordinary recording tests distinct from the
@@ -149,6 +158,7 @@ try{
  assert.equal(await format().getAttribute('aria-label'),'Format, 4:3 · Portrait')
  await format().click()
  await formatPanel().getByRole('button',{name:'Landscape',exact:true}).click()
+ await page.evaluate(()=>{window.physicalPortrait=false;window.deliverFrame({width:1920,height:1080})})
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Take photo"]').disabled)
  assert.equal(await format().getAttribute('aria-label'),'Format, 4:3 · Landscape')
  await format().click()
@@ -184,11 +194,11 @@ try{
  assert.equal(await livePreview.evaluate(el=>el.style.transform),'')
  assert.equal(await livePreview.evaluate(el=>getComputedStyle(el.nextElementSibling).display),'none')
  assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
- assert.equal(await page.evaluate(()=>window.profileConstraints.some(c=>c.width?.ideal===1080&&c.height?.ideal===1920)),true,'Missing capability metadata must still request portrait')
- await page.evaluate(()=>{window.fixtureSettings={width:1920,height:1080,frameRate:30};window.syncFixtureDimensions()})
+ assert.equal(await page.evaluate(()=>window.profileConstraints.some(c=>c.width?.ideal===1920&&c.height?.ideal===1080&&c.aspectRatio?.ideal===16/9&&c.frameRate?.ideal===30)),true,'Normalized video request must not promise portrait output')
+ await page.evaluate(()=>{window.deliverFrame({width:1920,height:1080},{width:1080,height:1920,frameRate:30})})
  await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
  assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true,'Wide delivered frames must not be labelled or recorded as portrait')
- await page.evaluate(()=>{window.fixtureSettings={width:1080,height:1920,frameRate:30};window.syncFixtureDimensions()})
+ await page.evaluate(()=>{window.deliverFrame({width:1080,height:1920},{width:1920,height:1080,frameRate:30})})
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
  assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
  await page.getByRole('button',{name:'2x',exact:true}).click()
@@ -198,6 +208,7 @@ try{
  assert.equal(await formatPanel().getByRole('group',{name:'Aspect ratio'}).count(),0)
  assert.equal(await formatPanel().getByRole('group',{name:'Orientation'}).count(),1)
  await formatPanel().getByRole('button',{name:'Landscape',exact:true}).click()
+ await page.evaluate(()=>{window.physicalPortrait=false;window.deliverFrame({width:1920,height:1080})})
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
  for(const [width,height,enlarged] of [[320,568,false],[390,844,false],[844,390,false],[390,844,true],[844,390,true]]){
   await page.setViewportSize({width,height})

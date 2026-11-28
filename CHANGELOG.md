@@ -1,3 +1,14 @@
+## November 27 - Video primary-orientation request prepared (not published)
+
+- After iPhone Video-selected/Portrait-unavailable failure, normalize video ideals
+  to1920x1080,16/9,30fps instead of swapping width/height for Portrait. Keep selected
+  shape as an output expectation and preserve delivered-frame recording checks.
+- Only the camera-profile helper changes in the app. No layout/fallback, codecs,
+  media quality, queue, stored original or photo-profile changes.
+- Independent engineering/design source reviews found no blocker. Profile suite,12independent-delivery browser groups, full camera upload UI and
+  frozen production build pass; synthetic old-tuple negative confirms the test
+  detects the prior failure path. Physical upright preview/playback remains open.
+
 ## November 27, 2026 - Camera readiness repair released
 
 Shawn explicitly approves Push. App commit 2e3353f511b9e0e42b960dd84cb07ae2329418be

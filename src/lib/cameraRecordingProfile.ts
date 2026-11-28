@@ -4,16 +4,17 @@ export const RECORDING_AUDIO_BITS = 128_000
 export type CameraProfileMode = "photo" | "video"
 type ProfileCapabilities = Pick<MediaTrackCapabilities, "width" | "height" | "aspectRatio">
 
-/** Request the selected orientation even when capabilities are missing or sensor-oriented.
- * Constraints are ideals: browsers may return other dimensions; measure them.
- * Video is full-track 16:9/9:16, independent of the still-photo crop selector.
+/** Request a primary-orientation video profile, not an output rotation.
+ * Width/height constraints can remain sensor-oriented while delivered frames
+ * rotate. Swapping ideals for Portrait can instead select a wide crop on iOS.
+ * The selected output orientation is checked against actual frames separately.
+ * Ideals are best effort; this does not guarantee upright playback or 9:16.
  */
-export function cameraProfileConstraints(mode: CameraProfileMode, portrait = false, _caps: ProfileCapabilities = {}): MediaTrackConstraints {
+export function cameraProfileConstraints(mode: CameraProfileMode, _portrait = false, _caps: ProfileCapabilities = {}): MediaTrackConstraints {
   if (mode === "photo") return { width: { ideal: 4096 }, height: { ideal: 3072 } }
-  const vertical = portrait
   return {
-    width: { ideal: vertical ? 1080 : 1920 }, height: { ideal: vertical ? 1920 : 1080 },
-    aspectRatio: { ideal: vertical ? 9 / 16 : 16 / 9 }, frameRate: { ideal: 30 },
+    width: { ideal: 1920 }, height: { ideal: 1080 },
+    aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: 30 },
   }
 }
 

@@ -1,5 +1,14 @@
 # Found Task Board
 
+- [x] Review physical463FFFD3 mismatch; Shawn approves bounded primary-orientation
+  profile correction. Preserve guard/originals; no silent fallback policy.
+- [x] Complete12independent-delivery browser groups, full camera upload UI/profile
+  suites and synthetic old-tuple negative; reviews and frozen build pass.
+- [ ] Publish tested normalized-profile release after final Shawn approval; verify
+  BOTH GitHub Actions and exact-SHA Vercel READY, then physical iPhone playback.
+- [ ] Physical iPhone: Photo to Video, upright preview and full original playback;
+  rear/front and horizontal/rotation cases remain separate acceptance gates.
+
 - [x] Finish approved readiness repair qualification: eight actual browser groups,
   profile/handler/timeout suite, camera upload UI regressions and frozen build pass.
 - [x] Prepare, visually inspect and save interactive vertical/horizontal camera

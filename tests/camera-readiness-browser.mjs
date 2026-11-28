@@ -23,6 +23,7 @@ function bundle(file, name) {
   if (seen.has(key)) return seen.get(key)
   const id = modules.length; seen.set(key, id); modules.push(null)
   let code = name && overrides[name] ? overrides[name] : fs.readFileSync(file, 'utf8')
+  if (process.env.FOUND_CAMERA_SWAPPED_NEGATIVE && file.endsWith('cameraRecordingProfile.ts')) code=code.replace('width: { ideal: 1920 }, height: { ideal: 1080 },', 'width: { ideal: _portrait ? 1080 : 1920 }, height: { ideal: _portrait ? 1920 : 1080 },').replace('aspectRatio: { ideal: 16 / 9 }','aspectRatio: { ideal: _portrait ? 9 / 16 : 16 / 9 }')
   if (/\.tsx?$/.test(file) && !(name && overrides[name])) code = ts.transpileModule(code, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
     jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true,
@@ -51,13 +52,18 @@ const script = `const process={env:{NODE_ENV:'production'}};const modules={${mod
 const R=load(${react}),e=R.createElement;
 window.sessions=[];window.recorders=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureClosed=0;
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>({state:'granted'})}});
-window.settings={width:4096,height:3072,frameRate:30};window.constraints=[];
-window.syncDimensions=()=>document.querySelectorAll('video').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.settings[key],configurable:true});v.dispatchEvent(new Event('resize'))});
-const track={readyState:'live',stop(){},getCapabilities(){return {}},getSettings(){return {...window.settings}},async applyConstraints(value){window.constraints.push(value);if(window.hangConstraints)await new Promise(resolve=>window.releaseConstraints=resolve);window.settings={width:value.width?.ideal||4096,height:value.height?.ideal||3072,frameRate:30};window.syncDimensions()}};
-const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
+// Delivered settings, preview and physical pose are independent fixture inputs.
+window.constraints=[];window.settings={width:1920,height:1080,frameRate:30};window.frames={width:1080,height:1920};window.physicalPortrait=true;
+window.syncDimensions=()=>document.querySelectorAll('video[data-fixture-stream]').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.frames[key],configurable:true});v.dispatchEvent(new Event('resize'))});
+window.deliverFrame=(frame,settings)=>{window.frames={...frame};if(settings)window.settings={...settings};window.syncDimensions()};
+const track={readyState:'live',stop(){},getCapabilities(){return {}},getSettings(){return {...window.settings}},async applyConstraints(value){window.constraints.push(value);if(window.hangConstraints)await new Promise(resolve=>window.releaseConstraints=resolve);
+ // Explicit synthetic iOS preset trap: swapped ideals select a wide crop.
+ // Otherwise dimensions come only from the controlled physical/frame inputs.
+ if(value.width?.ideal===1080&&value.height?.ideal===1920)window.deliverFrame({width:1920,height:1080});
+ window.syncDimensions()}};const stream={getTracks:()=>[track],getVideoTracks:()=>[track]};
 Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{const freshTrack={...track};window.mediaRequests=(window.mediaRequests||0)+1;return {getTracks:()=>[freshTrack],getVideoTracks:()=>[freshTrack]}}}});
-Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){setTimeout(()=>{Object.defineProperty(this,'readyState',{value:2,configurable:true});window.syncDimensions();this.dispatchEvent(new Event('loadedmetadata'))},20)}});
-const scene=document.createElement('canvas');scene.width=32;scene.height=32;scene.getContext('2d').fillRect(0,0,32,32);
+Object.defineProperty(HTMLMediaElement.prototype,'srcObject',{set(){setTimeout(()=>{this.dataset.fixtureStream='true';Object.defineProperty(this,'readyState',{value:2,configurable:true});window.syncDimensions();this.dispatchEvent(new Event('loadedmetadata'))},20)}});
+const scene=document.createElement('canvas');scene.width=64;scene.height=32;scene.getContext('2d').fillRect(0,0,32,32);
 const nativeContext=HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext=function(...args){const ctx=nativeContext.apply(this,args);const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(image,...values)=>draw(image instanceof HTMLVideoElement?scene:image,...values);return ctx};
 const nativeBlob=HTMLCanvasElement.prototype.toBlob;window.encodes=[];
@@ -92,6 +98,14 @@ const retained=()=>page.waitForFunction(()=>window.queueStatus.queueRows.length=
 try {
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
  browser=await chromium.launch({headless:true,...(process.env.FOUND_BROWSER_EXECUTABLE?{executablePath:process.env.FOUND_BROWSER_EXECUTABLE}:{})})
+ if(process.env.FOUND_CAMERA_SWAPPED_NEGATIVE){
+  await fresh();await beginStill();await mode('video').click();await waitLabel();await finishStill()
+  await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+  assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
+  assert.equal(await page.evaluate(()=>window.recorders.length),0)
+  assert.equal(await page.evaluate(()=>window.constraints.some(c=>c.width?.ideal===1080&&c.height?.ideal===1920&&c.aspectRatio?.ideal===9/16)),true)
+  console.log('PASS focused negative: complete old swapped tuple triggers synthetic preset trap; positive portrait-recording criterion is rejected (not iPhone evidence)')
+ } else {
  await fresh();await beginStill();await mode('video').click();await waitLabel();await selected('photo');await finishStill();await ready('Record video');await selected('video');await retained()
  // Exercise the reported sequence through actual recording handlers, not just readiness.
  const photoId=await page.evaluate(()=>window.queueStatus.queueRows[0].id)
@@ -111,7 +125,10 @@ try {
   return {count:expected.size,photoRetained:expected.has(photoId),videoBytes:video?.bytes,videoMatches:video?.digest===await hash(await window.fixtureVideoBlob.arrayBuffer())}
  },photoId)
  assert.equal(originals.count,2);assert.equal(originals.photoRetained,true);assert.ok(originals.videoBytes>0);assert.equal(originals.videoMatches,true)
- console.log('PASS delayed actual toBlob -> Video -> Record -> Stop: both originals retained with committed byte/hash verification')
+ await page.getByRole('button',{name:'Review captures',exact:true}).click()
+ await page.locator('[data-camera-review-status]').filter({hasText:'Check video framing'}).waitFor()
+ assert.equal(await page.evaluate(()=>window.queueStatus.queueRows.length),2)
+ console.log('PASS delayed actual toBlob -> Video -> Record -> Stop: both originals committed; decoded wide-playback mismatch warns without dropping originals')
  await fresh();await beginStill();await mode('video').click();await mode('photo').click();await finishStill();await retained();await selected('photo');assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).count(),0)
  console.log('PASS selecting Photo cancels pending Video intent')
  await fresh();await beginStill();await mode('video').click();await mode('photo').click();await mode('video').click();await finishStill();await ready('Record video');await selected('video');await retained()
@@ -124,7 +141,32 @@ try {
  console.log('PASS account/company scope replacement: old encoder callback cannot enqueue or switch new camera')
  await fresh();await page.evaluate(()=>window.throwEncoder=true);await page.getByRole('button',{name:'Take photo',exact:true}).click();await page.getByRole('status').filter({hasText:'Photo couldn’t be taken. Try again.'}).waitFor();await mode('video').click();await ready('Record video');await selected('video');assert.equal(await page.evaluate(()=>window.queueStatus.queueRows.length),0)
  console.log('PASS synchronous encoder exception clears readiness guard and permits Video')
+ // Sensor settings stay landscape while the delivered first frame is portrait.
+ await fresh();await mode('video').click();await ready('Record video');await selected('video')
+ assert.deepEqual(await page.evaluate(()=>({settings:[window.settings.width,window.settings.height],frame:[window.frames.width,window.frames.height]})),{settings:[1920,1080],frame:[1080,1920]})
+ assert.equal(await page.evaluate(()=>window.constraints.some(c=>c.width?.ideal===1920&&c.height?.ideal===1080&&c.aspectRatio?.ideal===16/9&&c.frameRate?.ideal===30)),true)
+ console.log('PASS normalized sensor request with independent landscape settings and portrait delivered first frame')
+ await page.evaluate(()=>window.deliverFrame({width:1920,height:1080},{width:1080,height:1920,frameRate:30}))
+ await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
+ const beforeRecorders=await page.evaluate(()=>window.recorders.length)
+ await page.getByRole('button',{name:'Record video',exact:true}).evaluate(button=>button.click())
+ assert.equal(await page.evaluate(()=>window.recorders.length),beforeRecorders)
+ console.log('PASS independently wide delivered frame blocks portrait despite portrait track settings')
+ await page.evaluate(()=>{window.deliverFrame({width:1080,height:1920},{width:1920,height:1080,frameRate:30});setTimeout(()=>window.deliverFrame({width:1920,height:1080}),150)})
+ await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
+ await page.evaluate(()=>{window.deliverFrame({width:1920,height:1080});setTimeout(()=>window.deliverFrame({width:1080,height:1920}),150)})
+ await ready('Record video')
+ console.log('PASS delayed preview flips settle on final delivered frame, not first observation')
+ await page.evaluate(()=>window.deliverFrame({width:1920,height:1080}))
+ await mode('photo').click();await ready('Take photo')
+ await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,650)))
+ await selected('photo');assert.equal(await page.getByRole('button',{name:'Take photo',exact:true}).isEnabled(),true)
+ await mode('video').click();await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
+ console.log('PASS stale prior-mode orientation observation cannot enable subsequent mismatched video')
  await fresh();await page.evaluate(()=>window.hangConstraints=true);await mode('video').click();await page.getByRole('button',{name:'Restart camera',exact:true}).waitFor();await page.getByRole('status').filter({hasText:'Camera isn’t ready. Try restarting it.'}).waitFor();assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true);await page.evaluate(()=>{window.hangConstraints=false;window.releaseConstraints?.()});await page.getByRole('button',{name:'Restart camera',exact:true}).click();await ready('Record video');assert.equal(await page.evaluate(()=>window.mediaRequests),2);
  console.log('PASS hanging constraints reach visible bounded failure and cannot authorize recording')
+ }
  assert.deepEqual(errors,[],'no uncaught React/browser errors')
 } finally {await context?.close();await browser?.close();await new Promise(resolve=>server.close(resolve));clearTimeout(deadline)}
