@@ -1,5 +1,22 @@
 # BRIEF.md - Found Co. / found-websites
 
+## November 27, 2026 - Normalized video framing request released
+
+Shawn approves Push. App010354a8a1e48ffd9ec91aa8f60c1de0804c3ce2 is live.
+Vercel dpl_D3tmBuUdEywQeU9t1bEn52VgoqXv READY/exact SHA verified; GitHub
+Actions Build run46114034789 completed SUCCESS. Read-only live login/dashboard/
+Photos, no-store authorized upload context, anonymous denial, wrong-account409,
+all four client homepages and Hiram gallery checks pass. No client media, messages,
+billing or provider settings changed for verification.
+
+Next: fully close/reopen Found to load the release, hold iPhone upright, take a
+photo then switch to Video. Confirm upright preview, record a short clip, then
+play the original from Photos all the way through. Physical acceptance is OPEN;
+do not mark the actual portrait defect fixed until this result. If mismatch
+persists, gather actual delivered-frame/settings evidence and compare fresh video
+acquisition separately; no silent horizontal fallback or guard removal is approved.
+
+
 ## November 27 - Normalized video profile qualified; publication pending
 
 Shawn approved the bounded correction. One application file changes: video ideals

@@ -4,8 +4,9 @@
   profile correction. Preserve guard/originals; no silent fallback policy.
 - [x] Complete12independent-delivery browser groups, full camera upload UI/profile
   suites and synthetic old-tuple negative; reviews and frozen build pass.
-- [ ] Publish tested normalized-profile release after final Shawn approval; verify
-  BOTH GitHub Actions and exact-SHA Vercel READY, then physical iPhone playback.
+- [x] Shawn approves Push:010354a live; GitHub46114034789 SUCCESS, Vercel
+  D3tmBuUdEywQeU9t1bEn52VgoqXv READY/exactSHA and live checks pass.
+- [ ] Physical iPhone portrait preview and full original playback after010354a.
 - [ ] Physical iPhone: Photo to Video, upright preview and full original playback;
   rear/front and horizontal/rotation cases remain separate acceptance gates.
 
