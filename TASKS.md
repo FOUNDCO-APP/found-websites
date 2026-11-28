@@ -1,5 +1,11 @@
 # Found Task Board
 
+## November 28 — Automatic Video orientation
+
+- [x] Prepare automatic Video orientation locally after Shawn identified the manual selection problem.
+- [ ] Check the installed iPhone app in portrait and landscape, including both original clips in Photos.
+- [ ] Obtain production push approval and verify the deployment and CI for the released commit.
+
 - [x] Review physical463FFFD3 mismatch; Shawn approves bounded primary-orientation
   profile correction. Preserve guard/originals; no silent fallback policy.
 - [x] Complete12independent-delivery browser groups, full camera upload UI/profile

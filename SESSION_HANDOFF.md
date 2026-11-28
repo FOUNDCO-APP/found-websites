@@ -1,5 +1,13 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 28, 2026 — Automatic Video orientation prepared locally
+
+Shawn requested the fix after confirming that both horizontal and vertical photos work on his iPhone and that he can record video. Video now follows the browser’s orientation on entry and before recording. It verifies the delivered frame and checks the original clip against the orientation at Record. The dashboard manifest allows rotation throughout the installed app.
+
+The Chromium camera readiness and upload UI suites, recording profile tests and swapped-profile negative control passed. They covered automatic selection, rapid rotations, and playback validation using simulated camera input. An independent mobile source review found no blocker.
+
+Physical acceptance and production publication are pending. In the updated installed app with system rotation unlocked, open Video upright and record a clip. Turn sideways, record a second clip, then play both originals in Found Photos. Also open Video while already sideways. Check rotation during a clip, both cameras, and behavior with system rotation lock on. Check the dashboard layout after returning from landscape.
+
 ## November 27, 2026 - Normalized video framing request released
 
 Shawn approves Push. App010354a8a1e48ffd9ec91aa8f60c1de0804c3ce2 is live.

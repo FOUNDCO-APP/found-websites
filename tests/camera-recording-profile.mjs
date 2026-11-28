@@ -485,7 +485,7 @@ function controlHarness() {
   const checks = []
   let finishConstraint
   const currentTrack = { readyState: 'live' }
-  const scope = { AbortController,
+  const scope = { AbortController, videoTarget: { current: true },
     videoRef: { current: { videoWidth: 1080, videoHeight: 1920, readyState: 2 } },
     streamRef: { current: { getVideoTracks: () => [currentTrack] } },
     profileAvailable: { current: true }, orientationGeneration: { current: 0 },

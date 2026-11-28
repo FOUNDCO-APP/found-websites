@@ -90,7 +90,31 @@ const deadline=setTimeout(()=>{console.error('FAIL camera readiness deadline');p
 const mode=name=>page.getByRole('button',{name,exact:true})
 const selected=async name=>assert.equal(await mode(name).getAttribute('aria-pressed'),'true',`${name} must be selected`)
 const ready=async name=>{await page.getByRole('button',{name,exact:true}).waitFor();await page.waitForFunction(label=>!document.querySelector('button[aria-label="'+label+'"]').disabled,name)}
-const fresh=async()=>{await context?.close();context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});page=await context.newPage();page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message));await page.goto('http://127.0.0.1:'+server.address().port);await ready('Take photo');await page.waitForFunction(()=>window.queueStatus.queueReady)}
+const fresh=async(orientationApi='screen')=>{
+ await context?.close()
+ context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'})
+ page=await context.newPage()
+ page.setDefaultTimeout(12000)
+ await page.addInitScript(api=>{
+  const screenPose = new EventTarget()
+  screenPose.type = 'portrait-primary'
+  Object.defineProperty(screen,'orientation',{value:api==='screen'?screenPose:undefined,configurable:true})
+  if (api==='legacy') Object.defineProperty(window,'orientation',{value:0,writable:true,configurable:true})
+  window.turnFixturePhone = landscape=>{
+   if(api==='screen'){
+    screenPose.type=landscape?'landscape-primary':'portrait-primary'
+    screenPose.dispatchEvent(new Event('change'))
+   }else if(api==='legacy'){
+    window.orientation=landscape?-90:0
+    window.dispatchEvent(new Event('orientationchange'))
+   }
+  }
+ },orientationApi)
+ page.on('pageerror',error=>errors.push(error.message))
+ await page.goto('http://127.0.0.1:'+server.address().port)
+ await ready('Take photo')
+ await page.waitForFunction(()=>window.queueStatus.queueReady)
+}
 const beginStill=async()=>{await page.evaluate(()=>window.delayEncoder=true);await page.getByRole('button',{name:'Take photo',exact:true}).click();assert.equal(await page.evaluate(()=>window.encodes.length),1)}
 const finishStill=()=>page.evaluate(()=>window.encodes.shift()())
 const waitLabel=async()=>{await page.getByRole('status').filter({hasText:/prepar|finish|saving|switch|wait/i}).first().waitFor()}
@@ -100,7 +124,7 @@ try {
  browser=await chromium.launch({headless:true,...(process.env.FOUND_BROWSER_EXECUTABLE?{executablePath:process.env.FOUND_BROWSER_EXECUTABLE}:{})})
  if(process.env.FOUND_CAMERA_SWAPPED_NEGATIVE){
   await fresh();await beginStill();await mode('video').click();await waitLabel();await finishStill()
-  await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+  await page.getByText('Portrait unavailable',{exact:true}).waitFor()
   assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
   assert.equal(await page.evaluate(()=>window.recorders.length),0)
   assert.equal(await page.evaluate(()=>window.constraints.some(c=>c.width?.ideal===1080&&c.height?.ideal===1920&&c.aspectRatio?.ideal===9/16)),true)
@@ -110,7 +134,15 @@ try {
  // Exercise the reported sequence through actual recording handlers, not just readiness.
  const photoId=await page.evaluate(()=>window.queueStatus.queueRows[0].id)
  await page.getByRole('button',{name:'Record video',exact:true}).click()
+ const profilesBeforeTurn = await page.evaluate(()=>window.constraints.length)
+ await page.evaluate(()=>window.turnFixturePhone(true))
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+ assert.equal(await page.evaluate(()=>window.constraints.length),profilesBeforeTurn,'Turning during recording must not reconfigure the stream')
+ assert.equal(await page.evaluate(()=>window.recorders.at(-1).state),'recording')
  await page.getByRole('button',{name:'Stop recording',exact:true}).click()
+ await page.evaluate(()=>window.deliverFrame({width:1920,height:1080}))
+ await ready('Record video')
+ await page.getByText('Landscape',{exact:true}).waitFor()
  await page.waitForFunction(()=>window.queueStatus.queueRows.length===2 && window.queueStatus.queueRows.every(row=>row.localSaved))
  const originals=await page.evaluate(async photoId=>{
   const hash=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('')
@@ -141,20 +173,46 @@ try {
  console.log('PASS account/company scope replacement: old encoder callback cannot enqueue or switch new camera')
  await fresh();await page.evaluate(()=>window.throwEncoder=true);await page.getByRole('button',{name:'Take photo',exact:true}).click();await page.getByRole('status').filter({hasText:'Photo couldn’t be taken. Try again.'}).waitFor();await mode('video').click();await ready('Record video');await selected('video');assert.equal(await page.evaluate(()=>window.queueStatus.queueRows.length),0)
  console.log('PASS synchronous encoder exception clears readiness guard and permits Video')
+ // A horizontal phone on entry and subsequent upright turn should require no manual control.
+ for(const api of ['screen','legacy','viewport']){
+  await fresh(api)
+  const turn=async landscape=>{
+   if(api==='viewport')await page.setViewportSize(landscape?{width:844,height:390}:{width:390,height:844})
+   else await page.evaluate(value=>window.turnFixturePhone(value),landscape)
+  }
+  await turn(true)
+  await page.evaluate(()=>window.deliverFrame({width:1920,height:1080}))
+  await mode('video').click()
+  await ready('Record video')
+  await page.getByText('Landscape',{exact:true}).waitFor()
+  assert.equal(await page.getByRole('button',{name:/^Format,/}).count(),0)
+  await turn(false)
+  await page.getByText('Portrait unavailable',{exact:true}).waitFor()
+  assert.equal(await mode('Record video').isDisabled(),true)
+  await page.evaluate(()=>window.deliverFrame({width:1080,height:1920}))
+  await ready('Record video')
+  await page.getByText('Portrait',{exact:true}).waitFor()
+  if(api==='screen'){
+   await page.evaluate(()=>{window.turnFixturePhone(true);window.turnFixturePhone(false)})
+   await ready('Record video')
+   await page.getByText('Portrait',{exact:true}).waitFor()
+  }
+ }
+ console.log('PASS automatic landscape entry and upright rotation via screen orientation, legacy iOS and viewport fallback; independent delivered-frame guard')
  // Sensor settings stay landscape while the delivered first frame is portrait.
  await fresh();await mode('video').click();await ready('Record video');await selected('video')
  assert.deepEqual(await page.evaluate(()=>({settings:[window.settings.width,window.settings.height],frame:[window.frames.width,window.frames.height]})),{settings:[1920,1080],frame:[1080,1920]})
  assert.equal(await page.evaluate(()=>window.constraints.some(c=>c.width?.ideal===1920&&c.height?.ideal===1080&&c.aspectRatio?.ideal===16/9&&c.frameRate?.ideal===30)),true)
  console.log('PASS normalized sensor request with independent landscape settings and portrait delivered first frame')
  await page.evaluate(()=>window.deliverFrame({width:1920,height:1080},{width:1080,height:1920,frameRate:30}))
- await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ await page.getByText('Portrait unavailable',{exact:true}).waitFor()
  assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
  const beforeRecorders=await page.evaluate(()=>window.recorders.length)
  await page.getByRole('button',{name:'Record video',exact:true}).evaluate(button=>button.click())
  assert.equal(await page.evaluate(()=>window.recorders.length),beforeRecorders)
  console.log('PASS independently wide delivered frame blocks portrait despite portrait track settings')
  await page.evaluate(()=>{window.deliverFrame({width:1080,height:1920},{width:1920,height:1080,frameRate:30});setTimeout(()=>window.deliverFrame({width:1920,height:1080}),150)})
- await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ await page.getByText('Portrait unavailable',{exact:true}).waitFor()
  assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
  await page.evaluate(()=>{window.deliverFrame({width:1920,height:1080});setTimeout(()=>window.deliverFrame({width:1080,height:1920}),150)})
  await ready('Record video')
@@ -163,7 +221,7 @@ try {
  await mode('photo').click();await ready('Take photo')
  await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,650)))
  await selected('photo');assert.equal(await page.getByRole('button',{name:'Take photo',exact:true}).isEnabled(),true)
- await mode('video').click();await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
+ await mode('video').click();await page.getByText('Portrait unavailable',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true)
  console.log('PASS stale prior-mode orientation observation cannot enable subsequent mismatched video')
  await fresh();await page.evaluate(()=>window.hangConstraints=true);await mode('video').click();await page.getByRole('button',{name:'Restart camera',exact:true}).waitFor();await page.getByRole('status').filter({hasText:'Camera isn’t ready. Try restarting it.'}).waitFor();assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true);await page.evaluate(()=>{window.hangConstraints=false;window.releaseConstraints?.()});await page.getByRole('button',{name:'Restart camera',exact:true}).click();await ready('Record video');assert.equal(await page.evaluate(()=>window.mediaRequests),2);
  console.log('PASS hanging constraints reach visible bounded failure and cannot authorize recording')

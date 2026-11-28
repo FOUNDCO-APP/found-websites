@@ -1,3 +1,7 @@
+## November 28, 2026 — Local camera update
+
+Video follows screen orientation before recording and keeps the initial framing expectation for original playback. Photo retains its separate format preference. The installed dashboard manifest allows both orientations. Production publication and physical acceptance are pending.
+
 ## November 27, 2026 - Normalized video framing request released
 
 Shawn approves Push. App010354a8a1e48ffd9ec91aa8f60c1de0804c3ce2 is live.

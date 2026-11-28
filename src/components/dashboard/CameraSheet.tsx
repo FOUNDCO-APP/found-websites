@@ -91,13 +91,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
   const stripRef        = useRef<HTMLDivElement>(null)
 
   const [ratio, setRatio]         = useState<AspectRatio>("16:9")
-  const [portrait, setPortrait]   = useState(true)
+  const [photoPortrait, setPortrait] = useState(true)
+  const [videoPortrait, setVideoPortrait] = useState(true)
+  const videoTarget = useRef(true)
   const [facing, setFacing]       = useState<"environment" | "user">("environment")
   const [torchOn, setTorchOn]     = useState(false)
   const [torchOk, setTorchOk]     = useState(false)
   const [zoom, setZoom]           = useState<ZoomLevel>(1)
   const [mode, setMode]           = useState<CameraMode>("photo")
   const [recording, setRecording] = useState(false)
+  const portrait = mode === "video" ? videoPortrait : photoPortrait
   const [recSecs, setRecSecs]     = useState(0)
   const [captures, setCaptures]     = useState<Capture[]>([])
   const [reviewIndex, setReviewIndex] = useState<number | null>(null)
@@ -310,7 +313,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     orientationRef.current = null; setOrientation(null)
     const current = () => mounted.current && generation === orientationGeneration.current
       && streamRef.current?.getVideoTracks()[0] === track && profileAvailable.current
-    const result = await verifyCameraOrientation(video, track, portrait, { signal: controller.signal, isCurrent: current })
+    const result = await verifyCameraOrientation(video, track, videoTarget.current, { signal: controller.signal, isCurrent: current })
     if (!current()) return
     orientationRef.current = result; setOrientation(result)
   }
@@ -384,6 +387,37 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     }
   }, [facing, reviewOnly, cameraRestart])
 
+  useEffect(() => {
+    if (mode !== "video" || recording || encodingBusy) return
+    const screenOrientation = window.screen.orientation
+    const viewport = window.matchMedia("(orientation: portrait)")
+    function syncOrientation() {
+      if (recorderRef.current?.state === "recording" || encoding.current) return
+      const type = screenOrientation?.type
+      const legacyAngle = (window as Window & { orientation?: number }).orientation
+      const next = type ? type.startsWith("portrait")
+        : typeof legacyAngle === "number" ? legacyAngle % 180 === 0 : viewport.matches
+      if (next === videoTarget.current) return
+      videoTarget.current = next
+      orientationGeneration.current++
+      orientationAbort.current?.abort()
+      orientationRef.current = null
+      setOrientation(null)
+      setVideoPortrait(next)
+      const track = streamRef.current?.getVideoTracks()[0]
+      if (track && profileAvailable.current) void checkPreviewOrientation(track)
+    }
+    syncOrientation()
+    screenOrientation?.addEventListener("change", syncOrientation)
+    window.addEventListener("orientationchange", syncOrientation)
+    viewport.addEventListener("change", syncOrientation)
+    return () => {
+      screenOrientation?.removeEventListener("change", syncOrientation)
+      window.removeEventListener("orientationchange", syncOrientation)
+      viewport.removeEventListener("change", syncOrientation)
+    }
+  }, [mode, recording, encodingBusy])
+
   // Keep capture blocked while the browser changes the sensor profile. Stills
   // regain their original detail ideals when returning from Video to Photo.
   useEffect(() => {
@@ -405,7 +439,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
         }
       })
     return () => { active = false; profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null }
-  }, [ready, mode, portrait, facing])
+  }, [ready, mode, photoPortrait, facing])
 
   useEffect(() => {
     const video = videoRef.current
@@ -419,7 +453,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     video.addEventListener("loadeddata", resized)
     video.addEventListener("canplay", resized)
     return () => { video.removeEventListener("resize", resized); video.removeEventListener("loadeddata", resized); video.removeEventListener("canplay", resized) }
-  }, [mode, portrait, facing])
+  }, [mode, facing])
 
   function applyMode(next: CameraMode) {
     profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setMode(next)
@@ -679,8 +713,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
     : encodingBusy ? mode === "photo" ? "Finishing photo…" : "Finishing video…"
     : profileBusy ? mode === "video" ? "Preparing video…" : "Preparing camera…"
     : mode === "video" && !orientation ? "Checking video frame…"
-    : mode === "video" && orientation?.status === "mismatch" ? "Video frame doesn’t match. Choose another frame."
-    : mode === "video" && orientation?.status === "unavailable" ? "Couldn’t check the video frame. Choose another frame." : null)
+    : mode === "video" && orientation?.status === "mismatch" ? "Video frame doesn’t match. Hold the phone steady. If this persists, reopen the camera."
+    : mode === "video" && orientation?.status === "unavailable" ? "Couldn’t check the video frame. Reopen the camera to try again." : null)
   // Actual unsaved-original guidance always takes priority over camera readiness.
   const cameraSummary = unprotected.length ? localSummary : readinessLabel ?? localSummary
 
@@ -757,8 +791,10 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId, initi
               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", animation: "rec-blink 1s ease-in-out infinite" }} />
               <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "white", fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em" }}>{fmtTime(recSecs)}</span>
             </div>
+          ) : mode === "video" ? (
+            <span role="status" style={{ color: "white", background: "rgba(0,0,0,0.65)", borderRadius: 24, padding: "8px 14px" }}>{videoOrientationLabel}</span>
           ) : (
-            <CameraFormatControl ratio={mode === "video" ? "16:9" : ratio} allowRatio={mode === "photo"} portrait={portrait} videoOrientationLabel={videoOrientationLabel} disabled={recording || profileBusy || encodingBusy || profileError} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setPortrait(next) }} />
+            <CameraFormatControl ratio={ratio} portrait={portrait} disabled={recording || profileBusy || encodingBusy || profileError} onRatioChange={setRatio} onPortraitChange={next => { profileGuard.current.invalidate(); profileAvailable.current = false; orientationGeneration.current++; orientationAbort.current?.abort(); orientationRef.current = null; setOrientation(null); setProfileBusy(true); setPortrait(next) }} />
           )}
         </div>
 

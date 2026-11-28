@@ -50,6 +50,8 @@ const script = `const process={env:{NODE_ENV:"production"}};const modules={${mod
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>({state:window.permission})}});
 // Delivered settings, preview and physical pose are independent fixture inputs.
 window.profileConstraints=[];window.fixtureSettings={width:1920,height:1080,frameRate:30};window.fixtureFrames={width:1080,height:1920};window.physicalPortrait=true;
+Object.defineProperty(screen.orientation,'type',{get:()=>window.physicalPortrait?'portrait-primary':'landscape-primary'});
+window.turnFixturePhone=portrait=>{window.physicalPortrait=portrait;screen.orientation.dispatchEvent(new Event('change'))};
 window.syncFixtureDimensions=()=>document.querySelectorAll('video[data-fixture-stream]').forEach(v=>{for(const key of ['width','height'])Object.defineProperty(v,key==='width'?'videoWidth':'videoHeight',{value:window.fixtureFrames[key],configurable:true});v.dispatchEvent(new Event('resize'))});
 window.deliverFrame=(frame,settings)=>{window.fixtureFrames={...frame};if(settings)window.fixtureSettings={...settings};window.syncFixtureDimensions()};
 const track={readyState:'live',stop(){},getCapabilities(){return {}},getSettings(){return {...window.fixtureSettings}},async applyConstraints(value){window.profileConstraints.push(value);
@@ -193,23 +195,23 @@ try{
  // CSS transforms animate, so inspect the target style rather than an intermediate matrix.
  assert.equal(await livePreview.evaluate(el=>el.style.transform),'')
  assert.equal(await livePreview.evaluate(el=>getComputedStyle(el.nextElementSibling).display),'none')
- assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
+ await page.getByText('Portrait',{exact:true}).waitFor()
  assert.equal(await page.evaluate(()=>window.profileConstraints.some(c=>c.width?.ideal===1920&&c.height?.ideal===1080&&c.aspectRatio?.ideal===16/9&&c.frameRate?.ideal===30)),true,'Normalized video request must not promise portrait output')
  await page.evaluate(()=>{window.deliverFrame({width:1920,height:1080},{width:1080,height:1920,frameRate:30})})
- await page.getByRole('button',{name:'Format, Portrait unavailable',exact:true}).waitFor()
+ await page.getByText('Portrait unavailable',{exact:true}).waitFor()
  assert.equal(await page.getByRole('button',{name:'Record video',exact:true}).isDisabled(),true,'Wide delivered frames must not be labelled or recorded as portrait')
  await page.evaluate(()=>{window.deliverFrame({width:1080,height:1920},{width:1920,height:1080,frameRate:30})})
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
- assert.equal(await format().getAttribute('aria-label'),'Format, Portrait')
+ await page.getByText('Portrait',{exact:true}).waitFor()
  await page.getByRole('button',{name:'2x',exact:true}).click()
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
- assert.equal(await format().getAttribute('aria-label'),'Format, Portrait','Video zoom must restart settled orientation verification')
- await format().click()
- assert.equal(await formatPanel().getByRole('group',{name:'Aspect ratio'}).count(),0)
- assert.equal(await formatPanel().getByRole('group',{name:'Orientation'}).count(),1)
- await formatPanel().getByRole('button',{name:'Landscape',exact:true}).click()
- await page.evaluate(()=>{window.physicalPortrait=false;window.deliverFrame({width:1920,height:1080})})
+ await page.getByText('Portrait',{exact:true}).waitFor()
+ assert.equal(await format().count(),0,'Video follows phone orientation without a Format control')
+ const profilesBeforeRotation = await page.evaluate(()=>window.profileConstraints.length)
+ await page.evaluate(()=>{window.turnFixturePhone(false);window.deliverFrame({width:1920,height:1080})})
  await page.waitForFunction(()=>!document.querySelector('[aria-label="Record video"]').disabled)
+ await page.getByText('Landscape',{exact:true}).waitFor()
+ assert.equal(await page.evaluate(()=>window.profileConstraints.length),profilesBeforeRotation,'Changing pose preserves the configured camera profile')
  for(const [width,height,enlarged] of [[320,568,false],[390,844,false],[844,390,false],[390,844,true],[844,390,true]]){
   await page.setViewportSize({width,height})
   await page.evaluate(enlarged=>document.documentElement.style.fontSize=enlarged?'24px':'16px',enlarged)
@@ -222,8 +224,9 @@ try{
  assert.equal(await livePreview.evaluate(el=>getComputedStyle(el.nextElementSibling).display),'flex')
  await format().click()
  assert.equal(await formatPanel().getByRole('button',{name:'1:1',exact:true}).getAttribute('aria-pressed'),'true')
- await page.getByRole('button',{name:'Done',exact:true}).click()
- console.log('PASS video contain/no CSS zoom/no still crop frame, orientation-only Format and restored stored photo ratio')
+ await formatPanel().getByRole('button',{name:'16:9',exact:true}).click()
+ assert.equal(await format().getAttribute('aria-label'),'Format, 16:9 · Portrait','Video rotation preserves the photo orientation preference')
+ console.log('PASS video contain/no CSS zoom/no still crop frame, automatic video orientation and restored stored photo ratio')
  // Desktop Chromium reports zero safe-area insets. Substitute representative
  // landscape values in rendered CSS only; application source stays unchanged.
  await fresh()

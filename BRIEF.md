@@ -1,5 +1,9 @@
 # BRIEF.md - Found Co. / found-websites
 
+## November 28, 2026 — Automatic Video orientation prepared locally
+
+Shawn confirmed both photo orientations work and identified manual Video orientation selection as the problem. The local camera update follows screen rotation before recording. See SESSION_HANDOFF.md for physical acceptance and release status.
+
 ## November 27, 2026 - Normalized video framing request released
 
 Shawn approves Push. App010354a8a1e48ffd9ec91aa8f60c1de0804c3ce2 is live.

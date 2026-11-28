@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#080A09",
   "theme_color": "#080A09",
-  "orientation": "portrait",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icons/found-app-icon-v3-192.png",
