@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
+import UploadStatusHomeSlot from "@/components/dashboard/UploadStatusHomeSlot"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK, avatarColorFor, albumLabelFor } from "@/lib/dashboard/typography"
 import type { SmartNextStep } from "@/lib/dashboard/smartNextStep"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
@@ -522,6 +523,8 @@ export default function HomeClient({
 
         </div>
       </div>
+
+      <UploadStatusHomeSlot />
 
       {/* ── RESPONSIVE SPACER — distributes empty space between buttons and the nudge below ── */}
       <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />

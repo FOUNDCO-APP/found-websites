@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -2925,7 +2925,8 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
           if (longPressFired.current) { longPressFired.current = false; return }
           selectMode ? onToggleSelect?.(photo.id) : onView(photo)
         }}
-        aria-label={isVideo ? "Open business video" : "Open business photo"}
+        aria-label={selectMode ? (isVideo ? "Select video" : "Select photo") : (isVideo ? "Open business video" : "Open business photo")}
+        aria-pressed={selectMode ? Boolean(selected) : undefined}
         onContextMenu={(e) => e.preventDefault()}
         style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
       >
@@ -2957,7 +2958,7 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
         </>
       )}
       {isVideo && (
-        <div style={{ position: "absolute", right: 8, top: 8, padding: "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", pointerEvents: "none" }}>VIDEO</div>
+        <div style={{ position: "absolute", left: selectMode ? 4 : undefined, right: selectMode ? undefined : 8, top: selectMode ? 32 : 8, padding: selectMode ? "2px 2px" : "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: selectMode ? "0" : "0.08em", pointerEvents: "none" }}>VIDEO</div>
       )}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: isVideo ? "inset 0 0 0 1px rgba(255,255,255,0.05)" : "none" }} />
       {/* Favorite / Gallery - always visible, tappable straight from the thumbnail

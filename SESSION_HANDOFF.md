@@ -1,5 +1,134 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## November 27, 2026 - Shared UI verified locally; release preparation
+
+Resumed approved work. Previous agent sessions were unavailable, so Dirac performed
+an independent AI review using Jony design / Steve product lenses; Hume completed
+a fresh Craig engineering source review with no concrete blocker. These are AI
+review roles, not those real people.
+Earlier Parfit/Pasteur/Galileo/Halley work is retained; do not claim renewed reviews
+were performed by those unavailable sessions.
+
+Dirac identified remaining 320px three-column selection collisions. The bounded
+approved correction now uses selection-only VIDEO left 4px / top 32px, padding
+2px and zero decorative tracking. Font size remains unchanged and can enlarge. The circle
+stays top-right. Normal-mode badge/controls remain byte-for-byte markup-equivalent
+against HEAD. No grid redesign, delete/download/flag logic or nested buttons.
+
+Verification completed in real Chromium with backend transport mocked:
+
+- PhotoCard: 32 actual-component groups; zero selection collisions, full horizontal
+  and vertical containment at two/three columns, 320/390px, normal/doubled pixel
+  font stress, library/job variants. Pointer/keyboard and pressed-state checks pass.
+- Upload status: actual owner/staff Home placement after actions, attention at top,
+  other-route fallback, one host, full-row action, scope isolation, camera suppression,
+  focus pin/completion acknowledgement, safe focus return after last upload and zero
+  IndexedDB writes caused by presentation relocation all pass.
+- Camera upload UI: local-save/reopen/recovery, quota/error handling, queued review,
+  permission-free review, retained original and terminal reconciliation pass.
+- Pro regression: 92 shared Home layouts across 23 industries and 11 chooser groups.
+- Photo deletion regression previously passed unchanged shared handlers.
+
+Accessibility exceptions: a focused status row stays stationary until blur even if
+priority changes; a focused completion acknowledgement can outlast 2.6 seconds until
+blur. Camera presentation overrides both. Review closes to the page heading when
+its trigger has disappeared; temporary tabindex is removed on blur.
+
+Known separate issue: the geometry matrix detects baseline normal-mode control
+crowding/clipping on narrow/enlarged-text cards. Normal markup is unchanged. Do not
+claim all gallery overlays were redesigned or that normal-mode crowding is fixed.
+Selection correction itself has no collision/clipping in tested geometry.
+
+Screenshots: ignored .billing-audits/upload-status-inline/portal-routine-390.png and
+external visualizations/photo-selection-badges/{2col,3col}-*.png. These are fixture
+renders, not production/iPhone screenshots. Physical iPhone UI acceptance, video
+playback and repeated weak/offline recovery remain open. Dirac inspected refreshed badge/status screenshots and recommends the bounded UI;
+Hume found no source blocker. Neither independently reran tests. The landscape
+fixture screenshot shows pre-existing/scaffold navigation overlap and is not clean
+whole-dashboard layout evidence. Final production build passed compilation (108 seconds), TypeScript and all 89
+pages; checked app hashes unchanged. Queue source remains unchanged (SHA256 prefix 7bb238f4bf2adb31); no transfer changes.
+Tested implementation, checks and existing MD records are saved in the local Git
+release commit; no publication. Live app remains e588d10.
+
+## November 22, 2026 - Approved Shared UI Implementation In Progress
+
+Shawn explicitly approves followingteamdirections after visible designmeeting and
+Photos-destination discussion. Approvedscope: conditionalVIDEObadge/checkvisibility
+and contextualroutineHomeuploadrow, existingdirectpendingReview; no newPhotosqueue
+strip. Earlierpendingapproval statementsbelowarehistorical andsuperseded.
+
+Main owns UploadStatusInline/Provider, newUploadStatusHomeSlot, HomeClient andstaff
+Home placement. Oneglobalreviewhost remainsinlayout. Presentation-only provider
+targetregisteredbyHomeSlot letsglobalhost portalroutine rowbelowfullowneractiongrid
+orstaffOpenCamera; attentionstatesremainglobaltop, otherpagesfallbacktoglobal.
+Emptyanchor display:contents preventsnewblankflexgaps. Noqueue/transferlifetime
+change. WholeReviewrow retainsaccessibleactionname andstatusdescription, chevron
+onlyforactualReview/CheckPhotosactions; completionisnoninteractive. Focuspinsrow
+placementuntilblur andholdscompletionack whilefocused; scopedReviewownsCameraSheet
+withoutpermissions. No extra banner/card/border/glow/navindicator.
+
+Parfit owns PhotosPage PhotoCard5lineconditionalbadge/ariafix andrealbrowser source
+componenttests; no delete/download/flag logic changes. Pasteur ownsstatusbrowser
+integration/regressions/Profixtureadaptation; Galileo andHalleyindependentlyreview
+design/productchanges. Actualtestevidence/finalreview/buildremainpending. Allnew
+app changes local only; live appe588d10 unchanged bythiswork. Normal MDs updated.
+
+## November 22, 2026 - Visible Design Meeting / Awaiting Shawn Yes Or No
+
+Follow-up beforeapproval: Shawn likes direction butasksiftappableHomeuploadrow
+shouldlinkPhotos toshowuploads. SourcecheckedPhotosPage usesuseUploadStatus only
+forlegacyfile-pickerstart/complete, renderscloudphotos, notdevicequeueRows.
+ExistingInlineReviewopensscopedpendingCameraSheetwithoutcamera/micpermission.
+ActualadditionalGalileo/JonyandHalley/Stevereviews bothrecommendkeepdirectpending
+reviewforthisminimalpolish. Userexpectationisvalid; plainPhotoslinkwouldhidepending
+items. ProperPhotosdestinationrequiresa temporaryscopedpendingstrip, local/cloud
+distinction, existingreviewaccess, and seamlesscompletionduringnavigationwithout
+staleemptyview/duplicates. Treatthatasa modestseparatescopechoice, notjustalinkswap.
+BothoptionsremainpendingShawn'sapproval; noappchanges. Selectionproposalunchanged.
+
+Shawn asks whether Home uploadstatus should be lower/betterdesigned, then reports
+Photos VIDEO label obscuring multiselect check (30EB7E81 screenshot). He explicitly
+requests Jony/Steve-led visible team meeting and his approval AFTERdiscussion,
+before implementation. No application edits, build or release for this review.
+
+Actual independent reviewers: Galileo01a2067c-527c-7312-aee8-ebc2acc72bc4 designlead
+(Jony lens); Halley01a2067d-ea85-7dc0-9ada-58f201ab75db productco-lead(Steve lens);
+Parfit01a2067c-5134-7ad1-b5f8-da1414e94a2c mobileUX(Angela/Chris lenses). These are
+AI roles, not real people. Findings/disagreement and responses shown in chat.
+
+Confirmedsource: Photospage PhotoCard selection top8/right8, VIDEO later inDOM same
+corner (around2960). NormaltopLEFT has Gallery/Favorite actions, hidden onselect;
+bottomleftUseonpage/bottomrightDelete alsooccupied normally. SiteEditor VIDEOleft
+hasdifferentcontrols and is not sufficientprecedent foralwaysleft Photosbadge.
+Galileo revises proposal to VIDEOleft onlyselectMode/rightnormally, selection
+stationaryright. Parfit initially favorsalwaysleft, then explicitly withdraws after
+sourcechallenge; supportsconditional placement. Halley supportsconsistentselection
+and mode-awaretypebadge. Preservewholetiletogglesinglecontrol, no nestedcheckbox
+button; checkselected/unselectedidentity/VoiceOverstate, normalactions unobscured,
+library/jobvariants, brightthumbnails,320/390/enlargedtext. No data/download/delete
+logic changes are proposed for the overlap repair.
+
+Statusdiscussion: existingDESIGN_DECISIONS300-308 puts4coreactions beforeroutineinfo.
+Current UploadStatusInline isglobalbeforechildren/greeting; addsheight/pushesactions.
+Galileo recommendsHomeaftercomplete4tilegrid(beforeinformationalnudge), staffafter
+OpenCamera. Belowgreeting stillpushesactions; betweenprimary/secondary rows breaks
+the actiongroup. Rejectfloatingbottombar: addschrome/safearea/keyboardcollision.
+Parfit agreesroutinebelowactions but pushesforglobalreviewdiscoverability. Halley
+asks whichEXISTINGnavdestination exposesReviewwithoutnewbadge. Galileo responds:
+Photosroute viaindustrytabs/More exists, but localqueuedReview requiresretained
+shellhost; navigationalone doesNOTprovideit. Finalproposal: page-aware Homeplacement
+while otherpagesretainexistingglobalReviewhost, exactlyonevisiblepresentation,
+provider/queueownershipandcamera/reviewsuppression remainintact. No newnavbadge/
+destination. HomefirstviewportvisibilitycannotbeguaranteedwithPro/leads/largefont;
+acceptedtradeoffonlyroutineworkbelowfold, urgentunsaved/unreadableguidanceprominent.
+
+Visualproposal: compactalignedrowusingexistingtype/colors, smallactiveindicator,
+regularstatus, trailingchevron, wholetaptarget>=44px ONLYwhenReviewavailable.
+RemovecompetingsemiboldReviewlabel; nosurfacecard/glow/decorativeborder/extraSaved
+lineunlessessential. Preserveexistingtruthfulstate distinctions andbriefconfirmed
+successclearing; no changes toupload/retry/storage/billing. Allindustries/owner+
+staffHome andsharedPhotosgrid apply. Shawn hasNOTapprovedtheseUIchangesyet.
+
 ## November 22, 2026 - Queued Photo Cloud Completion Confirmed On iPhone
 
 After publishede588d10, Shawn reports status became uploading, then uploaded, then

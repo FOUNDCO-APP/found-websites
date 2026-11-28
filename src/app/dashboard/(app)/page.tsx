@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import HomeClient from "@/components/dashboard/HomeClient"
+import UploadStatusHomeSlot from "@/components/dashboard/UploadStatusHomeSlot"
 import IncludedProTool from "@/components/dashboard/IncludedProTool"
 import { getCompanyActiveAddonSlugs } from "@/lib/dashboard/entitlements"
 import { getEffectiveAddons, getFeatureAccess } from "@/lib/featureAccess"
@@ -68,6 +69,8 @@ export default async function HomePage() {
             <span style={{ ...TYPE.title, color: FOUND_BLACK, fontWeight: 900 }}>Open Camera</span>
           </div>
         </Link>
+
+        <UploadStatusHomeSlot inset={false} />
 
         <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>

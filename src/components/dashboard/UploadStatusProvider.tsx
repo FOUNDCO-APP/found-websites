@@ -37,7 +37,10 @@ type UploadStatusContextValue = {
   queueRows: DeviceCapture[]
   queueReady: boolean
   queueError: string | null
-  inlineStatus: { text: string; busy: boolean; captureId?: string; legacyAttention: boolean } | null
+  inlineStatus: { text: string; busy: boolean; captureId?: string; legacyAttention: boolean; priority: "routine" | "attention"; completed: boolean } | null
+  homeStatusTarget: HTMLElement | null
+  cameraPresentationActive: boolean
+  registerHomeStatusTarget: (element: HTMLElement | null) => void
   registerCameraPresentation: () => () => void
   start: (count: number, kind?: Kind) => void
   complete: (success: boolean, errorMessage?: string) => void
@@ -57,6 +60,10 @@ export function useUploadStatus() {
 export default function UploadStatusProvider({ children, companyId = null, accountId = null }: { children: React.ReactNode; companyId?: string | null; accountId?: string | null }) {
   const [queueBinding, setQueueBinding] = useState<{ scope: string; controller: ReturnType<typeof getDeviceUploadQueue>; rows: DeviceCapture[]; ready: boolean; error: string | null } | null>(null)
   const [cameraCount, setCameraCount] = useState(0)
+  // Presentation destination only. Queue ownership stays in this shared provider
+  // while the Home slot mounts/unmounts during navigation.
+  const [homeStatusTarget, setHomeStatusTarget] = useState<HTMLElement | null>(null)
+  const registerHomeStatusTarget = useCallback((element: HTMLElement | null) => setHomeStatusTarget(element), [])
   const savedAcknowledgements = useRef(new Map<string, number>())
   const [queueSuccess, setQueueSuccess] = useState<{ scope: string; until: number } | null>(null)
   const cameraCountRef = useRef(0)
@@ -197,8 +204,10 @@ export default function UploadStatusProvider({ children, companyId = null, accou
   } else if (added.length || (queueSuccess?.scope === scope && queueSuccess.until > now)) text = "Uploaded"
   // File-picker uploads still rely on an open page; their existing guidance stays.
   if (text && !unverified.length && !unreadable.length && !queueBlocked && pending.some(op => now - op.startedAt >= 15000)) text += " · Keep Found open."
-  const inlineStatus = !cameraCount && text ? { text, busy: !queueBlocked && !unverified.length && !unreadable.length && (pending.length > 0 || transferring.length > 0), captureId: affected?.id, legacyAttention: failed.length > 0 } : null
-  return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, inlineStatus, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
+  const priority = unverified.length || unreadable.length || attention.length || failed.length || (queueBlocked && queueError !== "Waiting for a connection") ? "attention" as const : "routine" as const
+  const inlineStatus = !cameraCount && text ? { text, busy: !queueBlocked && !unverified.length && !unreadable.length && (pending.length > 0 || transferring.length > 0), captureId: affected?.id, legacyAttention: failed.length > 0, priority,
+    completed: !queued.length && !pending.length && !failed.length && !queueLabel } : null
+  return <UploadStatusContext.Provider value={{ accountId, companyId, deviceQueue, queueRows, queueReady, queueError, inlineStatus, homeStatusTarget, cameraPresentationActive: cameraCount > 0, registerHomeStatusTarget, registerCameraPresentation, start, complete, dismiss, beginOperation, detachOperation }}>
     {children}
   </UploadStatusContext.Provider>
 }

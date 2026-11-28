@@ -1,5 +1,34 @@
 # Found Task Board
 
+## November 27 - Approved shared UI release preparation
+
+- [x] Implement approved selection clarity and contextual Home upload status.
+- [x] Verify actual PhotoCard selection geometry, owner/staff placement, existing
+  review, camera recovery UI and Pro/Home regressions with real Chromium.
+- [x] Complete final production build and renewed independent source/visual review.
+- [x] Save tested release and existing MD records in local Git.
+- [ ] Obtain final publication approval, then verify live.
+- [ ] Physical iPhone acceptance: below-action status/Review and video selection.
+- [ ] Separate follow-up: baseline normal-mode gallery overlay crowding at narrow
+  widths/enlarged text; not changed by this bounded selection repair.
+
+Older unchecked proposal/approval entries below are historical, superseded by the
+approved implementation and this current checklist.
+
+- [x] Shawnapproves minimalUIaftervisiblemeeting: mode-awareVIDEObadge, contextual
+  Homeuploadrow withEXISTINGpendingReview; Photos-localpendingstripdeferred.
+- [ ] FinishsharedUIimplementation/source-basedbrowserchecks, independentdesign/
+  engineeringreview andfrozenbuild. Preservequeue/auth/otherpageReviewandallindustries.
+- [ ] Publish onlyafter finaltestedreleaseapproval; thenphysicaliPhoneUIacceptance.
+
+- [ ] Await Shawn yes/no after visible Jony/Steve-led design discussion: repair
+  VIDEO/checkmark overlap with mode-aware badge; routineHome uploadstatus belowfull
+  actiongrid/quietreviewrow, preserveurgent/globalreview access andallindustryscope.
+  No app edits authorized/made for this proposal. Review exchange in handoff.
+- [ ] Resolve Shawn's Photos-destination input beforeimplementation: minimal
+  tappablerowretainsdirectpendingReview(recommendedbybothreviews), or separately
+  scopePhotos-localpendingstrip+completion/navigationhandling. Plainlinkisnot enough.
+
 - [x] Shawn approves anchored retry correction/private wait diagnostics after actual
   engineering and Jony/Steve-role reviews; weak Mexico carrier context recorded.
 - [x] Finish policy/integrity browser regressions, independent source review and

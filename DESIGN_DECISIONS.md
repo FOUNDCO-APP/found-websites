@@ -1,3 +1,25 @@
+## November 22, 2026 - Selection Clarity And Contextual Upload Status (Approved)
+
+Shawn approves after visible Jony-led/Steve-co-led independent discussion and his
+Photos-link question. VIDEO moves left ONLY during selection; selection stays
+top-right on everytile. Normal-mode Gallery/Favorite actions retain their corners.
+Whole-tile selection remains one control with selected state conveyed accessibly.
+November 27 containment refinement: selection-only VIDEO uses left 4px/top 32px,
+2px padding and zero decorative tracking, preserving text size. Its vertical band
+is below the top-right selection circle; tested in two/three-column narrow grids
+and enlarged text. Normal-mode controls and badge geometry are unchanged.
+
+Home routine upload status follows the full action area (staff: after OpenCamera),
+before informational nudges. Use a quiet whole-row Review affordance with activity
+indicator, shared typography/colors and trailingchevron; no new card/glow/banner/
+navigation badge. Urgent/attention guidance stays prominent. Otherpages retain the
+globalReview entry; exactlyonevisiblepresentation, with Camera/review suppression.
+Tapping opens EXISTINGscopedpendingReview, not Photos, which currentlyshowscloudonly.
+Photos-localpendingstrip is deferred, not partofapproval. Keep queue/storage/retry/
+publication/billing contracts unchanged acrossindustries andowner/staffsurfaces.
+Preserve keyboard/VoiceOverfocus,44px target, enlargedtext/reducedmotion. Normal
+completion clears; don't remove a focused completion acknowledgement until blur.
+
 ## November 22, 2026 - Recovery Remains Automatic (Approved)
 
 After Meitner's independent Jony-led/Steve-co-led role review, Shawn approves narrow

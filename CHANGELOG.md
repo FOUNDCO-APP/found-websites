@@ -1,3 +1,16 @@
+## November 27, 2026 - Shared selection/status UI prepared (not published)
+
+- Routine Home upload status follows the complete action area; the full quiet row
+  opens existing pending-upload Review. Attention remains prominent; other pages
+  keep global access. One host retains queue lifetime and scoped review ownership.
+- Selection circles remain visible top-right. Selection-only VIDEO label placement
+  and decorative spacing prevent overlap/clipping in tested narrow three-column
+  and enlarged-text cases. Normal controls and data operations remain unchanged.
+- 32 PhotoCard groups, status integration, camera recovery UI, 92 Home layouts and
+  11 chooser groups pass in Chromium with mocked backend transport. Final build,
+  publication are pending; renewed independent design/product and engineering
+reviews found no blocker. No physical-device claim.
+
 ## November 22, 2026 - Anchored Retry / Private Wait Diagnostics Released
 
 - Physical follow-up: Shawn confirms uploading -> uploaded -> status cleared and

@@ -14,6 +14,16 @@ const { chromium } = require(process.env.FOUND_PLAYWRIGHT_MODULE || 'playwright'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const modules = [], seen = new Map()
 const overrides = {
+ 'next/link': "exports.__esModule=true;exports.default=({href,children,...props})=>window.fixtureReact.createElement('a',{href,...props},children);",
+ '@/lib/auth/getAuthUser': "exports.requireDashboardAccess=async()=>({id:'account-a',email:'fixture.invalid'});",
+ '@/lib/dashboard/getCompany': "exports.getCompany=async()=>({id:'company-a',name:'Fixture field team',industry_category:'construction'});exports.requireOwnerAccess=async()=>false;",
+ '@/lib/supabase/admin': "exports.createAdminClient=()=>({from(){const q={select(){return q},eq(){return q},order(){return q},limit:async()=>({data:[]})};return q}});",
+ 'next/navigation': "exports.redirect=()=>{throw Error('Unexpected redirect')};",
+ '@/components/dashboard/IncludedProTool': 'exports.__esModule=true;exports.default=()=>null;',
+ '@/components/dashboard/SignOutButton': "exports.__esModule=true;exports.default=()=>window.fixtureReact.createElement('button',null,'Sign out');",
+ '@/lib/dashboard/entitlements': 'exports.getCompanyActiveAddonSlugs=async()=>[];',
+ '@/lib/featureAccess': 'exports.getEffectiveAddons=()=>[];exports.getFeatureAccess=()=>false;',
+ '@/lib/dashboard/smartNextStep': 'exports.smartNextStepFor=()=>null;',
  '@/components/dashboard/AnnotationEditor': 'exports.__esModule=true;exports.default=()=>null;',
  '@/lib/uploadDashboardMedia': `exports.readDashboardUploadContext=async(endpoint)=>{window.contextCalls.push(endpoint);if(window.contextFailure)throw Object.assign(Error("SECRET context"),window.contextFailure);return window.fixtureScope};exports.DashboardUploadError=class extends Error{constructor(category){super('Safe upload error');this.category=category;this.retryable=['connection','timeout','transient'].includes(category);this.retryAfterMs=0}};exports.createDashboardUploadSession=(blob,options)=>{const session={blob,options,runs:0,run(){this.runs++;return new Promise((resolve,reject)=>{this.resolve=resolve;this.reject=reject})}};window.sessions.push(session);return session};`,
 
@@ -45,21 +55,25 @@ const react = bundle(require.resolve('react'))
 const client = bundle(require.resolve('react-dom/client'))
 const provider = bundle(path.join(root,'src/components/dashboard/UploadStatusProvider.tsx'))
 const inline = bundle(path.join(root,'src/components/dashboard/UploadStatusInline.tsx'))
-const script = `const process={env:{NODE_ENV:"production"}};const modules={${modules.join(',')}},cache={};function load(id){if(cache[id])return cache[id].exports;const module=cache[id]={exports:{}};const [fn,deps]=modules[id];fn(name=>load(deps[name]),module,module.exports);return module.exports;}const R=load(${react}),e=R.createElement;
+const home = bundle(path.join(root,'src/components/dashboard/HomeClient.tsx'))
+const staff = bundle(path.join(root,'src/app/dashboard/(app)/page.tsx'))
+const script = `const process={env:{NODE_ENV:"production"}};const modules={${modules.join(',')}},cache={};function load(id){if(cache[id])return cache[id].exports;const module=cache[id]={exports:{}};const [fn,deps]=modules[id];fn(name=>load(deps[name]),module,module.exports);return module.exports;}const R=load(${react}),e=R.createElement;window.fixtureReact=R;
+window.loadStaffHome=async()=>{window.staffTree=await load(${staff}).default();window.setStatusRoute('staff')};
+window.idbWrites=0;for(const name of ['put','add','delete','clear']){const original=IDBObjectStore.prototype[name];IDBObjectStore.prototype[name]=function(...args){window.idbWrites++;return original.apply(this,args)}};
 window.sessions=[];window.contextCalls=[];window.fixtureScope={accountId:'account-a',companyId:'company-a'};window.fixtureOnline=false;window.cameraRequests=0;window.permissionChecks=0;window.storageReports=[];addEventListener('found:device-storage-diagnostic',event=>window.storageReports.push(event.detail));
 Object.defineProperty(navigator,'onLine',{get:()=>window.fixtureOnline});
 Object.defineProperty(navigator,'permissions',{value:{query:async()=>{window.permissionChecks++;return {state:'granted'}}}});
 Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.cameraRequests++;throw new DOMException('Fixture unavailable','NotFoundError')}}});
-function Harness(){window.inlineFixtureStatus=load(${provider}).useUploadStatus();return e('div',null,
+function Harness(){const [route,setRoute]=R.useState('owner');window.setStatusRoute=setRoute;window.statusRoute=route;window.inlineFixtureStatus=load(${provider}).useUploadStatus();return e('div',null,
  e('header',{id:'header'},e('a',{href:'#home',onClick:()=>window.homeClicks=(window.homeClicks||0)+1},'F O U N D'),e('button',{onClick:()=>window.accountClicks=(window.accountClicks||0)+1},'Account')),
  e(load(${inline}).default),
- e('main',null,e('h1',null,'Ready for your next job.'),e('div',{className:'cards'},e('a',{href:'#camera'},'Camera'),e('a',{href:'#job'},'Start Job'),e('a',{href:'#contacts'},'My Contacts'),e('a',{href:'#website'},'Edit My Site'))),
+ route==='owner'?e(load(${home}).default,{businessName:'Fixture builders',greeting:'morning',newCount:0,totalCount:0,topName:null,topCreatedAt:null,siteSlug:'fixture',customDomain:null,isActive:true,recentLeads:[],lastPhotoAt:null,industry:'construction',smartNextStep:null,hasContacts:true}):route==='staff'?window.staffTree:e('main',null,e('h1',null,'Photos'),e('p',null,'Other route has no Home placement anchor.')),
  e('nav',{id:'navigation','aria-label':'Dashboard'},e('a',{href:'#home',onClick:()=>window.navClicks=(window.navClicks||0)+1},'Home'),e('a',{href:'#photos'},'Photos'),e('a',{href:'#more'},'More')))}
 window.inlineCameraOverlap=[];new MutationObserver(()=>{if(document.querySelector('.found-camera')&&document.querySelector('.found-upload-inline'))window.inlineCameraOverlap.push('duplicate-owner')}).observe(document.getElementById('root'),{childList:true,subtree:true});
 const root=load(${client}).createRoot(document.getElementById('root'));window.render=(identity=window.fixtureScope)=>{window.fixtureScope=identity;root.render(e(load(${provider}).default,identity,e(Harness)))};window.render();
 window.enqueue=async(id='pending-a')=>{const canvas=document.createElement('canvas');canvas.width=240;canvas.height=320;const ctx=canvas.getContext('2d');ctx.fillStyle='#9e8464';ctx.fillRect(0,0,240,320);ctx.fillStyle='#c7ba9e';ctx.fillRect(30,20,180,210);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));await window.inlineFixtureStatus.deviceQueue.enqueue(blob,{id,fileName:id+'.jpg',albumId:null})};
 `
-const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0;font-family:system-ui,sans-serif;background:#080A09;color:#ededed}*{box-sizing:border-box}button,a{font:inherit}button{min-height:44px}a{color:inherit;text-decoration:none}#header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #ffffff18;background:#080A09;z-index:40}#header button{background:none;border:0;color:#ddd}main{padding:24px 20px 100px;max-width:760px;margin:auto}h1{font-size:1.35rem;font-weight:600;margin:8px 0 24px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}.cards a{padding:30px 16px;background:#ffffff08;border:1px solid #ffffff14;border-radius:20px}.cards a:first-child{background:#32D074;color:#080A09;font-weight:700}nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;padding:20px;background:#080A09;border-top:1px solid #ffffff18;z-index:40}nav a{min-height:44px;display:flex;align-items:center}</style><div id="root"></div><script>'+script.replace(/<\/script/gi,'<\\/script')+'</script>')})
+const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0;font-family:system-ui,sans-serif;background:#080A09;color:#ededed}*{box-sizing:border-box}button,a{font:inherit}button{min-height:44px}a{color:inherit;text-decoration:none}#header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #ffffff18;background:#080A09;z-index:40}#header button{background:none;border:0;color:#ddd}main{max-width:760px;margin:auto}h1{font-size:1.35rem;font-weight:600;margin:8px 0 24px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}.cards a{padding:30px 16px;background:#ffffff08;border:1px solid #ffffff14;border-radius:20px}.cards a:first-child{background:#32D074;color:#080A09;font-weight:700}nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;padding:20px;background:#080A09;border-top:1px solid #ffffff18;z-index:40}nav a{min-height:44px;display:flex;align-items:center}</style><div id="root"></div><script>'+script.replace(/<\/script/gi,'<\\/script')+'</script>')})
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
 const browser=await chromium.launch({headless:true,...(process.env.FOUND_BROWSER_EXECUTABLE?{executablePath:process.env.FOUND_BROWSER_EXECUTABLE}:{})})
 let context, page
@@ -71,8 +85,120 @@ const row=()=>page.getByRole('complementary',{name:'Upload status'})
 const statusText=()=>row().getByRole('status')
 const online=()=>page.evaluate(()=>{window.fixtureOnline=true;dispatchEvent(new Event('online'))})
 const finish=async(index=0)=>page.evaluate(index=>window.sessions[index].resolve({id:'photo-'+index,url:'test',storage_path:'test',for_website:false,for_social:false,in_gallery:false,website_section:null,album_id:null,created_at:'test'}),index)
-const screenshot=async(name)=>{for(const [width,height,large] of [[390,844,false],[320,568,false],[844,390,false],[390,844,true]]){await page.setViewportSize({width,height});await page.evaluate(large=>document.documentElement.style.fontSize=large?'24px':'16px',large);assert.equal(await row().evaluate(el=>{const r=el.getBoundingClientRect(),h=document.getElementById('header').getBoundingClientRect(),m=document.querySelector('main').getBoundingClientRect();return getComputedStyle(el).position==='static'&&r.top>=h.bottom&&r.bottom<=m.top&&r.right<=innerWidth&&r.left>=0}),true);await page.screenshot({path:path.join(screenshotDir,name+'-'+width+(large?'-large':'')+'.png')})}await page.setViewportSize({width:390,height:844});await page.evaluate(()=>document.documentElement.style.fontSize='16px')}
+const screenshot=async(name)=>{for(const [width,height,large] of [[390,844,false],[320,568,false],[844,390,false],[390,844,true]]){await page.setViewportSize({width,height});await page.evaluate(large=>document.documentElement.style.fontSize=large?'24px':'16px',large);assert.equal(await row().evaluate(el=>{const r=el.getBoundingClientRect(),h=document.getElementById('header').getBoundingClientRect(),m=document.querySelector('main').getBoundingClientRect();const home=el.closest('[data-home-upload-status-slot]');const placed=home?r.top>=m.top:r.bottom<=m.top;return getComputedStyle(el).position==='static'&&r.top>=h.bottom&&placed&&r.right<=innerWidth&&r.left>=0&&el.scrollWidth<=el.clientWidth+1}),true);await page.screenshot({path:path.join(screenshotDir,name+'-'+width+(large?'-large':'')+'.png'),fullPage:true})}await page.setViewportSize({width:390,height:844});await page.evaluate(()=>document.documentElement.style.fontSize='16px')}
 try{
+
+ // Actual owner Home, real provider, one global host. Only transports/server
+ // data boundaries are mocked; slot placement and React portals are real.
+ await fresh()
+ await page.waitForTimeout(800)
+ const actionLabels=['Camera','Start Job','My Contacts','Edit My Site']
+ const actionGeometry=()=>page.evaluate(()=>['Camera','Start Job','My Contacts','Edit My Site'].map(label=>{const el=[...document.querySelectorAll('main button,main a')].find(el=>el.textContent.includes(label));if(!el)throw Error('Missing action '+label);const r=el.getBoundingClientRect();return {label,top:r.top,bottom:r.bottom}}))
+ const settledActions=()=>page.waitForFunction(()=>['Camera','Start Job','My Contacts','Edit My Site'].every(label=>{const el=[...document.querySelectorAll('main button,main a')].find(el=>el.textContent.includes(label));if(!el)return false;const style=getComputedStyle(el.parentElement.parentElement);return parseFloat(style.opacity)>.99&&Math.abs(new DOMMatrixReadOnly(style.transform).m42)<.1}))
+ await settledActions()
+ const baseline=await actionGeometry()
+ await page.evaluate(()=>window.enqueue('portal-layout'))
+ await row().waitFor()
+ assert.equal(await row().count(),1)
+ assert.equal(await row().evaluate(el=>!!el.closest('[data-home-upload-status-slot]')),true)
+ for(const [i,r] of (await actionGeometry()).entries())assert.ok(Math.abs(r.top-baseline[i].top)<1,'Routine status cannot push action '+r.label)
+ assert.ok((await row().boundingBox()).y>=Math.max(...(await actionGeometry()).map(r=>r.bottom)),'Routine row follows the complete four-action grid')
+ const reviewButton=page.getByRole('button',{name:'Review uploads',exact:true})
+ assert.equal(await reviewButton.count(),1)
+ assert.equal(await reviewButton.getByRole('status').count(),1,'Whole row is the review button')
+ assert.ok((await reviewButton.boundingBox()).height>=44)
+ assert.equal(await reviewButton.evaluate(el=>{const id=el.getAttribute('aria-describedby');return !!id&&!!document.getElementById(id)?.textContent}),true)
+ assert.equal(await reviewButton.locator('svg[aria-hidden="true"]').count(),1,'Decorative chevron')
+ const beforePortalWrites=await page.evaluate(()=>window.idbWrites)
+ await reviewButton.focus()
+ await page.evaluate(()=>{const q=window.inlineFixtureStatus.deviceQueue;Object.defineProperty(q,'error',{configurable:true,get:()=>window.presentationError??null});window.presentationError='Sign in to finish uploading.';q.releaseUploaded()})
+ await statusText().filter({hasText:'Sign in to finish uploading.'}).waitFor()
+ assert.equal(await reviewButton.evaluate(el=>document.activeElement===el),true,'Priority update preserves focused action')
+ assert.equal(await row().evaluate(el=>!!el.closest('[data-home-upload-status-slot]')),true,'Focused row remains stationary until blur')
+ await page.getByRole('button',{name:'Account',exact:true}).focus()
+ await page.waitForFunction(()=>!document.querySelector('[data-home-upload-status-slot] .found-upload-inline'))
+ assert.equal(await row().evaluate(el=>!!el.closest('[data-home-upload-status-slot]')),false)
+ assert.ok((await row().boundingBox()).y+(await row().boundingBox()).height<=(await page.locator('main').boundingBox()).y+1)
+ assert.equal(await page.getByRole('button',{name:'Account',exact:true}).evaluate(el=>document.activeElement===el),true,'Relocation after blur does not steal focus')
+ await screenshot('portal-attention')
+ await page.evaluate(()=>{window.presentationError=null;window.inlineFixtureStatus.deviceQueue.releaseUploaded()})
+ await page.waitForFunction(()=>!!document.querySelector('[data-home-upload-status-slot] .found-upload-inline'))
+ assert.equal(await page.getByRole('button',{name:'Account',exact:true}).evaluate(el=>document.activeElement===el),true)
+ await page.evaluate(()=>window.setStatusRoute('other'))
+ await page.getByRole('heading',{name:'Photos',exact:true}).waitFor()
+ assert.equal(await row().count(),1)
+ assert.equal(await page.locator('[data-home-upload-status-slot]').count(),0)
+ assert.ok((await row().boundingBox()).y+(await row().boundingBox()).height<=(await page.locator('main').boundingBox()).y+1)
+ await page.evaluate(()=>window.loadStaffHome())
+ await page.getByRole('heading',{name:'Field Photos'}).waitFor()
+ await page.waitForFunction(()=>!!document.querySelector('[data-home-upload-status-slot] .found-upload-inline'))
+ assert.ok((await row().boundingBox()).y>=(await page.getByRole('link',{name:'Open Camera',exact:true}).boundingBox()).y+(await page.getByRole('link',{name:'Open Camera',exact:true}).boundingBox()).height)
+ assert.equal(await row().count(),1)
+ await page.evaluate(()=>window.setStatusRoute('owner'))
+ await page.waitForFunction(()=>!!document.querySelector('[data-home-upload-status-slot] .found-upload-inline'))
+ assert.equal(await page.evaluate(()=>window.idbWrites),beforePortalWrites,'Portal/priority/route placement causes no IndexedDB mutations')
+
+ await settledActions()
+ for(const [width,large] of [[320,false],[390,false],[320,true],[390,true]]){
+  await page.setViewportSize({width,height:844});await page.evaluate(large=>document.documentElement.style.fontSize=large?'24px':'16px',large)
+  const visibleGeometry=await actionGeometry()
+  await page.evaluate(()=>{window.endGeometryCamera=window.inlineFixtureStatus.registerCameraPresentation()})
+  await row().waitFor({state:'detached'})
+  for(const [i,r] of (await actionGeometry()).entries())assert.ok(Math.abs(r.top-visibleGeometry[i].top)<1,'Routine status does not push '+r.label+' at '+width+(large?' enlarged':''))
+  await page.evaluate(()=>window.endGeometryCamera())
+  await row().waitFor()
+  {const placed=await row().boundingBox(),actions=await actionGeometry();assert.ok(placed.y>=Math.max(...actions.map(r=>r.bottom))-1,'Below full grid at '+width+(large?' enlarged':'')+': '+JSON.stringify({placed,actions,priority:await row().getAttribute('data-upload-priority'),inSlot:await row().evaluate(el=>!!el.closest('[data-home-upload-status-slot]'))}))}
+ }
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>document.documentElement.style.fontSize='16px')
+ await screenshot('portal-routine')
+ await reviewButton.click()
+ await page.locator('[data-camera-review-status]').waitFor()
+ assert.equal(await row().count(),0)
+ await page.evaluate(()=>window.setStatusRoute('other'))
+ assert.equal(await page.locator('.found-camera').count(),1,'Global host retains review across Home slot unmount')
+ assert.equal(await row().count(),0)
+ await page.getByRole('button',{name:'Done',exact:true}).click()
+ await row().waitFor()
+ await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Review uploads')
+ assert.equal(await page.evaluate(()=>window.cameraRequests+window.permissionChecks),0)
+ assert.deepEqual(await page.evaluate(()=>window.inlineCameraOverlap),[])
+ console.log('PASS actual owner/staff Home placement after actions, priority top/fallback, whole-row accessibility, focus/review persistence, one host, zero portal IDB writes')
+
+ await fresh()
+ await page.evaluate(()=>window.enqueue('focused-completion'))
+ await online()
+ await page.waitForFunction(()=>window.sessions.length===1)
+ await page.getByRole('button',{name:'Review uploads',exact:true}).focus()
+ await finish()
+ await statusText().filter({hasText:'Uploaded'}).waitFor()
+ assert.equal(await row().locator('button,a').count(),0,'Completion removes the stale interactive Review action')
+ await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Upload status')
+ await page.waitForTimeout(3000)
+ assert.equal(await row().count(),1,'Focused acknowledgement survives its routine expiry')
+ assert.equal(await row().locator('button,a').count(),0)
+ await page.getByRole('button',{name:'Account',exact:true}).focus()
+ await row().waitFor({state:'detached'})
+ assert.equal(await page.getByRole('button',{name:'Account',exact:true}).evaluate(el=>document.activeElement===el),true)
+ console.log('PASS focused completion becomes noninteractive acknowledgement, retains focus through expiry, disappears on blur without stealing focus')
+
+ await fresh()
+ await page.evaluate(()=>window.enqueue('focused-camera-suppression'))
+ await online()
+ await page.waitForFunction(()=>window.sessions.length===1)
+ await page.getByRole('button',{name:'Review uploads',exact:true}).focus()
+ await finish()
+ await statusText().filter({hasText:'Uploaded'}).waitFor()
+ await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Upload status')
+ await page.waitForTimeout(3000)
+ await page.evaluate(()=>{window.endExternalCamera=window.inlineFixtureStatus.registerCameraPresentation()})
+ assert.equal(await row().count(),0,'Camera presentation suppresses even a focus-held expired acknowledgement')
+ await page.evaluate(()=>window.endExternalCamera())
+ await page.waitForTimeout(100)
+ assert.equal(await row().count(),0,'Releasing camera presentation must not resurrect an expired held acknowledgement')
+ console.log('PASS camera suppression overrides focused acknowledgement retention without stale resurfacing')
+
+
+
  await fresh()
  assert.equal(await row().count(),0)
  await page.evaluate(()=>window.enqueue())
@@ -91,10 +217,12 @@ try{
  assert.equal((await statusText().innerText()).includes('Uploaded'),false)
  await finish()
  await statusText().filter({hasText:'Uploaded'}).waitFor()
+ assert.equal(await row().locator('button,a').count(),0,'Confirmed success has no stale Review action')
  const successAt=Date.now()
  await row().waitFor({state:'detached',timeout:4500})
  assert.ok(Date.now()-successAt>=2200)
  assert.equal(await page.evaluate(()=>window.inlineFixtureStatus.deviceQueue.getSnapshot().length),0)
+ assert.equal(await page.getByRole('button',{name:'Review uploads',exact:true}).count(),0,'Expired success leaves no interactive status')
  console.log('PASS real queue confirmation-only success, 2.6-second acknowledgement expiry and existing queue release')
  await fresh()
  await page.evaluate(()=>{window.inlineFixtureStatus.start(3,'photo');window.inlineFixtureStatus.complete(true)})
@@ -300,10 +428,31 @@ try{
   assert.equal(await page.getByRole('dialog').count(),0)
  }
  console.log('PASS browser image/video decode errors become presentation-only placeholders without changing localSaved or original bytes')
+
+ await fresh()
+ await page.evaluate(()=>window.enqueue('review-completes'))
+ await online()
+ await page.waitForFunction(()=>window.sessions.length===1)
+ await page.getByRole('button',{name:'Review uploads',exact:true}).click()
+ await page.locator('[data-camera-review-status]').waitFor()
+ await finish()
+ await page.waitForFunction(()=>window.inlineFixtureStatus.queueRows.some(r=>r.state==='uploaded'))
+ await page.getByRole('button',{name:'Done',exact:true}).click()
+ await page.locator('.found-camera').waitFor({state:'detached'})
+ await page.waitForTimeout(100)
+ assert.equal(await page.evaluate(()=>document.activeElement!==document.body&&document.activeElement?.isConnected),true,'Review completion/close must return focus to a connected dashboard target even if status has disappeared')
+ assert.equal(await page.evaluate(()=>{window.focusReturnTarget=document.activeElement;return window.focusReturnTarget.matches('main, main h1, main [role=heading]')}),true,'Completed review focuses actual dashboard context')
+ assert.equal(await page.evaluate(()=>window.focusReturnTarget.getAttribute('tabindex')),'-1')
+ await page.getByRole('button',{name:'Account',exact:true}).focus()
+ assert.equal(await page.evaluate(()=>window.focusReturnTarget.hasAttribute('tabindex')),false,'Temporary dashboard tabindex removed after blur')
+ assert.equal(await page.evaluate(()=>window.cameraRequests+window.permissionChecks),0)
+ console.log('PASS completing the last capture during review returns focus safely after the status disappears')
  // Verify server layout mounts the actual host after its header, within provider scope.
  const layout=fs.readFileSync(path.join(root,'src/app/dashboard/(app)/layout.tsx'),'utf8')
  const host=layout.indexOf('<UploadStatusInline />')
  assert.ok(host>layout.indexOf('</header>',layout.indexOf('async function DashboardChrome'))&&host<layout.indexOf('{children}',layout.indexOf('async function DashboardChrome')))
+ assert.equal((layout.match(/<UploadStatusInline\s/g)||[]).length,1,'One global host in the actual layout')
+ for(const source of ['src/components/dashboard/HomeClient.tsx','src/app/dashboard/(app)/page.tsx'])assert.equal(fs.readFileSync(path.join(root,source),'utf8').includes('<UploadStatusInline'),false,'Home renders an anchor, never another host')
  assert.deepEqual(errors,[])
  console.log('PASS actual React provider/inline host + real Chromium IndexedDB; transport and dashboard scaffold mocked')
 }catch(error){throw error}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

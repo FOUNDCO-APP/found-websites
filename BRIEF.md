@@ -1,6 +1,43 @@
 # BRIEF.md - Found Co. / found-websites
+
+## November 27, 2026 - Approved shared UI: verification and release preparation
+
+The approved implementation is local, not published. Routine Home upload status is
+below the complete action area and opens existing pending-upload Review. Attention
+remains prominent; other pages retain global access. One shared host owns Review.
+Photos selection circles remain top-right; VIDEO moves left and below the circle
+band during selection, with compact padding/tracking so the full label fits.
+Normal Photos controls, storage, transfer, billing and publication are unchanged.
+
+Browser checks pass: 32 actual PhotoCard groups (two/three columns, 320/390 widths,
+normal/doubled text, library/job), status integration, camera recovery UI, and
+92 Home layouts across 23 industries plus 11 Pro chooser groups. Final production
+build passes compilation, TypeScript and all 89 pages; reviewed app hashes are
+unchanged. Renewed independent design/product and engineering reviews found
+no blocker in this bounded scope. Existing normal-mode overlay
+crowding is baseline-confirmed and remains a separate follow-up. See handoff.
+Earlier pending-approval notes below are historical; Shawn approved implementation.
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
 ### This file is the entry point. Read this before touching anything.
+
+November22 current: Shawn APPROVES the visible team's minimalUI direction. Implement
+VIDEOleftonlyduringselection/checkrightalways, plusroutineHomeuploadrowbelowall
+actions/staffOpenCamera. TappingopensEXISTINGpendingReview, notcloud-onlyPhotos.
+Oneglobalreviewowner portalsroutinepresentationintoHomeanchor; attentionglobal,
+otherpageaccess/camerasuppression/scopepreserved. No newqueue/storage/backend/nav
+behavior. Implementation and independent tests/review in progress; no newrelease.
+
+November22 latest DESIGN DISCUSSION ONLY: Shawn requests visible Jony/Steve-led
+team meeting and his yes/no before implementation. New30EB7E81 Photos screenshot
+shows VIDEO badge covering selection check. Independent reviews propose VIDEO
+topleft ONLYselectMode, selectionalways top-right; normal Favorite/Gallery corners
+preserved. Routine Home upload status proposed belowfullactiongrid, quiettappable
+row/chevron; urgent guidance prominent, otherpageglobalReview retained, no newnav
+badge. Tradeoff: routine status may be belowfold on small/enlargedtext Home. No UI/
+app changes made; pending Shawn approval. Details/reviewer exchange in handoff.
+Shawn asksabouttappingrowtoPhotos. Jony/Steveindependentlyrecommendexistingdirect
+pendingreviewnow; Photoscurrentlycloud-onlyandwouldneedtemporarypending-strip
+integrationbeforebecominghonestdestination. Userchoice/approvalstillpending.
 
 November22 latest physical result: Shawn confirms uploading -> uploaded -> all
 statuses cleared, and the actual queued photo is visible in Photos aftere588d10.

@@ -13,6 +13,9 @@ const { chromium } = require(process.env.FOUND_PLAYWRIGHT_MODULE || 'playwright'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const modules = [], seen = new Map()
 const overrides = {
+  // Pro chooser tests do not own upload presentation. The dedicated status suite
+  // renders actual HomeClient, slot and provider together.
+  '@/components/dashboard/UploadStatusHomeSlot': 'exports.__esModule=true;exports.default=()=>null;',
   'next/navigation': `exports.usePathname=()=>window.fixture.pathname;exports.useRouter=()=>({refresh(){window.fixture.refreshes++}});`,
   'next/link': `exports.__esModule=true;exports.default=({href,children,...props})=>window.fixtureReact.createElement('a',{href,...props},children);`,
   '@/app/dashboard/(app)/more/actions': `exports.switchIncludedAddon=async(...args)=>{window.fixture.calls.push(args);if(window.fixture.behavior==='throw')throw Error('synthetic failure');if(window.fixture.behavior==='pending')return new Promise(r=>window.fixture.resolve=r);return window.fixture.result;};`,
